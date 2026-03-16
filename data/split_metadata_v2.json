@@ -1,0 +1,50 @@
+{
+  "random_seed": 42,
+  "split_ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "split_level": "key_id (strict, no same key in multiple splits)",
+  "quantile_thresholds_from_train": {
+    "p5": 544.0,
+    "p10": 562.0,
+    "p25": 612.0,
+    "p50": 740.0
+  },
+  "primary_filter_threshold_cycles": 612.0,
+  "hw_median_threshold_from_train": 91.0,
+  "sizes_raw": {
+    "train": 70000,
+    "val": 15000,
+    "test": 15000
+  },
+  "sizes_filtered": {
+    "train": 17545,
+    "val": 3773,
+    "test": 3849
+  },
+  "sizes_aggregated": {
+    "train": 1239,
+    "val": 273,
+    "test": 275
+  },
+  "targets": [
+    "target_lsb_c0: LSB of coeff_0 (binary)",
+    "target_hw_bin: Hamming weight >= train median (binary)",
+    "target_hw_parity: Parity of HW sum (binary)",
+    "target_top2_c0: Top 2 bits of coeff_0 (4-class)"
+  ],
+  "features": [
+    "timing_min",
+    "timing_q05",
+    "timing_q10",
+    "timing_q25",
+    "timing_median",
+    "timing_mean",
+    "timing_std",
+    "timing_iqr",
+    "timing_range",
+    "timing_skew"
+  ]
+}

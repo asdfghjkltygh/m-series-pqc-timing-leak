@@ -1,0 +1,42 @@
+# Compiled binaries
+src/keygen_helper
+src/keygen_helper_v2
+src/keygen_helper_v3
+src/keygen_helper_vuln
+src/timing_harness
+src/timing_harness_v2
+src/timing_harness_vuln
+src/tvla_harness
+src/timer_profile
+x86-tvla-control/tvla_harness_x86
+x86-tvla-control/timer_profile_x86
+x86-tvla-control/liboqs-src/
+x86-tvla-control/liboqs-build/
+x86-tvla-control/liboqs-install/
+x86-tvla-control/*.npz
+
+# Vulnerable liboqs build artifacts
+liboqs-vulnerable/
+
+# Large raw data files (>1MB)
+data/raw_timing_traces_v2.csv
+data/raw_timing_traces_v4_vertical.csv
+data/tvla_traces.npz
+
+# Intermediate split files
+data/train_v2_raw.csv
+data/val_v2_raw.csv
+data/test_v2_raw.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+
+# Models
+data/models/
+*.pkl
+*.pt

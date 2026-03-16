@@ -1,0 +1,145 @@
+{
+  "experiment": "positive_control",
+  "description": "Compare vulnerable liboqs v0.9.0 (KyberSlash) vs patched v0.15.0",
+  "vulnerable": {
+    "n_traces": 25000,
+    "n_keys": 500,
+    "timing_mean": 1458.15896,
+    "timing_std": 75164.35971051997,
+    "tvla": {
+      "sk_byte0_lsb": {
+        "t_statistic": -1.0211826128263235,
+        "p_value": 0.3081407706477813,
+        "abs_t": 1.0211826128263235,
+        "effect_size_d": 0.09379513962243498,
+        "n0": 264,
+        "n1": 236,
+        "mean0": 964.8640151515152,
+        "mean1": 2009.9804237288135,
+        "significant_4.5": false
+      },
+      "sk_byte0_parity": {
+        "t_statistic": 1.06042122465593,
+        "p_value": 0.2899146682242022,
+        "abs_t": 1.06042122465593,
+        "effect_size_d": -0.0957253319698533,
+        "n0": 245,
+        "n1": 255,
+        "mean0": 1992.8633469387753,
+        "mean1": 944.4233725490195,
+        "significant_4.5": false
+      },
+      "valid_ct": {
+        "t_statistic": 1.036575531764322,
+        "p_value": 0.3009442734458936,
+        "abs_t": 1.036575531764322,
+        "effect_size_d": -0.09598333831447646,
+        "n0": 232,
+        "n1": 268,
+        "mean0": 2035.9665517241378,
+        "mean1": 957.9673134328359,
+        "significant_4.5": false
+      },
+      "msg_hw_parity": {
+        "t_statistic": -0.9540198691850925,
+        "p_value": 0.3409041216055675,
+        "abs_t": 0.9540198691850925,
+        "effect_size_d": 0.085024689337858,
+        "n0": 248,
+        "n1": 252,
+        "mean0": 994.6709677419354,
+        "mean1": 1914.2899999999997,
+        "significant_4.5": false
+      }
+    },
+    "xgboost": {
+      "sk_byte0_lsb": {
+        "xgb_accuracy_cv": 0.5660000000000001,
+        "xgb_accuracy_std": 0.026532998322843178,
+        "dummy_accuracy": 0.528,
+        "majority_rate": 0.528,
+        "lift_over_chance": 0.038000000000000034,
+        "exploitable": true
+      },
+      "valid_ct": {
+        "xgb_accuracy_cv": 1.0,
+        "xgb_accuracy_std": 0.0,
+        "dummy_accuracy": 0.5360000000000001,
+        "majority_rate": 0.536,
+        "lift_over_chance": 0.46399999999999997,
+        "exploitable": true
+      }
+    }
+  },
+  "patched": {
+    "n_traces": 1000000,
+    "n_keys": 200,
+    "timing_mean": 1217.350137,
+    "timing_std": 43426.66733761562,
+    "tvla": {
+      "sk_byte0_lsb": {
+        "t_statistic": 1.1991285263662992,
+        "p_value": 0.2323237074189507,
+        "abs_t": 1.1991285263662992,
+        "effect_size_d": -0.17129093549108362,
+        "n0": 96,
+        "n1": 104,
+        "mean0": 1319.7431104166665,
+        "mean1": 1122.833546153846,
+        "significant_4.5": false
+      },
+      "sk_byte0_parity": {
+        "t_statistic": -0.08150872300905923,
+        "p_value": 0.935119870669916,
+        "abs_t": 0.08150872300905923,
+        "effect_size_d": 0.011519839922825435,
+        "n0": 102,
+        "n1": 98,
+        "mean0": 1210.9037960784315,
+        "mean1": 1224.059593877551,
+        "significant_4.5": false
+      },
+      "valid_ct": {
+        "t_statistic": 0.013559217371123145,
+        "p_value": 0.9891979788400259,
+        "abs_t": 0.013559217371123145,
+        "effect_size_d": -0.0019332029626617695,
+        "n0": 96,
+        "n1": 104,
+        "mean0": 1218.5077979166665,
+        "mean1": 1216.2815269230769,
+        "significant_4.5": false
+      },
+      "msg_hw_parity": {
+        "t_statistic": -0.4070280918634961,
+        "p_value": 0.684484229207021,
+        "abs_t": 0.4070280918634961,
+        "effect_size_d": 0.05827070592492193,
+        "n0": 109,
+        "n1": 91,
+        "mean0": 1186.8040990825687,
+        "mean1": 1253.938248351648,
+        "significant_4.5": false
+      }
+    },
+    "xgboost": {
+      "sk_byte0_lsb": {
+        "xgb_accuracy_cv": 0.525,
+        "xgb_accuracy_std": 0.09082951062292476,
+        "dummy_accuracy": 0.5199999999999999,
+        "majority_rate": 0.52,
+        "lift_over_chance": 0.0050000000000000044,
+        "exploitable": false
+      },
+      "valid_ct": {
+        "xgb_accuracy_cv": 1.0,
+        "xgb_accuracy_std": 0.0,
+        "dummy_accuracy": 0.5199999999999999,
+        "majority_rate": 0.52,
+        "lift_over_chance": 0.48,
+        "exploitable": true
+      }
+    }
+  },
+  "verdict": "PASS"
+}

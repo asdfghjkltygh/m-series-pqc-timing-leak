@@ -1,0 +1,14 @@
+{
+  "target_lsb_c0": {
+    "best_val_acc": 0.5347985347985348,
+    "seq_len": 16
+  },
+  "target_hw_bin": {
+    "best_val_acc": 0.5018315018315018,
+    "seq_len": 16
+  },
+  "target_hw_parity": {
+    "best_val_acc": 0.5494505494505495,
+    "seq_len": 16
+  }
+}

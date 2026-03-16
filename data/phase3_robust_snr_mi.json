@@ -1,0 +1,45 @@
+{
+  "experiment": "robust_snr_permutation_mi",
+  "mad_snr": {
+    "sk_byte0_lsb": 0.2467302404914872,
+    "sk_byte0_parity": 0.099535306845004,
+    "valid_ct": 0.2570709304193342,
+    "msg_hw_parity": 0.0636604912167824
+  },
+  "winsorized_snr": {
+    "sk_byte0_lsb": 0.0062595993742919675,
+    "sk_byte0_parity": 0.0004484207340877997,
+    "valid_ct": 0.00023430724236236304,
+    "msg_hw_parity": 0.0002559445707633554
+  },
+  "ksg_mi_permutation": {
+    "sk_byte0_lsb": {
+      "mi_observed": 0.0,
+      "mi_null_mean": 0.011799585350936654,
+      "mi_null_std": 0.016670878725381727,
+      "p_value": 1.0,
+      "significant_005": false
+    },
+    "sk_byte0_parity": {
+      "mi_observed": 0.0,
+      "mi_null_mean": 0.012044223017099944,
+      "mi_null_std": 0.017171266190240106,
+      "p_value": 1.0,
+      "significant_005": false
+    },
+    "valid_ct": {
+      "mi_observed": 0.0,
+      "mi_null_mean": 0.008928308357032955,
+      "mi_null_std": 0.014446631231167515,
+      "p_value": 1.0,
+      "significant_005": false
+    },
+    "msg_hw_parity": {
+      "mi_observed": 0.0,
+      "mi_null_mean": 0.0102271305926483,
+      "mi_null_std": 0.014638297450767336,
+      "p_value": 1.0,
+      "significant_005": false
+    }
+  }
+}

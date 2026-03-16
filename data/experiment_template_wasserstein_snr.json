@@ -1,0 +1,95 @@
+{
+  "target_rejection_template_pca5": {
+    "test_acc": 0.49333333333333335,
+    "p_value": 0.6983786752709836,
+    "majority": 0.5066666666666667
+  },
+  "target_rejection_template_pca10": {
+    "test_acc": 0.51,
+    "p_value": 0.4770862212743903,
+    "majority": 0.5066666666666667
+  },
+  "target_rejection_xgb_wasserstein": {
+    "test_acc": 0.5433333333333333,
+    "p_value": 0.11259898909254622,
+    "majority": 0.5066666666666667,
+    "wasserstein_importance": 0.06787214428186417
+  },
+  "target_rejection_snr": {
+    "max_snr": 0.0008535902591052957,
+    "top_snr": {
+      "timing_p95": 0.0008535902591052957,
+      "timing_var": 0.0005410269972323024,
+      "timing_range": 0.00013804799038170853,
+      "timing_max": 0.00013790483141301808,
+      "timing_kurtosis": 9.591310503598931e-05,
+      "timing_std": 8.208758112507359e-05,
+      "timing_p99": 4.113853647955892e-05,
+      "timing_min": 2.9689365927738933e-05,
+      "wasserstein": 1.9203966965815526e-05,
+      "timing_mean": 1.830838833110581e-05
+    }
+  },
+  "target_msg_hw_parity_template_pca5": {
+    "test_acc": 0.4866666666666667,
+    "p_value": 0.737308634183131,
+    "majority": 0.5033333333333333
+  },
+  "target_msg_hw_parity_template_pca10": {
+    "test_acc": 0.49333333333333335,
+    "p_value": 0.6569551309496717,
+    "majority": 0.5033333333333333
+  },
+  "target_msg_hw_parity_xgb_wasserstein": {
+    "test_acc": 0.52,
+    "p_value": 0.30173155583015543,
+    "majority": 0.5033333333333333,
+    "wasserstein_importance": 0.06719320267438889
+  },
+  "target_msg_hw_parity_snr": {
+    "max_snr": 0.003013712015357726,
+    "top_snr": {
+      "timing_mean": 0.003013712015357726,
+      "wasserstein": 0.0029529630654973795,
+      "timing_p99": 0.0028566404921728144,
+      "timing_std": 0.00273630468416083,
+      "timing_max": 0.002565601639597961,
+      "timing_range": 0.00256491905307022,
+      "timing_p95": 0.001804186753831591,
+      "timing_var": 0.0017180135074715793,
+      "timing_median": 0.0011575373284253411,
+      "spike_ratio": 0.0006452629870802132
+    }
+  },
+  "target_sk_lsb_template_pca5": {
+    "test_acc": 0.48,
+    "p_value": 0.9977357306259182,
+    "majority": 0.56
+  },
+  "target_sk_lsb_template_pca10": {
+    "test_acc": 0.45,
+    "p_value": 0.999947541715166,
+    "majority": 0.56
+  },
+  "target_sk_lsb_xgb_wasserstein": {
+    "test_acc": 0.52,
+    "p_value": 0.9267163205961515,
+    "majority": 0.56,
+    "wasserstein_importance": 0.06856317818164825
+  },
+  "target_sk_lsb_snr": {
+    "max_snr": 0.0005792163652744126,
+    "top_snr": {
+      "timing_var": 0.0005792163652744126,
+      "timing_range": 0.0005133579001429933,
+      "timing_min": 0.0005131960896324527,
+      "timing_max": 0.0005124050578790482,
+      "timing_median": 0.0004618578804365095,
+      "timing_kurtosis": 0.00042579324389635867,
+      "timing_std": 0.00040632621125083365,
+      "timing_p99": 0.000341162852772545,
+      "timing_mean": 0.00029653202159618774,
+      "timing_skew": 0.000294974850321906
+    }
+  }
+}

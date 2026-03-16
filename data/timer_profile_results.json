@@ -1,0 +1,28 @@
+{
+  "experiment": "timer_resolution_profile",
+  "timer": "CNTVCT_EL0 (ARM virtual counter)",
+  "platform": "Apple Silicon M-series",
+  "frequency_mhz": 24.00,
+  "ns_per_tick": 41.6667,
+  "num_samples": 10000000,
+  "back_to_back_deltas": {
+    "min_ticks": 0,
+    "p01_ticks": 0,
+    "p05_ticks": 0,
+    "median_ticks": 0,
+    "mean_ticks": 0.01,
+    "p95_ticks": 0,
+    "p99_ticks": 0,
+    "max_ticks": 37,
+    "unique_values": 6
+  },
+  "distribution": {
+    "0_ticks": {"count": 9921097, "percent": 99.2},
+    "1_ticks": {"count": 78865, "percent": 0.8},
+    "2_ticks": {"count": 34, "percent": 0.0},
+    "3_ticks": {"count": 1, "percent": 0.0},
+    "4_ticks": {"count": 2, "percent": 0.0},
+    "37_ticks": {"count": 1, "percent": 0.0}
+  },
+  "conclusion": "Timer overhead is negligible (median 0 ticks). 99.2% of back-to-back reads return within the same tick. The 24 MHz frequency provides 41.67 ns resolution, which is adequate for measuring Kyber decapsulation (~thousands of ticks). The timer is NOT a limiting factor in our measurement methodology."
+}

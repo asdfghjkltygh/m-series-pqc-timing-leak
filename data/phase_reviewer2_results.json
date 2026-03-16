@@ -1,0 +1,224 @@
+{
+  "experiment": "reviewer2_gap_closure",
+  "gap1_sparsity_target": {
+    "sk_byte0_near_zero": {
+      "n_class0": 196,
+      "n_class1": 4,
+      "welch_t": 1.970147418375508,
+      "welch_p": 0.08081554333411958,
+      "abs_t": 1.970147418375508,
+      "ks_stat": 0.3520408163265306,
+      "ks_p": 0.6151862218336719,
+      "xgb_accuracy": 0.9666666666666667,
+      "majority_rate": 0.9666666666666667
+    },
+    "sk_byte0_mod5_zero": {
+      "n_class0": 159,
+      "n_class1": 41,
+      "welch_t": 1.3476101798020694,
+      "welch_p": 0.17972835581793303,
+      "abs_t": 1.3476101798020694,
+      "ks_stat": 0.0966405890473999,
+      "ks_p": 0.8855281614128634,
+      "xgb_accuracy": 0.8,
+      "majority_rate": 0.9
+    }
+  },
+  "gap2_dmp_adaptation": {
+    "early_50": {
+      "sk_byte0_lsb": {
+        "welch_t": 0.5714481831822507,
+        "abs_t": 0.5714481831822507,
+        "p_value": 0.5685495278879368,
+        "xgb_accuracy": 0.6333333333333333,
+        "majority_rate": 0.5666666666666667
+      },
+      "sk_byte0_parity": {
+        "welch_t": 1.624789417141552,
+        "abs_t": 1.624789417141552,
+        "p_value": 0.10717720804335193,
+        "xgb_accuracy": 0.6666666666666666,
+        "majority_rate": 0.5666666666666667
+      },
+      "msg_hw_parity": {
+        "welch_t": -1.6883065730023374,
+        "abs_t": 1.6883065730023374,
+        "p_value": 0.09467997813987836,
+        "xgb_accuracy": 0.4666666666666667,
+        "majority_rate": 0.5333333333333333
+      }
+    },
+    "late_50": {
+      "sk_byte0_lsb": {
+        "welch_t": -0.8972369043852263,
+        "abs_t": 0.8972369043852263,
+        "p_value": 0.37167090912266576,
+        "xgb_accuracy": 0.4666666666666667,
+        "majority_rate": 0.5666666666666667
+      },
+      "sk_byte0_parity": {
+        "welch_t": 0.9513871566427212,
+        "abs_t": 0.9513871566427212,
+        "p_value": 0.343666912002479,
+        "xgb_accuracy": 0.5333333333333333,
+        "majority_rate": 0.5666666666666667
+      },
+      "msg_hw_parity": {
+        "welch_t": -0.9736698225995642,
+        "abs_t": 0.9736698225995642,
+        "p_value": 0.3328232380823164,
+        "xgb_accuracy": 0.5,
+        "majority_rate": 0.5333333333333333
+      }
+    },
+    "early_vs_late_comparison": {
+      "paired_t": -0.8577348546522577,
+      "paired_p": 0.39207073064863396,
+      "early_grand_mean": 982.8624000000001,
+      "late_grand_mean": 1502.0623,
+      "early_mean_std": 1467.092815181259,
+      "late_mean_std": 4327.665739635937
+    }
+  },
+  "gap3_low_dim_ksg": {
+    "top3_sk_byte0_lsb": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99"
+      ],
+      "mi_total_nats": 0.035883183096396376,
+      "mi_total_bits": 0.05176849030448173,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.016056767841334363,
+        "timing_p99": 0.008972248588395626
+      },
+      "perm_null_mean": 0.030408508461230513,
+      "perm_null_std": 0.03084847843521816,
+      "p_value": 0.36,
+      "significant_005": false
+    },
+    "top3_sk_byte0_parity": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99"
+      ],
+      "mi_total_nats": 0.003763957681839347,
+      "mi_total_bits": 0.0054302430817055455,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.003763957681839347,
+        "timing_p99": 0.0
+      },
+      "perm_null_mean": 0.036041080911094724,
+      "perm_null_std": 0.02815004542623388,
+      "p_value": 0.88,
+      "significant_005": false
+    },
+    "top3_msg_hw_parity": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99"
+      ],
+      "mi_total_nats": 0.031686570820050886,
+      "mi_total_bits": 0.045714058584864346,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.0,
+        "timing_p99": 0.03241528654876635
+      },
+      "perm_null_mean": 0.030345741187724727,
+      "perm_null_std": 0.028123941305118024,
+      "p_value": 0.42,
+      "significant_005": false
+    },
+    "top5_sk_byte0_lsb": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99",
+        "timing_mean",
+        "timing_iqr"
+      ],
+      "mi_total_nats": 0.05744393154175009,
+      "mi_total_bits": 0.08287407516444797,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.016056767841334363,
+        "timing_p99": 0.008972248588395626,
+        "timing_mean": 0.0,
+        "timing_iqr": 0.02291501376208016
+      },
+      "perm_null_mean": 0.05525305267881206,
+      "perm_null_std": 0.03663907479035044,
+      "p_value": 0.42,
+      "significant_005": false
+    },
+    "top5_sk_byte0_parity": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99",
+        "timing_mean",
+        "timing_iqr"
+      ],
+      "mi_total_nats": 0.02821000494592285,
+      "mi_total_bits": 0.04069843423893603,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.003763957681839347,
+        "timing_p99": 0.0,
+        "timing_mean": 0.0,
+        "timing_iqr": 0.03162410583262165
+      },
+      "perm_null_mean": 0.06467314642539441,
+      "perm_null_std": 0.04141209873022163,
+      "p_value": 0.8,
+      "significant_005": false
+    },
+    "top5_msg_hw_parity": {
+      "features": [
+        "timing_median",
+        "timing_std",
+        "timing_p99",
+        "timing_mean",
+        "timing_iqr"
+      ],
+      "mi_total_nats": 0.030152840661320734,
+      "mi_total_bits": 0.04350135369080252,
+      "mi_per_feature": {
+        "timing_median": 0.0,
+        "timing_std": 0.0,
+        "timing_p99": 0.03241528654876635,
+        "timing_mean": 0.0,
+        "timing_iqr": 0.0
+      },
+      "perm_null_mean": 0.0555887937475761,
+      "perm_null_std": 0.038197699619923114,
+      "p_value": 0.72,
+      "significant_005": false
+    }
+  },
+  "gap4_detection_threshold": {
+    "kyberslash_effect": {
+      "mean_diff_cycles": 1045.1164085772984,
+      "mean_diff_ns": 43546.55186126772,
+      "pooled_std_cycles": 11142.543342697,
+      "cohens_d": 0.09379513962243498
+    },
+    "detection_floor": {
+      "n_keys": 200,
+      "per_key_mean_std_cycles": 1140.109623638784,
+      "min_d_80pct_power": 0.3979621681907625,
+      "min_d_90pct_power": 0.4601875649351787,
+      "min_cycles_80pct": 453.7204977984447,
+      "min_ns_80pct": 18905.035865618454,
+      "min_cycles_90pct": 524.664271461495,
+      "min_ns_90pct": 21861.028799704673
+    },
+    "conclusion": "With 200 keys and 5000 repeats/key, our apparatus can detect timing differences \u2265453.7 cycles (18905 ns) at 80% power. Any leakage below this floor is undetectable at our sample sizes AND likely unexploitable at this timer resolution (41.67 ns/tick)."
+  }
+}

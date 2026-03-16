@@ -1,0 +1,26 @@
+{
+  "random_seed": 42,
+  "split_ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "split_level": "key_id (no same key in train and test)",
+  "quantile_filtering": {
+    "upper_quantile_percentile": 0.1,
+    "upper_threshold_ns": 28833.0,
+    "computed_on": "training set ONLY"
+  },
+  "sizes_raw": {
+    "train": 7000,
+    "val": 1500,
+    "test": 1500
+  },
+  "sizes_filtered": {
+    "train": 709,
+    "val": 128,
+    "test": 188
+  },
+  "target": "target_bit (LSB of sk[0])",
+  "num_unique_keys": 500
+}

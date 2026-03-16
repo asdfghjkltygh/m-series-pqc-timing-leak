@@ -1,0 +1,282 @@
+{
+  "target_lsb_c0": {
+    "dummy": {
+      "name": "Dummy",
+      "accuracy": 0.4908424908424908,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "confusion_matrix": [
+        [
+          134,
+          0
+        ],
+        [
+          139,
+          0
+        ]
+      ]
+    },
+    "xgboost": {
+      "name": "XGBoost",
+      "accuracy": 0.5018315018315018,
+      "precision": 0.5114503816793893,
+      "recall": 0.48201438848920863,
+      "f1": 0.4962962962962963,
+      "confusion_matrix": [
+        [
+          70,
+          64
+        ],
+        [
+          72,
+          67
+        ]
+      ],
+      "params": {
+        "n_estimators": "300",
+        "max_depth": "5",
+        "learning_rate": "0.05",
+        "subsample": "0.8"
+      }
+    },
+    "random_forest": {
+      "name": "RandomForest",
+      "accuracy": 0.4981684981684982,
+      "precision": 0.5083333333333333,
+      "recall": 0.43884892086330934,
+      "f1": 0.47104247104247104,
+      "confusion_matrix": [
+        [
+          75,
+          59
+        ],
+        [
+          78,
+          61
+        ]
+      ],
+      "params": {
+        "n_estimators": "500",
+        "max_depth": "None",
+        "min_samples_leaf": "1"
+      }
+    },
+    "gradient_boosting": {
+      "name": "GradientBoosting",
+      "accuracy": 0.5018315018315018,
+      "precision": 0.5126050420168067,
+      "recall": 0.43884892086330934,
+      "f1": 0.4728682170542636,
+      "confusion_matrix": [
+        [
+          76,
+          58
+        ],
+        [
+          78,
+          61
+        ]
+      ]
+    },
+    "feature_importance": {
+      "timing_q05": 0.10907967388629913,
+      "timing_range": 0.1056385189294815,
+      "timing_q10": 0.10521531105041504,
+      "timing_std": 0.10454529523849487,
+      "timing_iqr": 0.10214794427156448,
+      "timing_skew": 0.10031946003437042,
+      "timing_q25": 0.10002845525741577,
+      "timing_mean": 0.09775936603546143,
+      "timing_median": 0.09660171717405319,
+      "timing_min": 0.07866424322128296
+    }
+  },
+  "target_hw_bin": {
+    "dummy": {
+      "name": "Dummy",
+      "accuracy": 0.4981684981684982,
+      "precision": 0.4981684981684982,
+      "recall": 1.0,
+      "f1": 0.6650366748166259,
+      "confusion_matrix": [
+        [
+          0,
+          137
+        ],
+        [
+          0,
+          136
+        ]
+      ]
+    },
+    "xgboost": {
+      "name": "XGBoost",
+      "accuracy": 0.5384615384615384,
+      "precision": 0.53125,
+      "recall": 0.625,
+      "f1": 0.5743243243243243,
+      "confusion_matrix": [
+        [
+          62,
+          75
+        ],
+        [
+          51,
+          85
+        ]
+      ],
+      "params": {
+        "n_estimators": "500",
+        "max_depth": "3",
+        "learning_rate": "0.05",
+        "subsample": "0.7",
+        "colsample_bytree": "0.8"
+      }
+    },
+    "random_forest": {
+      "name": "RandomForest",
+      "accuracy": 0.5018315018315018,
+      "precision": 0.5,
+      "recall": 0.625,
+      "f1": 0.5555555555555556,
+      "confusion_matrix": [
+        [
+          52,
+          85
+        ],
+        [
+          51,
+          85
+        ]
+      ],
+      "params": {
+        "n_estimators": "500",
+        "max_depth": "None",
+        "min_samples_leaf": "1"
+      }
+    },
+    "gradient_boosting": {
+      "name": "GradientBoosting",
+      "accuracy": 0.5128205128205128,
+      "precision": 0.5086705202312138,
+      "recall": 0.6470588235294118,
+      "f1": 0.56957928802589,
+      "confusion_matrix": [
+        [
+          52,
+          85
+        ],
+        [
+          48,
+          88
+        ]
+      ]
+    },
+    "feature_importance": {
+      "timing_iqr": 0.10699881613254547,
+      "timing_q10": 0.1050589308142662,
+      "timing_std": 0.10411706566810608,
+      "timing_range": 0.10363882780075073,
+      "timing_mean": 0.10218299180269241,
+      "timing_median": 0.10215482860803604,
+      "timing_q05": 0.09895101934671402,
+      "timing_q25": 0.09865491837263107,
+      "timing_skew": 0.09464693069458008,
+      "timing_min": 0.0835956558585167
+    }
+  },
+  "target_hw_parity": {
+    "dummy": {
+      "name": "Dummy",
+      "accuracy": 0.47985347985347987,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "confusion_matrix": [
+        [
+          131,
+          0
+        ],
+        [
+          142,
+          0
+        ]
+      ]
+    },
+    "xgboost": {
+      "name": "XGBoost",
+      "accuracy": 0.4945054945054945,
+      "precision": 0.5175438596491229,
+      "recall": 0.4154929577464789,
+      "f1": 0.4609375,
+      "confusion_matrix": [
+        [
+          76,
+          55
+        ],
+        [
+          83,
+          59
+        ]
+      ],
+      "params": {
+        "n_estimators": "300",
+        "max_depth": "5",
+        "learning_rate": "0.05",
+        "subsample": "0.8"
+      }
+    },
+    "random_forest": {
+      "name": "RandomForest",
+      "accuracy": 0.4981684981684982,
+      "precision": 0.5274725274725275,
+      "recall": 0.3380281690140845,
+      "f1": 0.41201716738197425,
+      "confusion_matrix": [
+        [
+          88,
+          43
+        ],
+        [
+          94,
+          48
+        ]
+      ],
+      "params": {
+        "n_estimators": "200",
+        "max_depth": "5",
+        "min_samples_leaf": "5"
+      }
+    },
+    "gradient_boosting": {
+      "name": "GradientBoosting",
+      "accuracy": 0.4981684981684982,
+      "precision": 0.5233644859813084,
+      "recall": 0.39436619718309857,
+      "f1": 0.4497991967871486,
+      "confusion_matrix": [
+        [
+          80,
+          51
+        ],
+        [
+          86,
+          56
+        ]
+      ]
+    },
+    "feature_importance": {
+      "timing_q10": 0.10908235609531403,
+      "timing_q05": 0.1079288050532341,
+      "timing_std": 0.10658267140388489,
+      "timing_iqr": 0.10474130511283875,
+      "timing_median": 0.0999000072479248,
+      "timing_mean": 0.09950926899909973,
+      "timing_skew": 0.09896188229322433,
+      "timing_range": 0.09874888509511948,
+      "timing_q25": 0.09818176180124283,
+      "timing_min": 0.07636301964521408
+    }
+  }
+}

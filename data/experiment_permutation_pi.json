@@ -1,0 +1,38 @@
+{
+  "target_rejection": {
+    "real_acc": 0.5466666666666666,
+    "majority": 0.5066666666666667,
+    "perm_p": 0.052947052947052944,
+    "perm_mean": 0.5008966666666668,
+    "perm_std": 0.027629018360331867,
+    "perm_95": 0.5466666666666666,
+    "perm_99": 0.5633333333333334,
+    "perceived_info_bits": -0.011837575825276447,
+    "label_entropy_bits": 0.999871756640849,
+    "model_cross_entropy_bits": 1.0117093324661255
+  },
+  "target_msg_hw_parity": {
+    "real_acc": 0.52,
+    "majority": 0.5033333333333333,
+    "perm_p": 0.24775224775224775,
+    "perm_mean": 0.4993666666666667,
+    "perm_std": 0.027357286252680676,
+    "perm_95": 0.5433333333333333,
+    "perm_99": 0.56,
+    "perceived_info_bits": -0.02564608333590057,
+    "label_entropy_bits": 0.9999679398727176,
+    "model_cross_entropy_bits": 1.0256140232086182
+  },
+  "target_sk_lsb": {
+    "real_acc": 0.51,
+    "majority": 0.56,
+    "perm_p": 0.42957042957042957,
+    "perm_mean": 0.5038166666666667,
+    "perm_std": 0.029973687534977148,
+    "perm_95": 0.5533333333333333,
+    "perm_99": 0.58,
+    "perceived_info_bits": -0.027237677905141644,
+    "label_entropy_bits": 0.9895875212220556,
+    "model_cross_entropy_bits": 1.0168251991271973
+  }
+}
