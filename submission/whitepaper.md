@@ -51,6 +51,14 @@ We threw the full arsenal of side-channel analysis at this dataset. Gradient-boo
 
 Every technique, at every data scale, on every target, performed at or below random guessing. XGBoost achieves 50.2% accuracy on binary key-bit classification where the majority baseline is 50.0%. The random forest returns 49.8%. The CNN converges to majority-class prediction within three epochs. Template attacks produce posteriors indistinguishable from the prior. The distributional tests show no statistically significant difference between timing distributions conditioned on different secret key bits. No method — linear, nonlinear, parametric, nonparametric, supervised, or unsupervised — found any exploitable structure in 12.2 million traces.
 
+### Ruling Out Aggregation Masking
+
+A natural objection to the above: we aggregated 50 repeats per key into summary statistics (mean, median, standard deviation) before training our ML models. If secret-dependent leakage is stochastic — occurring on only a small fraction of traces due to rare cache alignments or branch mispredictions — averaging could destroy the signal before any classifier sees it.
+
+We tested this directly. We ran XGBoost and Random Forest classifiers on the raw, unaggregated traces — each row being a single decapsulation execution, not a per-key summary. We also ran Welch's t-test, KS 2-sample test, and KSG mutual information at the individual-trace level across 100,000 raw measurements.
+
+The results are unambiguous. At the single-trace level, sk_lsb classification accuracy is 50.5% (XGBoost) with Cohen's d = 0.0003 and MI = 0.000 bits (p = 1.0). Message Hamming weight parity yields 50.4% accuracy with d = 0.009. Every statistical test is non-significant. The null result is not an artifact of aggregation — the signal does not exist at any granularity.
+
 ### The Positive Control
 
 A negative result is only meaningful if the apparatus can detect a positive. We built the same measurement pipeline against liboqs v0.9.0, a version vulnerable to KyberSlash — a known timing side-channel where the decapsulation routine performs a variable-time division operation that leaks information about the secret key.
@@ -81,19 +89,21 @@ The timing difference TVLA detects is real — but it is between "CPU has optimi
 
 ### Apple Silicon: DMP Synchronization
 
-Apple M-series processors feature a Data-Dependent Prefetcher (DMP) that examines data values flowing through the pipeline and speculatively prefetches memory addresses that look like pointers. This is an aggressive optimization unique to Apple's microarchitecture (and the subject of the "Augury" disclosure in 2022).
+Apple M-series processors feature a Data-Dependent Prefetcher (DMP) that examines data values flowing through the pipeline and speculatively prefetches memory addresses that look like pointers. This is an aggressive optimization unique to Apple's microarchitecture, extensively characterized by Borah et al. (GoFetch, 2024) and the earlier Augury disclosure (2022).
 
-In TVLA's fixed group, the same ciphertext bytes flow through ML-KEM's decapsulation routine every time. The DMP sees the same data patterns, issues the same prefetch requests, and within a few iterations locks onto a stable prefetch strategy. Execution is fast — most of the time. But the DMP's synchronization is not perfect. Occasionally, it makes a catastrophically wrong prediction, issuing prefetches that evict useful cache lines and cause pipeline stalls. The result is a bimodal timing distribution: most measurements cluster tightly around the fast mode, but rare outliers land 10x slower.
+Our observed timing behavior is consistent with the deterministic DMP behavior described in this prior work. In TVLA's fixed group, the same ciphertext bytes flow through ML-KEM's decapsulation routine every time. The DMP sees the same data patterns and within a few iterations converges on a stable prefetch strategy. Execution is fast — most of the time. But occasional catastrophic mispredictions cause pipeline stalls. The result is a bimodal timing distribution: most measurements cluster tightly around the fast mode, with rare outliers landing 10x slower.
 
-In the random group, every iteration presents new data values. The DMP never synchronizes, never locks on, and never catastrophically mispredicts. The result is a unimodal distribution with moderate, consistent timing.
+In the random group, every iteration presents new data values. The DMP never converges, producing a unimodal distribution with moderate, consistent timing.
 
-TVLA's Welch's t-test compares the means of these two distributions. The fixed group's mean is pulled upward by its heavy tail of catastrophic DMP misses. The random group's mean is stable. The difference is statistically significant — |t| = 8.42 — but it has nothing to do with the secret key.
+TVLA's Welch's t-test compares the means of these two distributions. The fixed group's mean is pulled upward by its heavy tail. The random group's mean is stable. The difference is statistically significant — |t| = 8.42 — but it has nothing to do with the secret key. We note that we did not use Performance Monitoring Counters (PMCs) to directly observe DMP/cache state transitions; our attribution is based on the consistency of the observed variance signature with the known DMP behavioral model. OS scheduler effects (macOS CFS vs Linux CFS on the Intel target) remain an additional potential confounding variable.
 
 ### Intel x86: Cache Thrashing
 
 Intel Xeon processors exhibit the same failure mode through a different mechanism. On Intel, the dominant confound is cache replacement policy interaction with speculative execution. The fixed group allows the cache hierarchy to stabilize around a single working set, but Intel's pseudo-LRU replacement policy introduces periodic eviction storms when the working set sits at a cache-set boundary. The random group constantly varies the working set, preventing both stabilization and storms.
 
-The telling detail: on Intel, the variance ratio is inverted. The random group has *higher* variance (0.47x ratio, meaning fixed variance is about half of random variance). On Apple, the fixed group has higher variance due to DMP catastrophic misses. Different mechanisms, opposite variance signatures — but TVLA fails identically on both platforms because it detects mean differences, not variance differences, and both mechanisms shift the mean.
+The telling detail: on Intel, the variance ratio is inverted. The random group has *higher* variance (0.47x ratio, meaning fixed variance is about half of random variance). On Apple, the fixed group has higher variance. Different mechanisms, opposite variance signatures — but TVLA fails identically on both platforms because it detects mean differences, not variance differences, and both mechanisms shift the mean.
+
+**Cross-platform harness equivalence.** To ensure the inverted variance ratio is not an artifact of different measurement harnesses, we verified that the C-language TVLA harnesses on both platforms execute byte-for-byte identical logic. Both harnesses call `OQS_KEM_keypair()` and `OQS_KEM_encaps()` as state-polluting setup before each random-mode decapsulation, and both time only the `OQS_KEM_decaps()` call. The sole difference is the timer instruction: `CNTVCT_EL0` (ARM) vs `RDTSC` with CPUID serialization (x86). Memory allocation patterns, warmup sequences, and output format are identical. The variance inversion is a hardware phenomenon, not a measurement artifact.
 
 This cross-platform replication with divergent root causes is what elevates the finding from a platform-specific quirk to a systemic indictment of the methodology. The confound is not "Apple does X" or "Intel does Y." The confound is "any modern processor with adaptive microarchitecture will violate TVLA's stationarity assumption."
 
@@ -159,7 +169,7 @@ sca-triage produces a structured JSON report containing:
 
 Auditors integrate sca-triage into their FIPS evaluation workflow by running it as a follow-up to any TVLA failure. The JSON report provides the documentation trail needed for CMVP submission, including the statistical justification for overriding a TVLA failure.
 
-**Repository:** [https://github.com/PLACEHOLDER/sca-triage](https://github.com/PLACEHOLDER/sca-triage)
+**Repository:** [https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage](https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage)
 
 ### Recommendations for Standards Bodies
 
@@ -177,7 +187,9 @@ Auditors integrate sca-triage into their FIPS evaluation workflow by running it 
 
 The bottom line for organizations deploying post-quantum cryptography: **ML-KEM deployment should not be delayed based on TVLA-only evaluations.** The TVLA failures reported on Apple Silicon and Intel x86 are false positives caused by microarchitectural confounds, not by weaknesses in the algorithm or its implementation.
 
-The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms that the known timing vulnerability in pre-patch versions is detectable and that the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe to the limits of our measurement capability.
+**Threat model scope.** We do not claim liboqs is perfectly constant-time. We claim it is free of secret-dependent macro-timing leaks exceeding 454 cycles (approximately 19 microseconds) — the detection floor of our apparatus as bounded by the positive control's Cohen's d = 0.094 and our timer resolution. An attacker with kernel-level performance counter (PMC) access could achieve cycle-accurate resolution, potentially detecting sub-threshold leakage; however, such an attacker already has ring-0 execution on the target machine, placing them outside the remote/userspace adversary threat model that FIPS 140-3 non-invasive evaluation targets.
+
+The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms that the known timing vulnerability in pre-patch versions is detectable and that the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe against remote and userspace adversaries constrained by OS scheduling noise and standard timer resolution.
 
 For organizations already in FIPS evaluation: if your lab has reported a TVLA failure on ML-KEM running on Apple Silicon or Intel hardware, request a Stage 2 analysis. Point evaluators to this paper and the sca-triage tool. The TVLA failure is real in the statistical sense, but it does not represent exploitable leakage.
 

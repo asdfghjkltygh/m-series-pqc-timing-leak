@@ -1,0 +1,102 @@
+{
+  "n_raw_traces": 100000,
+  "analysis": "raw_unaggregated_traces",
+  "targets": {
+    "sk_lsb": {
+      "xgboost_raw": {
+        "acc": 50.51,
+        "baseline": 50.1,
+        "lift": 0.41
+      },
+      "random_forest_raw": {
+        "acc": 50.18,
+        "baseline": 50.1,
+        "lift": 0.08
+      },
+      "welch_ttest": {
+        "t_stat": 0.053,
+        "p_value": 0.95775,
+        "cohens_d": 0.000335,
+        "n0": 49900,
+        "n1": 50100
+      },
+      "ks_test": {
+        "ks_stat": 0.00773,
+        "p_value": 0.10027
+      },
+      "ksg_mi": {
+        "mi_bits": 0.0,
+        "p_value": 1.0
+      },
+      "aggregated_prior": {
+        "xgb_acc": 52.0,
+        "baseline": 50.0,
+        "lift": 2.0
+      }
+    },
+    "msg_hw_parity": {
+      "xgboost_raw": {
+        "acc": 50.44,
+        "baseline": 51.5,
+        "lift": -1.06
+      },
+      "random_forest_raw": {
+        "acc": 51.75,
+        "baseline": 51.5,
+        "lift": 0.25
+      },
+      "welch_ttest": {
+        "t_stat": 1.421,
+        "p_value": 0.15533,
+        "cohens_d": 0.009122,
+        "n0": 48500,
+        "n1": 51500
+      },
+      "ks_test": {
+        "ks_stat": 0.004878,
+        "p_value": 0.59026
+      },
+      "ksg_mi": {
+        "mi_bits": 0.0,
+        "p_value": 1.0
+      },
+      "aggregated_prior": {
+        "xgb_acc": 52.0,
+        "baseline": 50.0,
+        "lift": 2.0
+      }
+    },
+    "valid_ct": {
+      "xgboost_raw": {
+        "acc": 50.24,
+        "baseline": 50.15,
+        "lift": 0.1
+      },
+      "random_forest_raw": {
+        "acc": 50.62,
+        "baseline": 50.15,
+        "lift": 0.47
+      },
+      "welch_ttest": {
+        "t_stat": -0.5757,
+        "p_value": 0.56483,
+        "cohens_d": -0.003643,
+        "n0": 49850,
+        "n1": 50150
+      },
+      "ks_test": {
+        "ks_stat": 0.010343,
+        "p_value": 0.0094413
+      },
+      "ksg_mi": {
+        "mi_bits": 0.0,
+        "p_value": 1.0
+      },
+      "aggregated_prior": {
+        "xgb_acc": 100.0,
+        "baseline": 50.0,
+        "lift": 50.0
+      }
+    }
+  }
+}
