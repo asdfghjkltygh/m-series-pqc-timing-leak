@@ -1,6 +1,7 @@
 services:
   run-all-experiments:
     build: .
+    tty: true
     volumes:
       - ./data:/workspace/data
       - ./figures:/workspace/figures
