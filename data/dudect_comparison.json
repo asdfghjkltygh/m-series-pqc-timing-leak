@@ -1,0 +1,90 @@
+{
+  "patched_v0150": {
+    "dudect": {
+      "method": "streaming Welch's t-test (dudect algorithm)",
+      "abs_t": 8.42,
+      "verdict": "NON-CONSTANT-TIME",
+      "progressive_trace": [
+        {
+          "n": 920000,
+          "t": 8.4215
+        },
+        {
+          "n": 940000,
+          "t": 8.4403
+        },
+        {
+          "n": 960000,
+          "t": 8.4463
+        },
+        {
+          "n": 980000,
+          "t": 8.394
+        },
+        {
+          "n": 1000000,
+          "t": 8.4247
+        }
+      ]
+    },
+    "tvla": {
+      "method": "Welch's t-test (ISO 17825 TVLA)",
+      "abs_t": 8.42,
+      "p_value": 3.6261342215792886e-17,
+      "verdict": "FAIL (leakage)"
+    },
+    "sca_triage": {
+      "stage1": {
+        "abs_t": 8.42,
+        "result": "FAIL"
+      },
+      "stage2": {
+        "sk_lsb": {
+          "t": 0.59,
+          "p": 0.553
+        },
+        "msg_hw_parity": {
+          "t": 0.84,
+          "p": 0.402
+        },
+        "result": "all non-significant"
+      },
+      "stage3": {
+        "mi_bits": 0.0,
+        "p": 1.0
+      },
+      "verdict": "FALSE POSITIVE"
+    },
+    "n_fixed": 500000,
+    "n_random": 500000,
+    "data_source": "tvla_traces.npz"
+  },
+  "vulnerable_v090": {
+    "dudect": {
+      "method": "streaming Welch t-test on raw traces (sk_lsb split)",
+      "abs_t": 1.04,
+      "n_class0": 13200,
+      "n_class1": 11800,
+      "verdict": "underpowered"
+    },
+    "tvla": {
+      "method": "Welch t-test on raw traces (sk_lsb split)",
+      "abs_t": 1.04,
+      "p_value": 0.2970665879097492,
+      "verdict": "underpowered"
+    },
+    "sca_triage": {
+      "stage1_abs_t": 1.04,
+      "stage2_sk_lsb_t": 1.02,
+      "stage2_sk_lsb_p": 0.3081,
+      "stage2_msg_hw_t": 0.95,
+      "stage2_msg_hw_p": 0.3409,
+      "xgb_accuracy": 0.566,
+      "xgb_exploitable": true,
+      "verdict": "REAL LEAKAGE",
+      "note": "XGBoost achieves 56.6% on sk_lsb (chance=52.8%), confirming exploitable timing dependence on secret key bits. With only 25k traces the t-test is underpowered, but the ML classifier detects the leak."
+    },
+    "n_traces": 25000,
+    "n_keys": 500
+  }
+}

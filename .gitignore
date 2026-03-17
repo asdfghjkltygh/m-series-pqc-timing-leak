@@ -1,19 +1,19 @@
 # Compiled binaries
-src/keygen_helper
-src/keygen_helper_v2
-src/keygen_helper_v3
-src/keygen_helper_vuln
-src/timing_harness
-src/timing_harness_v2
-src/timing_harness_vuln
-src/tvla_harness
-src/timer_profile
-x86-tvla-control/tvla_harness_x86
-x86-tvla-control/timer_profile_x86
-x86-tvla-control/liboqs-src/
-x86-tvla-control/liboqs-build/
-x86-tvla-control/liboqs-install/
-x86-tvla-control/*.npz
+harnesses/keygen_helper
+harnesses/keygen_helper_v2
+harnesses/keygen_helper_v3
+harnesses/keygen_helper_vuln
+harnesses/timing_harness
+harnesses/timing_harness_v2
+harnesses/timing_harness_vuln
+harnesses/tvla_harness
+harnesses/timer_profile
+x86-replication/tvla_harness_x86
+x86-replication/timer_profile_x86
+x86-replication/liboqs-src/
+x86-replication/liboqs-build/
+x86-replication/liboqs-install/
+x86-replication/*.npz
 
 # Vulnerable liboqs build artifacts
 liboqs-vulnerable/
