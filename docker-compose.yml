@@ -1,0 +1,6 @@
+services:
+  run-all-experiments:
+    build: .
+    volumes:
+      - ./data:/workspace/data
+      - ./figures:/workspace/figures

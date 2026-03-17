@@ -1,12 +1,33 @@
 # Reproduce Core Results
 
-## Prerequisites
+## 1-Click Docker Reproduction (Recommended)
+
+No host dependencies required. Docker builds liboqs, compiles harnesses, installs sca-triage, and runs all experiments:
+
+```bash
+docker-compose up --build run-all-experiments
+```
+
+Results are written to `data/` and `figures/` via volume mount. Total runtime: ~5 minutes.
+
+To run a single experiment interactively:
+
+```bash
+docker-compose run --build run-all-experiments bash
+python scripts/dudect_comparison.py
+```
+
+---
+
+## Manual Reproduction
+
+### Prerequisites
 
 - Python 3.10+
 - pip
 - For harness compilation: a C compiler and liboqs v0.15.0 installed
 
-## 1. Install sca-triage
+### 1. Install sca-triage
 
 ```bash
 cd sca-triage
@@ -14,7 +35,7 @@ pip install -e .
 cd ..
 ```
 
-## 2. Reproduce Key Experiments (pre-collected data)
+### 2. Reproduce Key Experiments (pre-collected data)
 
 These scripts use pre-collected timing data in `data/`. Large CSV files are gitignored; contact the authors for full datasets.
 
@@ -42,7 +63,7 @@ python scripts/phase8_ml_detection_floor.py
 ```
 **Expected:** XGBoost floor at d ≈ 0.85. T-test floor at d = 0.398.
 
-## 3. Compile and Run Harnesses (requires hardware)
+### 3. Compile and Run Harnesses (requires hardware)
 
 ### Apple Silicon
 ```bash
@@ -64,7 +85,7 @@ python tvla_analysis_x86.py
 cd ..
 ```
 
-## 4. Data Access
+### 4. Data Access
 
 Large trace files (>1MB) are gitignored. Available datasets:
 - `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces) — included in repo
@@ -72,7 +93,7 @@ Large trace files (>1MB) are gitignored. Available datasets:
 - `data/raw_timing_traces_v4_vertical.csv` (25MB) — contact authors
 - Full 12.2M trace dataset — contact authors
 
-## Expected Runtimes
+### Expected Runtimes
 
 | Script | Runtime | Hardware |
 |--------|---------|----------|
