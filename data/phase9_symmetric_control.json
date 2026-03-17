@@ -1,0 +1,33 @@
+{
+  "experiment": "symmetric_harness_control",
+  "platform": "apple_silicon",
+  "num_traces_per_mode": 50000,
+  "liboqs_version": "0.15.0",
+  "compiler_flags": "-O2 -march=native",
+  "asymmetric_harness": {
+    "t_statistic": 2.997326799204468,
+    "p_value": 0.002724608484110073,
+    "variance_ratio_fixed_over_random": 0.1574815179184089,
+    "fixed_mean": 523.0493,
+    "fixed_std": 65.4667337623468,
+    "random_mean": 525.42842,
+    "random_std": 164.97034314174044,
+    "fixed_n": 50000,
+    "random_n": 50000,
+    "passes_tvla": true
+  },
+  "symmetric_harness": {
+    "t_statistic": 62.491630942337665,
+    "p_value": 0.0,
+    "variance_ratio_fixed_over_random": 7.7088629166454234,
+    "fixed_mean": 594.4886,
+    "fixed_std": 208.19537927158711,
+    "random_mean": 532.64456,
+    "random_std": 74.98526403505157,
+    "fixed_n": 50000,
+    "random_n": 50000,
+    "passes_tvla": false
+  },
+  "verdict": "ARCHITECTURAL_CONFIRMED",
+  "interpretation": "The symmetric harness eliminates keygen+encaps cache pollution from the measurement loop. If TVLA still fails, the cause is architectural (DMP synchronization on repeated data). If TVLA passes, the original false positive was entirely due to harness asymmetry."
+}

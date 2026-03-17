@@ -7,6 +7,7 @@ harnesses/timing_harness
 harnesses/timing_harness_v2
 harnesses/timing_harness_vuln
 harnesses/tvla_harness
+harnesses/tvla_harness_symmetric
 harnesses/timer_profile
 x86-replication/tvla_harness_x86
 x86-replication/timer_profile_x86
