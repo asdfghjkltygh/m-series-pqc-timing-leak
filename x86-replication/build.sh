@@ -92,6 +92,21 @@ $CC -O2 -march=native \
 echo "  Built: $SCRIPT_DIR/tvla_harness_x86"
 
 # ---------------------------------------------------------------
+# Step 2b: Compile symmetric TVLA harness
+# ---------------------------------------------------------------
+echo ""
+echo "[Step 2b] Compiling symmetric TVLA harness..."
+
+$CC -O2 -march=native \
+    -I"$INSTALL_PREFIX/include" \
+    -o "$SCRIPT_DIR/tvla_harness_symmetric_x86" \
+    "$SCRIPT_DIR/tvla_harness_symmetric_x86.c" \
+    "$LIB_DIR/liboqs.a" \
+    -lssl -lcrypto -lm -lpthread
+
+echo "  Built: $SCRIPT_DIR/tvla_harness_symmetric_x86"
+
+# ---------------------------------------------------------------
 # Step 3: Compile timer profiler
 # ---------------------------------------------------------------
 echo ""
@@ -110,11 +125,6 @@ echo "  Built: $SCRIPT_DIR/timer_profile_x86"
 echo ""
 echo "=== Build complete ==="
 echo ""
-echo "To run the experiment:"
-echo "  python3 tvla_analysis_x86.py --traces 500000"
-echo ""
-echo "This will:"
-echo "  1. Profile the RDTSC timer"
-echo "  2. Collect 500K fixed + 500K random traces"
-echo "  3. Compute Welch's t-test and progressive analysis"
-echo "  4. Save results to tvla_x86_results.json"
+echo "To run experiments:"
+echo "  python3 tvla_analysis_x86.py --traces 500000    # Asymmetric TVLA"
+echo "  python3 ../scripts/intel_symmetric_control.py    # Symmetric control"

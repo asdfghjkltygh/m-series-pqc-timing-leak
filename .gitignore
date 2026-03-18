@@ -8,13 +8,20 @@ harnesses/timing_harness_v2
 harnesses/timing_harness_vuln
 harnesses/tvla_harness
 harnesses/tvla_harness_symmetric
+harnesses/tvla_interleaved_symmetric
+harnesses/tvla_interleaved_asymmetric
 harnesses/timer_profile
 x86-replication/tvla_harness_x86
+x86-replication/tvla_harness_symmetric_x86
+x86-replication/tvla_interleaved_symmetric_x86
+x86-replication/tvla_interleaved_asymmetric_x86
 x86-replication/timer_profile_x86
 x86-replication/liboqs-src/
 x86-replication/liboqs-build/
 x86-replication/liboqs-install/
 x86-replication/*.npz
+data/x86_fixed_traces.txt
+data/x86_random_traces.txt
 
 # Vulnerable liboqs build artifacts
 liboqs-vulnerable/
@@ -22,7 +29,9 @@ liboqs-vulnerable/
 # Large raw data files (>1MB)
 data/raw_timing_traces_v2.csv
 data/raw_timing_traces_v4_vertical.csv
-data/tvla_traces.npz
+data/apple_symmetric_interleaved.csv
+data/apple_asymmetric_interleaved.csv
+# data/tvla_traces.npz  # 854KB, included in repo for reproducibility
 
 # Intermediate split files
 data/train_v2_raw.csv

@@ -1,0 +1,21 @@
+{
+  "platform": "Linux-6.8.0-1043-aws-x86_64-with-glibc2.35",
+  "processor": "x86_64",
+  "architecture": "x86_64",
+  "n_fixed": 500000,
+  "n_random": 500000,
+  "fixed_mean": 74866.049458,
+  "fixed_std": 512143.3068636569,
+  "fixed_median": 56702.0,
+  "random_mean": 96972.450744,
+  "random_std": 1092897.2248655309,
+  "random_median": 57451.0,
+  "t_statistic": -12.951357887927486,
+  "abs_t": 12.951357887927486,
+  "p_value": 2.3316146995114137e-38,
+  "variance_ratio": 0.4686106755616207,
+  "leakage_detected": true,
+  "verdict": "PERSISTS_ON_X86",
+  "apple_t": 8.4247,
+  "apple_variance_ratio": 10.0
+}

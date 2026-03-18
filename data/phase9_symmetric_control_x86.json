@@ -1,0 +1,35 @@
+{
+  "platform": "intel_x86",
+  "experiment": "symmetric_control",
+  "liboqs_version": "0.15.0",
+  "compiler": "gcc -O2 -march=native",
+  "traces_per_mode": 50000,
+  "asymmetric": {
+    "t_statistic": 14.84,
+    "p_value": 1.0960905146397997e-49,
+    "variance_ratio": 88.13,
+    "fixed_mean": 189115.8,
+    "fixed_std": 1918884.6,
+    "random_mean": 61083.3,
+    "random_std": 204402.5,
+    "n_traces": 50000,
+    "levene_F": 221.34,
+    "levene_p": 5.214383779294926e-50,
+    "tvla_verdict": "FAIL"
+  },
+  "symmetric": {
+    "t_statistic": 15.09,
+    "p_value": 2.5098225947958475e-51,
+    "variance_ratio": 171964.07,
+    "fixed_mean": 193231.3,
+    "fixed_std": 1987746.2,
+    "random_mean": 59102.7,
+    "random_std": 4793.4,
+    "n_traces": 50000,
+    "levene_F": 229.82,
+    "levene_p": 7.461128560512422e-52,
+    "tvla_verdict": "FAIL"
+  },
+  "verdict": "BOTH_FAIL",
+  "interpretation": "Both harnesses fail TVLA. The Intel confound is ARCHITECTURAL \u2014 harness asymmetry is not the sole cause."
+}

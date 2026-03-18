@@ -1,0 +1,29 @@
+{
+  "experiment": "interleaved_control",
+  "symmetric": {
+    "n_pairs": 50000,
+    "fixed_mean": 183685.4,
+    "fixed_std": 1886110.9,
+    "random_mean": 204168.1,
+    "random_std": 2029707.5,
+    "welch_t": 1.65,
+    "paired_t": 1.65,
+    "winsorized_t": 18.55,
+    "mann_whitney_effect": 0.5468,
+    "welch_verdict": "PASS",
+    "paired_verdict": "PASS"
+  },
+  "asymmetric": {
+    "n_pairs": 50000,
+    "fixed_mean": 58171.7,
+    "fixed_std": 5013.9,
+    "random_mean": 58429.6,
+    "random_std": 5052.2,
+    "welch_t": 8.1,
+    "paired_t": 8.06,
+    "winsorized_t": 9.02,
+    "mann_whitney_effect": 0.4502,
+    "welch_verdict": "FAIL",
+    "paired_verdict": "FAIL"
+  }
+}

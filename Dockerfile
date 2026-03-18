@@ -33,6 +33,12 @@ RUN if [ "$(uname -m)" = "x86_64" ]; then \
             /usr/local/lib/liboqs.a \
             -lssl -lcrypto -lm -lpthread && \
         gcc -O2 -march=native \
+            -I/usr/local/include \
+            -o /workspace/x86-replication/tvla_harness_symmetric_x86 \
+            /workspace/x86-replication/tvla_harness_symmetric_x86.c \
+            /usr/local/lib/liboqs.a \
+            -lssl -lcrypto -lm -lpthread && \
+        gcc -O2 -march=native \
             -o /workspace/x86-replication/timer_profile_x86 \
             /workspace/x86-replication/timer_profile_x86.c \
             -lm; \
@@ -57,5 +63,8 @@ CMD ["bash", "-c", "\
     echo '' && \
     echo '=== ML detection floor ===' && \
     python scripts/phase8_ml_detection_floor.py && \
+    echo '' && \
+    echo '=== Positive control (KyberSlash) ===' && \
+    python scripts/analysis_positive_control.py && \
     echo '' && \
     echo '=== All experiments complete ==='"]

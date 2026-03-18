@@ -1,0 +1,44 @@
+{
+  "experiment": "interleaved_control",
+  "platform": "apple_silicon",
+  "num_traces_per_group": 500000,
+  "collection_method": "interleaved",
+  "liboqs_version": "0.15.0",
+  "compiler_flags": "-O2 -march=native",
+  "asymmetric_interleaved": {
+    "t_statistic": 0.99,
+    "p_value": 0.3214650890023128,
+    "variance_ratio": 0.0975,
+    "fixed_mean": 508.0,
+    "fixed_std": 1116.6,
+    "fixed_median": 494.0,
+    "random_mean": 513.3,
+    "random_std": 3576.0,
+    "random_median": 494.0,
+    "n_traces": 500000,
+    "levene_F": 0.9,
+    "levene_p": 0.34247751746790367,
+    "tvla_verdict": "PASS"
+  },
+  "symmetric_interleaved": {
+    "t_statistic": 0.58,
+    "p_value": 0.5620152856137524,
+    "variance_ratio": 0.9491,
+    "fixed_mean": 555.3,
+    "fixed_std": 3337.7,
+    "fixed_median": 495.0,
+    "random_mean": 551.4,
+    "random_std": 3426.1,
+    "random_median": 496.0,
+    "n_traces": 500000,
+    "levene_F": 0.42,
+    "levene_p": 0.5168404463081588,
+    "tvla_verdict": "PASS"
+  },
+  "verdict": "TEMPORAL_DRIFT_ONLY",
+  "intel_comparison": {
+    "asymmetric_interleaved_t": 8.1,
+    "symmetric_interleaved_t": 1.65,
+    "symmetric_interleaved_verdict": "PASS"
+  }
+}
