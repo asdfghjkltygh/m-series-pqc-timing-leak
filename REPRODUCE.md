@@ -37,7 +37,14 @@ cd ..
 
 ### 2. Reproduce Key Experiments (pre-collected data)
 
-These scripts use pre-collected timing data in `data/`. Large CSV files are gitignored; contact the authors for full datasets.
+These scripts use pre-collected timing data in `data/`. The following data files are included in the repo:
+
+- `data/tvla_traces.npz` (854KB) — Apple Silicon TVLA traces (fixed + random, asymmetric + symmetric)
+- `data/phase11_interleaved_control.json` — Apple Silicon interleaved control results
+- `data/intel_interleaved_results.json` — Intel x86 interleaved control results
+- `data/phase9_symmetric_control_x86.json` — Intel x86 sequential symmetric results
+
+Large raw CSV files (>1MB) are gitignored. To obtain them, contact the authors or regenerate from the harness binaries using the scripts below. The Docker container generates a small sample dataset automatically for pipeline validation.
 
 ### dudect vs TVLA vs sca-triage comparison (~10 seconds)
 ```bash
