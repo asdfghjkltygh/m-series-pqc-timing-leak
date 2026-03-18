@@ -11,7 +11,7 @@ We can make liboqs ML-KEM — the most widely integrated open-source PQC library
 
 The Test Vector Leakage Assessment (TVLA) — the mandatory side-channel test for ISO 17825 compliance — reports catastrophic leakage when run on liboqs ML-KEM-768: |t| = 62.49 on Apple Silicon and |t| = 6.70 on Intel x86 (using a symmetric test harness that eliminates the most obvious confound source — Section 3), far exceeding the |t| = 4.5 failure threshold. Taken at face value, these results block ML-KEM deployment across the entire US federal government and any organization requiring FIPS compliance.
 
-The leakage is not real. We spent months and 12.2 million traces proving it. The signal comes from a temporal-drift confound: sequential collection methodology — running all fixed-input measurements, then all random-input measurements — introduces systematic environmental differences between groups that TVLA misinterprets as leakage. Interleaved measurement — alternating fixed and random traces within a single collection run — is standard practice in hardware power analysis precisely to prevent low-frequency drift. It is widely ignored in software macro-timing evaluations. We quantify the catastrophic cost of this omission: when we interleave, TVLA passes on both platforms (|t| = 0.58 on Apple Silicon, |t| = 1.65 on Intel x86). In this paper we characterize the confound, prove non-exploitability through 150+ converging experiments, and release a practical triage tool.
+The leakage is not real. We spent months and 12.2 million traces proving it. The signal comes from a temporal-drift confound: sequential collection methodology — running all fixed-input measurements, then all random-input measurements — introduces systematic environmental differences between groups that TVLA misinterprets as leakage. Interleaved measurement — alternating fixed and random traces within a single collection run — is common practice in hardware power analysis precisely to prevent low-frequency drift. It is widely ignored in software macro-timing evaluations. We quantify the catastrophic cost of this omission: when we interleave, TVLA passes on both platforms (|t| = 0.58 on Apple Silicon, |t| = 1.65 on Intel x86). In this paper we characterize the confound, prove non-exploitability through 150+ converging experiments, and release a practical triage tool.
 
 ### Key Result: Sequential vs. Interleaved Collection
 
@@ -54,7 +54,7 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 **Apple Silicon M-series.** All measurements were collected on Apple M-series processors using the ARM performance counter CNTVCT_EL0 as the timing source. This counter operates at 24 MHz (~41.7 ns granularity) with 99.2% zero-tick measurement overhead. The 24 MHz resolution is *conservative* for our purposes — it reduces sensitivity to small effects, meaning both the TVLA failure signal (|t| = 62.49 on the symmetric harness) and the null pairwise result are robust to timer granularity. A higher-resolution timer would increase statistical power for both detection and non-detection. Traces were collected under controlled conditions with performance governor set to high-performance mode, thermal throttling monitored, and system load minimized.
 
-**Intel Xeon x86.** Intel measurements used RDTSC with CPUID serialization to ensure precise cycle-accurate timing. The CPUID instruction forces pipeline serialization before reading the timestamp counter, eliminating measurement artifacts from out-of-order execution. Measured overhead is approximately 1,778 cycles per serialized read. While this overhead exceeds the 454-cycle detection floor, it acts as a stationary noise source (constant across both fixed and random groups); our 50-repetition per-key aggregation suppresses it sufficiently to detect the targeted macro-timing effects. The same controlled conditions were applied: performance governor pinned, hyperthreading accounted for, system load minimized.
+**Intel Xeon x86.** Intel measurements used RDTSC with CPUID serialization to ensure precise cycle-accurate timing. The CPUID instruction forces pipeline serialization before reading the timestamp counter, eliminating measurement artifacts from out-of-order execution. Measured overhead is approximately 1,778 cycles per serialized read. This overhead is a constant additive bias that affects both fixed and random groups identically; it cancels in the Welch's t-test comparison and does not reduce sensitivity to *differences* between groups. The 454-cycle detection floor refers to the minimum detectable *difference* in decapsulation time, not the absolute timer resolution. The same controlled conditions were applied: performance governor pinned, hyperthreading accounted for, system load minimized.
 
 **Noise model and data collection.** For each platform, we collected traces across 500 distinct keys with 50 repetitions per key, yielding a total dataset of 12.2 million measurements across both platforms. Data collection was automated and checksummed to ensure reproducibility. The entire pipeline — from trace collection through analysis — is scripted and available in the supplementary repository.
 
@@ -80,7 +80,24 @@ We note that KyberSlash represents a relatively large vulnerability (variable-ti
 
 ## Section 3: The Root Cause
 
-If TVLA reports significant leakage and no attack can exploit it, the question is not "where is the leakage hiding?" but "what is TVLA actually detecting?" The answer is a temporal-drift confound arising from sequential data collection. TVLA implementations — including virtually every open-source PQC harness — collect all fixed-input measurements in one block, then all random-input measurements in a second block. System state (thermal conditions, OS scheduling, cache pressure, prefetcher history) drifts between blocks, creating systematic timing differences that correlate with group assignment rather than with cryptographic secrets. A secondary source — asymmetrical harness design that performs different pre-measurement work in fixed vs random modes — contributes on some platforms but is neither necessary nor sufficient for the confound.
+If TVLA reports significant leakage and no attack can exploit it, the question is not "where is the leakage hiding?" but "what is TVLA actually detecting?"
+
+### The Complete Picture
+
+We isolated two independent confound sources by varying two experimental dimensions — collection order (sequential vs. interleaved) and harness design (asymmetric vs. symmetric) — across both platforms. Each cell in the following table shows the Welch |t| statistic:
+
+|  | Sequential Asymmetric | Sequential Symmetric | Interleaved Asymmetric | Interleaved Symmetric |
+|--|---|---|---|---|
+| **Apple Silicon** | 3.00 (PASS) | 62.49 (FAIL) | 0.99 (PASS) | 0.58 (PASS) |
+| **Intel x86** | 5.35 (FAIL) | 6.70 (FAIL) | 8.10 (FAIL) | 1.65 (PASS) |
+
+Reading across columns isolates the effect of each fix:
+- **Symmetric harness** (columns 1→2): Eliminates cache pollution but reveals temporal drift. On Apple, |t| *increases* from 3.00 to 62.49 because cache pollution was masking drift.
+- **Interleaved collection** (columns 2→4): Eliminates temporal drift. On both platforms, |t| drops to non-significant (0.58 and 1.65).
+- **Intel asymmetric interleaved** (column 3): Still fails (|t| = 8.10), confirming that live keygen+encaps cache pollution is a real secondary confound on Intel — independent of temporal drift.
+- **Both fixes combined** (column 4): Symmetric + interleaved passes on both platforms. This is the definitive result.
+
+The remainder of this section details the two confound sources and the per-platform evidence behind each cell.
 
 ### The Harness Asymmetry Problem
 
@@ -114,7 +131,9 @@ We initially attributed this symmetric-harness failure to Apple's Data-Dependent
 | Asymmetric | 0.99 | 0.10x | 508.0 | 513.3 | **PASS** |
 | Symmetric | 0.58 | 0.95x | 555.3 | 551.4 | **PASS** |
 
-With interleaved collection, the symmetric harness produces |t| = 0.58 — essentially zero signal — and a variance ratio of 0.95x (effectively 1:1). The t-statistic drops from 62.49 to 0.58 — a 100x reduction — solely by eliminating temporal drift. The DMP, branch predictor, and all other microarchitectural features are identical between sequential and interleaved runs; the only difference is whether the two groups occupy separate time windows or share the same one.
+With interleaved collection, the symmetric harness produces |t| = 0.58 — essentially zero signal — and a variance ratio of 0.95x (effectively 1:1). The t-statistic drops from 62.49 to 0.58 — a 100x reduction — solely by eliminating temporal drift.
+
+This result distinguishes between two competing hypotheses. If the confound were DMP-driven, it would persist under interleaved collection — the DMP responds to data *content* (whether values in the pipeline resemble pointers), not to when the measurement occurs relative to other measurements. A DMP that converges on repeated fixed inputs would do so whether the next measurement is another fixed input (sequential) or a random input (interleaved). The fact that interleaving eliminates the signal — with identical inputs and identical hardware — rules out any data-content-dependent mechanism. The confound must instead be temporal: environmental changes (thermal state, DVFS, scheduler pressure) that correlate with collection order, not with the data flowing through the CPU.
 
 Pairwise decomposition on the sequential symmetric data confirms the signal is not secret-dependent: every t-test grouped by actual secret-key properties (individual bits, byte values, Hamming weights) returns non-significant results. The temporal drift confound accounts for 100% of the TVLA signal.
 
@@ -160,19 +179,6 @@ The symmetric harness — with identical code paths and no keygen or encaps in t
 The symmetric interleaved harness passes with |t| = 1.65. The asymmetric interleaved harness still fails (|t| = 8.10), confirming that harness asymmetry — live keygen+encaps polluting cache state before random measurements — is a real but secondary confound on Intel. When both temporal drift *and* harness asymmetry are eliminated (symmetric interleaved), TVLA passes.
 
 The variance ratio difference between platforms in sequential mode (Intel 0.43x vs. Apple 7.71x) initially suggested distinct architectural mechanisms. The interleaved results reframe this: both platforms show near-unity variance ratios when temporal drift is removed, indicating the sequential variance signatures were artifacts of how system state drifted during each platform's specific collection window, not of fundamentally different hardware responses to data content.
-
-**Cross-platform 2×2 matrix.** The following table isolates the two confound sources — temporal drift (sequential vs. interleaved) and cache pollution (asymmetric vs. symmetric) — across both platforms. Each cell shows the Welch |t| statistic:
-
-|  | Sequential Asymmetric | Sequential Symmetric | Interleaved Asymmetric | Interleaved Symmetric |
-|--|---|---|---|---|
-| **Apple Silicon** | 3.00 (PASS) | 62.49 (FAIL) | 0.99 (PASS) | 0.58 (PASS) |
-| **Intel x86** | 5.35 (FAIL) | 6.70 (FAIL) | 8.10 (FAIL) | 1.65 (PASS) |
-
-Reading across columns isolates the effect of each fix:
-- **Symmetric harness** (columns 1→2): Eliminates cache pollution but reveals temporal drift. On Apple, |t| *increases* from 3.00 to 62.49 because cache pollution was masking drift.
-- **Interleaved collection** (columns 2→4): Eliminates temporal drift. On both platforms, |t| drops to non-significant (0.58 and 1.65).
-- **Intel asymmetric interleaved** (column 3): Still fails (|t| = 8.10), confirming that live keygen+encaps cache pollution is a real secondary confound on Intel — independent of temporal drift.
-- **Both fixes combined** (column 4): Symmetric + interleaved passes on both platforms. This is the definitive result.
 
 The sequential symmetric results remain valuable as a diagnostic: they show the confound's magnitude when temporal drift is present. Evaluation labs using the standard asymmetric harness may see *attenuated* false positives — the underlying temporal drift confound is larger than what their results suggest.
 
@@ -342,7 +348,7 @@ Each limitation below includes what it would take to close the gap and why it do
 
 **Compiler optimization levels.** The sequential symmetric harness fails TVLA at all five tested optimization levels (-O0 through -O3 and -Os). Initial -Os results showed run-to-run variability (|t| ranging from 1.73 to 11.47); Levene's test confirms the variance confound is present even when Welch's t happens to fall below threshold. Binary analysis confirms identical instruction counts across flags. The confound is not compiler-dependent. See Section 3.
 
-**ML-KEM only.** Cross-algorithm validation (ML-DSA, SLH-DSA, BIKE, HQC) has not been performed. *To close:* replicate the symmetric harness experiment with each algorithm's decapsulation/signing entry point. *Why the current findings stand:* the confound is architectural (fixed-vs-random methodology on adaptive hardware), not algorithm-specific — but empirical confirmation across algorithms would strengthen the generalization claim.
+**ML-KEM only.** Cross-algorithm validation (ML-DSA, SLH-DSA, BIKE, HQC) has not been performed. *To close:* replicate the symmetric harness experiment with each algorithm's decapsulation/signing entry point. *Why the current findings stand:* the confound is methodological (sequential collection introducing temporal drift), not algorithm-specific — but empirical confirmation across algorithms would strengthen the generalization claim.
 
 **No NTT-internal intermediate targets.** We tested key-level and message-level properties but not butterfly outputs, Montgomery reduction intermediates, or CBD sampling. *To close:* instrument liboqs NTT internals and collect per-operation traces. *Why the current findings stand:* our raw-trace analysis bounds any per-execution timing signal at d < 0.001, constraining intermediate-value leakage — any NTT-internal dependency would need to propagate through hundreds of operations to affect macro-timing.
 

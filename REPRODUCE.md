@@ -95,8 +95,17 @@ python3 scripts/phase9_symmetric_harness_control.py
 # Compiler flag sweep (~30 min)
 python3 scripts/phase10_compiler_flags.py
 ```
-**Expected (symmetric control):** Symmetric |t|=62.49 (FAIL), asymmetric |t|=3.00 (PASS). Confirms architectural confound.
+**Expected (symmetric control):** Symmetric |t|=62.49 (FAIL), asymmetric |t|=3.00 (PASS).
 **Expected (compiler flags):** All 5 flags exhibit the confound. -O0, -O1, -O2, -O3 fail outright. -Os shows run-to-run variability (|t| ranges from 1.73 to 11.47); Levene's test confirms variance asymmetry is always present.
+
+### Interleaved Control — Temporal Drift Isolation (Apple Silicon)
+```bash
+# Compile and run interleaved harnesses (500K traces per group, ~1 hour)
+python3 scripts/phase11_interleaved_control.py
+```
+**Expected:** Symmetric interleaved |t|=0.58 (PASS), asymmetric interleaved |t|=0.99 (PASS). This is the paper's flagship result — the 100x attenuation from sequential |t|=62.49 to interleaved |t|=0.58 proves the confound is temporal drift, not architectural.
+
+Results saved to `data/phase11_interleaved_control.json`. Raw traces saved to `data/apple_symmetric_interleaved.csv` and `data/apple_asymmetric_interleaved.csv`.
 
 ### Intel x86
 ```bash
@@ -112,7 +121,27 @@ python3 ../scripts/intel_symmetric_control.py
 cd ..
 ```
 **Expected (asymmetric):** |t|=12.95, variance ratio 0.47x (FAIL).
-**Expected (symmetric control):** Both harnesses fail — asymmetric |t|=5.35, symmetric |t|=6.70. Confirms architectural confound.
+**Expected (symmetric control):** Both harnesses fail — asymmetric |t|=5.35, symmetric |t|=6.70.
+
+### Interleaved Control — Temporal Drift Isolation (Intel x86)
+```bash
+cd x86-replication
+
+# Compile interleaved harnesses
+gcc -O2 -o tvla_interleaved_symmetric_x86 tvla_interleaved_symmetric_x86.c \
+    -I./liboqs-install/include -L./liboqs-install/lib \
+    -loqs -lcrypto -lm -Wl,-rpath,./liboqs-install/lib
+gcc -O2 -o tvla_interleaved_asymmetric_x86 tvla_interleaved_asymmetric_x86.c \
+    -I./liboqs-install/include -L./liboqs-install/lib \
+    -loqs -lcrypto -lm -Wl,-rpath,./liboqs-install/lib
+
+# Run (50K traces per group, ~15 min each)
+./tvla_interleaved_symmetric_x86 50000 > interleaved_symmetric_traces.txt 2>sym_log.txt
+./tvla_interleaved_asymmetric_x86 50000 > interleaved_asymmetric_traces.txt 2>asym_log.txt
+
+cd ..
+```
+**Expected:** Symmetric interleaved |t|=1.65 (PASS), asymmetric interleaved |t|=8.10 (FAIL). Results in `data/intel_interleaved_results.json`.
 
 ### 4. Data Access
 
@@ -133,7 +162,10 @@ Large trace files (>1MB) are gitignored. Available datasets:
 | analysis_positive_control.py | ~2min | Any |
 | phase9_symmetric_harness_control.py | ~30min | Apple Silicon |
 | phase10_compiler_flags.py | ~30min | Apple Silicon |
+| phase11_interleaved_control.py | ~1hr | Apple Silicon |
 | intel_symmetric_control.py | ~30min | Intel x86 |
+| tvla_interleaved_symmetric_x86 (50K) | ~15min | Intel x86 |
+| tvla_interleaved_asymmetric_x86 (50K) | ~15min | Intel x86 |
 | tvla_analysis_x86.py (500K traces) | ~1-2hr | Intel x86 |
 | tvla_harness (10K traces) | ~5min | Apple Silicon |
 | tvla_harness_x86 (10K traces) | ~5min | Intel x86 |

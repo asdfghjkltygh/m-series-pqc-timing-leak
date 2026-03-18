@@ -41,7 +41,19 @@ RUN if [ "$(uname -m)" = "x86_64" ]; then \
         gcc -O2 -march=native \
             -o /workspace/x86-replication/timer_profile_x86 \
             /workspace/x86-replication/timer_profile_x86.c \
-            -lm; \
+            -lm && \
+        gcc -O2 -march=native \
+            -I/usr/local/include \
+            -o /workspace/x86-replication/tvla_interleaved_symmetric_x86 \
+            /workspace/x86-replication/tvla_interleaved_symmetric_x86.c \
+            /usr/local/lib/liboqs.a \
+            -lssl -lcrypto -lm -lpthread && \
+        gcc -O2 -march=native \
+            -I/usr/local/include \
+            -o /workspace/x86-replication/tvla_interleaved_asymmetric_x86 \
+            /workspace/x86-replication/tvla_interleaved_asymmetric_x86.c \
+            /usr/local/lib/liboqs.a \
+            -lssl -lcrypto -lm -lpthread; \
     fi
 
 # Install sca-triage and analysis dependencies
