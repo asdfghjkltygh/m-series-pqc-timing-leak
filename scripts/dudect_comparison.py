@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-dudect_comparison.py — Head-to-head comparison of dudect, TVLA, and sca-triage.
+dudect_comparison.py — Why the Welch's t-test alone is insufficient.
 
-dudect (Reparaz et al., DATE 2017) applies Welch's t-test to timing
-measurements of cryptographic functions using a fixed-vs-random input
-strategy.  This is mathematically identical to TVLA Stage 1 per ISO 17825.
+Both TVLA (ISO 17825) and dudect (Reparaz et al., DATE 2017) use Welch's
+t-test as their core statistical test.  dudect's *measurement loop*
+interleaves fixed and random inputs by design, preventing temporal drift.
+However, FIPS evaluation labs running ISO 17825 typically collect
+sequentially, not with dudect's interleaved loop.
 
-This script demonstrates that dudect and TVLA reach the same (incorrect)
-conclusion on liboqs v0.15.0 ML-KEM-768 decapsulation, while sca-triage's
-two additional stages correctly identify the failure as a false positive
-caused by execution-context confounds (OS scheduling, cache state) rather
-than secret-dependent leakage.
-
-When applied to the genuinely vulnerable v0.9.0 implementation, all three
-methods correctly flag real leakage.
+This script applies the shared Welch's t-test to sequentially-collected
+data — the scenario FIPS labs face — and shows that:
+  1. The t-test alone cannot distinguish temporal drift from real leakage.
+  2. sca-triage's pairwise decomposition and MI stages correctly triage
+     the false positive.
+  3. On genuinely vulnerable code (v0.9.0), sca-triage detects real leakage
+     via cross-key ML classification even when the t-test is underpowered.
 """
 
 import json
@@ -209,8 +210,9 @@ def run_vuln_analysis(df):
 def main():
     print()
     print("=" * 65)
-    print("  DUDECT vs TVLA vs SCA-TRIAGE: HEAD-TO-HEAD COMPARISON")
+    print("  WELCH'S T-TEST vs SCA-TRIAGE: DIAGNOSTIC COMPARISON")
     print("  Target: liboqs ML-KEM-768 decapsulation")
+    print("  (Welch's t-test is the shared core of both TVLA and dudect)")
     print("=" * 65)
     print()
 
@@ -224,16 +226,19 @@ def main():
     print(f"  Random:  {len(random):,} traces  (mean={random.mean():.1f}, std={random.std():.1f})")
     print()
 
-    # Panel A — dudect-style streaming t-test
-    print("Running dudect-style streaming Welch's t-test ...")
+    # Panel A — Streaming t-test (dudect's algorithm, applied to sequential data)
+    print("Running streaming Welch's t-test on sequential data ...")
+    print("  (Note: dudect's actual tool interleaves collection, preventing drift.")
+    print("   This applies the same statistical test to sequentially-collected data")
+    print("   — the scenario FIPS labs face under ISO 17825.)")
     dudect_t, dudect_trace = dudect_streaming_t(fixed, random)
     dudect_abs_t = round(abs(dudect_t), 2)
-    dudect_verdict = "NON-CONSTANT-TIME" if dudect_abs_t > 4.5 else "constant-time"
-    print(f"  dudect final |t| = {dudect_abs_t}  =>  {dudect_verdict}")
+    dudect_verdict = "FAIL" if dudect_abs_t > 4.5 else "PASS"
+    print(f"  Streaming |t| = {dudect_abs_t}  =>  {dudect_verdict}")
     print()
 
     # Panel B — TVLA (batch, identical test)
-    print("Running TVLA (ISO 17825) Welch's t-test ...")
+    print("Running TVLA (ISO 17825) batch Welch's t-test ...")
     tvla_t, tvla_p = welch_t_test(fixed, random)
     tvla_abs_t = round(abs(tvla_t), 2)
     tvla_verdict = "FAIL (leakage)" if tvla_abs_t > 4.5 else "PASS"
@@ -264,21 +269,24 @@ def main():
     print(border)
     print(f"{'Method':<22}| {'Test':<20}| {'Result':<10}| {'Verdict'}")
     print("-" * 22 + "|" + "-" * 20 + "|" + "-" * 10 + "|" + "-" * 13)
-    print(f"{'dudect':<22}| {'Welchs t-test':<20}| {'|t|=' + str(dudect_abs_t):<10}| {dudect_verdict}")
-    print(f"{'ISO 17825 TVLA':<22}| {'Welchs t-test':<20}| {'|t|=' + str(tvla_abs_t):<10}| {tvla_verdict}")
+    print(f"{'Welchs t (streaming)':<22}| {'Welchs t-test':<20}| {'|t|=' + str(dudect_abs_t):<10}| {dudect_verdict}")
+    print(f"{'Welchs t (batch)':<22}| {'Welchs t-test':<20}| {'|t|=' + str(tvla_abs_t):<10}| {tvla_verdict}")
     print(f"{'sca-triage Stage 1':<22}| {'Welchs t-test':<20}| {'|t|=' + str(sca_s1_t):<10}| FAIL (triggers Stage 2)")
     print(f"{'sca-triage Stage 2':<22}| {'Pairwise decomp.':<20}| {'all p>0.2':<10}| No secret dependence")
     print(f"{'sca-triage Stage 3':<22}| {'Permutation MI':<20}| {'0.000 bits':<10}| Zero information")
     print(f"{'sca-triage FINAL':<22}| {'Three-stage':<20}| {chr(0x2014):<10}| {sca_verdict}")
     print(border)
     print()
-    print("KEY INSIGHT: dudect and TVLA use the SAME test and reach the SAME")
-    print("(incorrect) conclusion. sca-triage adds two additional stages that")
-    print("distinguish execution-context confounds from real leakage.")
+    print("KEY INSIGHT: The Welch's t-test — whether applied in streaming mode")
+    print("(as dudect does) or in batch mode (as TVLA does) — cannot distinguish")
+    print("temporal drift from real leakage on sequentially-collected data.")
+    print("sca-triage's pairwise decomposition and MI stages provide the")
+    print("missing diagnostic.")
     print()
-    print("dudect tests whether an IMPLEMENTATION is constant-time.")
-    print("sca-triage evaluates whether the ISO 17825 TVLA PROTOCOL produces")
-    print("valid results and provides triage when it fails.")
+    print("Note: dudect's actual measurement loop interleaves by design,")
+    print("preventing drift at the collection stage. This comparison applies")
+    print("the shared statistical test to sequential data — the scenario FIPS")
+    print("evaluation labs face under ISO 17825.")
     print(border)
     print()
 
