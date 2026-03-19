@@ -24,7 +24,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KDTree
-from xgboost import XGBClassifier
+try:
+    from xgboost import XGBClassifier
+    HAS_XGBOOST = True
+except ImportError:
+    HAS_XGBOOST = False
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -155,22 +159,25 @@ def main():
     print("[3] RAW TRACE XGBOOST CLASSIFICATION")
     print("-" * 70)
     xgb_results = {}
-    for t in targets:
-        y = df[t].values
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_raw, y, test_size=0.2, stratify=y, random_state=RANDOM_STATE
-        )
-        clf = XGBClassifier(
-            n_estimators=100, max_depth=6, use_label_encoder=False,
-            eval_metric="logloss", verbosity=0, random_state=RANDOM_STATE
-        )
-        clf.fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        acc = accuracy_score(y_test, y_pred) * 100
-        baseline = max(y_test.mean(), 1 - y_test.mean()) * 100
-        lift = acc - baseline
-        xgb_results[t] = {"acc": round(acc, 2), "baseline": round(baseline, 2), "lift": round(lift, 2)}
-        print(f"  {t:18s}  acc={acc:5.1f}%  baseline={baseline:5.1f}%  lift={lift:+5.1f}%")
+    if not HAS_XGBOOST:
+        print("  XGBoost not available, skipping (install with: pip3 install xgboost, or use Docker).")
+    else:
+        for t in targets:
+            y = df[t].values
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_raw, y, test_size=0.2, stratify=y, random_state=RANDOM_STATE
+            )
+            clf = XGBClassifier(
+                n_estimators=100, max_depth=6, use_label_encoder=False,
+                eval_metric="logloss", verbosity=0, random_state=RANDOM_STATE
+            )
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
+            acc = accuracy_score(y_test, y_pred) * 100
+            baseline = max(y_test.mean(), 1 - y_test.mean()) * 100
+            lift = acc - baseline
+            xgb_results[t] = {"acc": round(acc, 2), "baseline": round(baseline, 2), "lift": round(lift, 2)}
+            print(f"  {t:18s}  acc={acc:5.1f}%  baseline={baseline:5.1f}%  lift={lift:+5.1f}%")
 
     # ------------------------------------------------------------------
     # 4. Raw trace Random Forest classification

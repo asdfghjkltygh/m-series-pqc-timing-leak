@@ -8,7 +8,7 @@ We release **sca-triage**, an open-source triage tool that distinguishes real si
 
 ## Quick Start
 
-**Prerequisites:** Python 3.10+ and pip. On macOS, if `python3 --version` fails, install via `brew install python` or download from [python.org](https://www.python.org/downloads/).
+**Prerequisites:** Python 3.10+ and pip. On macOS, install via `brew install python` or [python.org](https://www.python.org/downloads/). On Ubuntu/Debian: `sudo apt install python3 python3-pip python3-venv`.
 
 ```bash
 git clone https://github.com/asdfghjkltygh/m-series-pqc-timing-leak.git
