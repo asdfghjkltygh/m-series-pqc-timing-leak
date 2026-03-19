@@ -1,7 +1,10 @@
 # When TVLA Lies: How a Broken Standard Is Blocking Post-Quantum Crypto Deployment
 
-**Authors:** Saahil Shenoy
-**Date:** March 2026
+**Saahil Shenoy**
+Founding AI Scientist, Bedrock Data
+saahil@bedrockdata.ai
+
+March 2026
 
 ---
 

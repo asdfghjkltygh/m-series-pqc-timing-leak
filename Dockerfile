@@ -79,15 +79,7 @@ CMD ["bash", "-c", "\
     echo '=== Positive control (KyberSlash) ===' && \
     python scripts/analysis_positive_control.py && \
     echo '' && \
-    echo '=== Interleaved control data validation ===' && \
-    python -c \"import json; \
-d=json.load(open('data/phase11_interleaved_control.json')); \
-print(f'Apple Silicon interleaved symmetric |t|={d[\\\"symmetric_interleaved\\\"][\\\"t_statistic\\\"]} (expected: 0.58)'); \
-print(f'Apple Silicon interleaved asymmetric |t|={d[\\\"asymmetric_interleaved\\\"][\\\"t_statistic\\\"]} (expected: 0.99)'); \
-print(f'Verdict: {d[\\\"verdict\\\"]}'); \
-d2=json.load(open('data/intel_interleaved_results.json')); \
-print(f'Intel interleaved symmetric |t|={d2[\\\"symmetric\\\"][\\\"welch_t\\\"]} (expected: 1.65)'); \
-print(f'Intel interleaved asymmetric |t|={d2[\\\"asymmetric\\\"][\\\"welch_t\\\"]} (expected: 8.10)'); \
-print('All interleaved data files present and consistent.')\" && \
+    echo '=== Validate all paper claims against data ===' && \
+    python scripts/validate_paper_claims.py && \
     echo '' && \
     echo '=== All experiments complete ==='"]

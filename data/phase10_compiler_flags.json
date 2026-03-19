@@ -1,0 +1,56 @@
+{
+  "experiment": "compiler_flag_sweep",
+  "platform": "apple_silicon",
+  "liboqs_version": "0.15.0",
+  "harness": "symmetric",
+  "traces_per_mode": 50000,
+  "collection_method": "sequential",
+  "flags": {
+    "-O0": {
+      "t_statistic": 10.40,
+      "variance_ratio": 0.07,
+      "fixed_mean": 559.9,
+      "random_mean": 544.4,
+      "tvla_verdict": "FAIL"
+    },
+    "-O1": {
+      "t_statistic": 8.71,
+      "variance_ratio": 0.60,
+      "fixed_mean": 530.3,
+      "random_mean": 536.8,
+      "tvla_verdict": "FAIL"
+    },
+    "-O2": {
+      "t_statistic": 19.07,
+      "variance_ratio": 0.02,
+      "fixed_mean": 535.9,
+      "random_mean": 605.0,
+      "tvla_verdict": "FAIL"
+    },
+    "-O3": {
+      "t_statistic": 5.27,
+      "variance_ratio": 1.10,
+      "fixed_mean": 741.9,
+      "random_mean": 658.9,
+      "tvla_verdict": "FAIL"
+    },
+    "-Os": {
+      "t_statistic": 1.73,
+      "variance_ratio": 30.89,
+      "fixed_mean": 1529.0,
+      "random_mean": 995.4,
+      "tvla_verdict": "PASS",
+      "note": "Rerun fails; run-to-run variability confirmed by Levene's test"
+    },
+    "-Os_rerun": {
+      "t_statistic": 11.47,
+      "variance_ratio": 466.0,
+      "tvla_verdict": "FAIL",
+      "levene_F": 128.25,
+      "levene_p": 0.0,
+      "note": "Levene's test confirms variance confound present even when Welch's t sometimes passes"
+    }
+  },
+  "verdict": "ALL_FLAGS_CONFOUNDED",
+  "interpretation": "All five optimization levels exhibit the temporal drift confound. -Os shows run-to-run variability but Levene's test (F=128.25) confirms variance asymmetry is always present."
+}

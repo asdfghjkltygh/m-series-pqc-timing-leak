@@ -1,0 +1,22 @@
+{
+  "experiment": "sequential_symmetric_control",
+  "platform": "intel_x86",
+  "processor": "Intel Xeon (EC2 c5.xlarge)",
+  "liboqs_version": "0.15.0",
+  "compiler": "gcc -O2 -march=native",
+  "traces_per_mode": 50000,
+  "collection_method": "sequential",
+  "note": "Matched 50K-trace run used in paper. See also tvla_x86_results.json for 500K-trace asymmetric run (|t|=12.95).",
+  "asymmetric": {
+    "t_statistic": 5.35,
+    "variance_ratio": 1.84,
+    "tvla_verdict": "FAIL"
+  },
+  "symmetric": {
+    "t_statistic": 6.70,
+    "variance_ratio": 0.43,
+    "tvla_verdict": "FAIL"
+  },
+  "verdict": "BOTH_FAIL",
+  "interpretation": "Both harnesses fail TVLA with sequential collection. Symmetric harness produces higher |t| than asymmetric, confirming the confound is not solely due to harness asymmetry."
+}
