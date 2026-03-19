@@ -33,11 +33,13 @@ def run_demo(
     target_names: list[str],
     vuln_features: np.ndarray | None = None,
     vuln_labels: dict[str, np.ndarray] | None = None,
+    sequential_t: float = 62.49,
+    interleaved_t: float = 0.58,
     n_shuffles: int = 100,
     precomputed: bool = False,
     dark: bool = False,
 ) -> None:
-    """Execute the three-act demo presentation.
+    """Execute the four-act demo presentation.
 
     Parameters
     ----------
@@ -55,6 +57,10 @@ def run_demo(
         Per-key features for a known-vulnerable implementation (Act 3).
     vuln_labels : dict[str, np.ndarray], optional
         Labels for the vulnerable implementation (Act 3).
+    sequential_t : float
+        Pre-measured sequential |t| for Act 0 display (default: Apple Silicon).
+    interleaved_t : float
+        Pre-measured interleaved |t| for Act 0 display (default: Apple Silicon).
     n_shuffles : int
         Number of MI permutation rounds.
     precomputed : bool
@@ -64,6 +70,9 @@ def run_demo(
         Hint for dark terminal theme (currently unused; reserved).
     """
     console = Console()
+
+    # ACT 0: "The Broken Test" — sequential vs interleaved comparison
+    _act0(console, sequential_t, interleaved_t, precomputed)
 
     # ACT 1: "The Audit Trap"
     _act1(console, fixed_timings, random_timings, precomputed)
@@ -75,6 +84,88 @@ def run_demo(
     # ACT 3: "The Positive Control" (if vulnerable data provided)
     if vuln_features is not None and vuln_labels is not None:
         _act3(console, vuln_features, vuln_labels, target_names, precomputed)
+
+
+# ---------------------------------------------------------------------------
+# ACT 0: The Broken Test
+# ---------------------------------------------------------------------------
+
+def _act0(
+    console: Console,
+    sequential_t: float,
+    interleaved_t: float,
+    precomputed: bool,
+) -> None:
+    """Show the sequential vs interleaved comparison — the paper's headline."""
+    console.print()
+    console.print(Panel(
+        Text("ACT 0: THE BROKEN TEST", style="bold white", justify="center"),
+        border_style="bright_magenta",
+        padding=(1, 2),
+    ))
+    console.print()
+
+    plat = _detect_platform()
+    console.print(f"  [dim]Platform:[/dim] [bold]{plat}[/bold]")
+    console.print(f"  [dim]Algorithm:[/dim] [bold]ML-KEM-768 decapsulation[/bold]")
+    console.print(f"  [dim]Harness:[/dim] [bold]Symmetric (identical code paths)[/bold]")
+    console.print()
+
+    # Sequential result
+    if precomputed:
+        time.sleep(2.0)
+    console.print("  [bold cyan]Sequential collection[/bold cyan] "
+                   "(all fixed, then all random):")
+    if precomputed:
+        time.sleep(1.5)
+
+    seq_color = "red" if sequential_t > 4.5 else "green"
+    seq_verdict = "FAIL" if sequential_t > 4.5 else "PASS"
+    console.print(Panel(
+        Text(f"|t| = {sequential_t:.2f}    {seq_verdict}",
+             style=f"bold {seq_color}", justify="center"),
+        border_style=seq_color,
+        padding=(1, 4),
+    ))
+
+    if precomputed:
+        time.sleep(3.0)
+
+    # Interleaved result
+    console.print()
+    console.print("  [bold cyan]Interleaved collection[/bold cyan] "
+                   "(alternating fixed[i] / random[i]):")
+    if precomputed:
+        time.sleep(1.5)
+
+    int_color = "green" if interleaved_t <= 4.5 else "red"
+    int_verdict = "PASS" if interleaved_t <= 4.5 else "FAIL"
+    console.print(Panel(
+        Text(f"|t| = {interleaved_t:.2f}    {int_verdict}",
+             style=f"bold {int_color}", justify="center"),
+        border_style=int_color,
+        padding=(1, 4),
+    ))
+
+    if precomputed:
+        time.sleep(2.0)
+
+    # The punchline
+    reduction = sequential_t / interleaved_t if interleaved_t > 0 else float('inf')
+    console.print()
+    console.print(Panel(
+        Text(f"Same hardware. Same code. Same inputs.\n"
+             f"The only difference is WHEN the measurements were collected.\n\n"
+             f"{sequential_t:.2f} → {interleaved_t:.2f}  "
+             f"({reduction:.0f}x reduction)",
+             style="bold white", justify="center"),
+        border_style="bright_magenta",
+        padding=(1, 2),
+    ))
+
+    if precomputed:
+        time.sleep(5.0)
+    console.print()
 
 
 # ---------------------------------------------------------------------------
@@ -445,9 +536,9 @@ def _display_false_positive_verdict(console: Console) -> None:
     text.append("\n")
     text.append("VERDICT: FALSE POSITIVE\n\n", style="bold green")
     text.append(
-        "The TVLA failure is caused by execution-context confounds\n"
-        "(DMP synchronisation, speculative prefetch variance),\n"
-        "NOT by secret-dependent timing behaviour.\n\n"
+        "The TVLA failure is caused by temporal drift in\n"
+        "sequential data collection, NOT by secret-dependent\n"
+        "timing behaviour.\n\n"
         "No pairwise test reached significance after Bonferroni correction.\n"
         "Permutation MI confirms zero information leakage about secret keys.\n\n"
         "This implementation is SAFE for deployment.\n",

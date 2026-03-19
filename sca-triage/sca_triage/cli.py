@@ -258,18 +258,33 @@ def demo(
     precomputed: bool,
     dark: bool,
 ) -> None:
-    """Run the dramatic three-act demo presentation."""
+    """Run the dramatic four-act demo presentation."""
     try:
         from .demo import run_demo  # type: ignore[import-not-found]
     except ImportError:
         click.echo("Demo module not yet available.", err=True)
         sys.exit(1)
 
+    target_list = [t.strip() for t in targets.split(",") if t.strip()]
+
+    # Load main (patched) data
+    click.echo("Loading timing data...")
+    data = _load_data(timing_data, secret_labels, target_list)
+
+    # Load vulnerable data if provided
+    vuln_bundle = None
+    if vuln_data:
+        click.echo("Loading vulnerable data...")
+        vuln_bundle = _load_data(vuln_data, secret_labels, target_list)
+
     run_demo(
-        timing_data=timing_data,
-        vuln_data=vuln_data,
-        secret_labels=secret_labels,
-        targets=targets,
+        fixed_timings=data.fixed_timings,
+        random_timings=data.random_timings,
+        per_key_features=data.per_key_features,
+        per_key_labels=data.per_key_labels,
+        target_names=target_list,
+        vuln_features=vuln_bundle.per_key_features if vuln_bundle else None,
+        vuln_labels=vuln_bundle.per_key_labels if vuln_bundle else None,
         precomputed=precomputed,
         dark=dark,
     )
