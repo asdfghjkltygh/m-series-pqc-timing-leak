@@ -159,7 +159,7 @@ Intel Xeon shows the same confound:
 | Asymmetric | 8.10 | 58,172 | 58,430 | **FAIL** |
 | Symmetric | 1.65 | 183,685 | 204,168 | **PASS** |
 
-Symmetric interleaved passes (|t| = 1.65). The asymmetric interleaved failure (|t| = 8.10) confirms harness asymmetry — live keygen+encaps polluting cache state — is a real but secondary confound on Intel, independent of temporal drift. When both confounds are eliminated, TVLA passes. The cross-platform replication rules out any platform-specific architectural explanation.
+Symmetric interleaved passes (|t| = 1.65). The asymmetric interleaved failure (|t| = 8.10) confirms harness asymmetry — live keygen+encaps polluting cache state — is a real but secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes (|t| = 0.99), likely because its large shared L2/SLC cache and high memory bandwidth absorb the keygen+encaps pollution without displacing the state required for the timed decapsulation. When both confounds are eliminated, TVLA passes. The cross-platform replication rules out any platform-specific architectural explanation.
 
 ### The Proof: Pairwise Decomposition
 
@@ -233,10 +233,10 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 | Analysis | Patched v0.15.0 (no real leak) | Vulnerable v0.9.0 (KyberSlash) |
 |------|------|------|
 | **Welch's t-test (sequential data)** | |t| = 8.42 → FAIL | |t| = 1.04 → Underpowered |
-| **dudect (interleaved collection)** | PASS (solves temporal drift) | PASS (blind to harness asymmetry) |
+| **dudect (interleaved collection)** | PASS (solves temporal drift) | PASS (underpowered at 25K traces) |
 | **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise d=0.0003, MI=0.0 bits) | REAL_LEAKAGE (XGBoost 56.6% vs 52.8% chance) |
 
-On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves the temporal drift problem and correctly passes, but it is blind to harness asymmetry and cannot detect the real KyberSlash vulnerability at 25K traces. On the vulnerable version, the sequential t-test is underpowered. sca-triage correctly triages both cases — identifying the false positive and detecting the real vulnerability via cross-key ML classification.
+On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves the temporal drift problem and correctly passes. On the vulnerable version, both the sequential t-test and dudect are underpowered at 25K traces — the KyberSlash signal (d = 0.094) is too small for Welch's t-test to reach significance against the OS scheduling noise floor. sca-triage correctly triages both cases — identifying the false positive and detecting the real vulnerability via cross-key ML classification that aggregates weak signals across 500 keys.
 
 **Repository:** [https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage](https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage)
 
@@ -316,25 +316,12 @@ Full tables are available in the supplementary materials repository. Each experi
 
 ## Appendix B: Information-Theoretic Methodology
 
-**Perceived Information (PI).** Defined as:
+We used four complementary metrics to bound information leakage. Each was chosen for a specific property; all were validated via 10,000-shuffle permutation tests rather than parametric assumptions.
 
-PI = H(Y) - CE(Y | X)
-
-where H(Y) is the entropy of the secret target variable Y and CE(Y | X) is the cross-entropy of the best-performing classifier's predicted distribution given timing observations X. When PI is negative, the classifier performs worse than a coin flip — the observations contain less information about the secret than the prior. We compute CE using calibrated XGBoost posterior probabilities with 5-fold cross-validation to avoid overfitting bias.
-
-**KSG Mutual Information.** The Kraskov-Stogbauer-Grassberger estimator computes mutual information I(X; Y) using k-nearest-neighbor distances in joint and marginal spaces. It is nonparametric and makes no distributional assumptions. We use k=5 neighbors and validate the estimate with a permutation test: I(X; Y) is recomputed 10,000 times with Y randomly shuffled. The p-value is the fraction of permuted estimates exceeding the real estimate. A p-value of 1.0 means the real estimate is at or below the median of the null distribution.
-
-**MAD-based SNR.** Signal-to-noise ratio using Median Absolute Deviation as a robust scale estimator:
-
-SNR = MAD(group_medians) / median(within_group_MADs)
-
-MAD is resistant to the heavy-tailed outliers that characterize timing distributions on modern processors. We compute SNR across secret-key-byte groups and across Hamming weight classes.
-
-**Winsorized SNR.** SNR with 5% Winsorization (top and bottom 2.5% of each group's timing distribution clamped to the corresponding percentile). This bounds the influence of outliers while preserving more distributional information than MAD.
-
-**Permutation test methodology.** For all information-theoretic metrics, significance is assessed via permutation testing rather than parametric assumptions. The secret labels are randomly shuffled 10,000 times, the metric is recomputed for each shuffle, and the p-value is the rank of the real metric within the permuted distribution. This controls for any systematic bias in the estimator.
-
-**Vertical scaling convergence.** We compute classifier accuracy as a function of training set size from 10% to 150% of the theoretically predicted minimum (based on the TVLA-reported effect size and Gaussian power analysis). A real signal produces a monotonically increasing accuracy curve that converges to a value above the majority baseline. A false positive produces a flat line at the baseline. All targets show flat lines.
+- **Perceived Information (PI):** Cross-entropy of calibrated XGBoost posteriors minus target entropy. Negative PI means the classifier performs worse than chance — zero exploitable information. Computed with 5-fold CV to prevent overfitting bias.
+- **KSG Mutual Information:** Nonparametric, model-free MI estimator (k=5 neighbors). Returns 0.000 bits (p = 1.0) for all targets — the observed MI is at or below the permutation null median.
+- **MAD-based and Winsorized SNR:** Robust signal-to-noise ratios resistant to the heavy-tailed outliers that characterize timing distributions on modern processors. MAD uses median absolute deviation; Winsorized SNR clamps the top/bottom 2.5%.
+- **Vertical scaling convergence:** Classifier accuracy as a function of training set size. Real leakage produces a monotonically increasing curve converging above baseline; false positives produce a flat line. All targets show flat lines.
 
 ---
 
@@ -342,7 +329,7 @@ MAD is resistant to the heavy-tailed outliers that characterize timing distribut
 
 **Timer characterization.**
 
-*CNTVCT_EL0 (Apple Silicon):* ARM generic timer counter, 24 MHz tick rate. Overhead characterization: 99.2% of back-to-back reads return zero ticks elapsed, confirming sub-tick measurement granularity. Timer is monotonic and unaffected by frequency scaling (it runs on a fixed-frequency crystal, not the CPU clock).
+*CNTVCT_EL0 (Apple Silicon):* ARM generic timer counter, 24 MHz tick rate. Inline assembly uses ISB (Instruction Synchronization Barrier) before each MRS read to force all prior instructions to retire, preventing out-of-order execution from reordering timer reads across the decapsulation boundary. Overhead characterization: 99.2% of back-to-back reads return zero ticks elapsed, confirming sub-tick measurement granularity. Timer is monotonic and unaffected by frequency scaling (it runs on a fixed-frequency crystal, not the CPU clock).
 
 *RDTSC + CPUID (Intel x86):* Timestamp counter read with pipeline serialization. CPUID before RDTSC forces all prior instructions to retire, ensuring the timestamp reflects actual completion. Measured overhead: approximately 1,778 cycles per serialized read pair. TSC is invariant (constant rate regardless of frequency scaling) on all tested processors.
 
@@ -353,6 +340,7 @@ MAD is resistant to the heavy-tailed outliers that characterize timing distribut
 - Two platforms (Apple M-series, Intel Xeon)
 - Two conditions per platform (fixed input, random input)
 - Total: approximately 12.2 million individual timing measurements
+- The open-source repository contains representative sample datasets (1M TVLA traces, 100K raw traces, 25K vulnerable traces) for immediate, low-friction validation of the sca-triage pipeline. The full 12.2 million trace dataset is available from the authors upon request for exhaustive replication.
 - All measurements checksummed (SHA-256) at collection time for reproducibility
 - Collection scripts automated with retry logic for thermal throttling events
 

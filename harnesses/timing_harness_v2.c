@@ -18,6 +18,7 @@
 /* Read ARM virtual counter directly for sub-nanosecond precision */
 static inline uint64_t read_cntvct(void) {
     uint64_t val;
+    __asm__ volatile("isb" ::: "memory");
     __asm__ volatile("mrs %0, CNTVCT_EL0" : "=r"(val));
     return val;
 }
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
         hex_to_bytes(ct_hex, ct, ct_len);
         hex_to_bytes(sk_hex, sk, sk_len);
 
-        /* Use CNTVCT_EL0 for cycle-accurate timing */
+        /* Use CNTVCT_EL0 for high-resolution timing */
         uint64_t start = read_cntvct();
         OQS_STATUS rc = OQS_KEM_decaps(kem, ss, ct, sk);
         uint64_t end = read_cntvct();

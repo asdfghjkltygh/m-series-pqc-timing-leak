@@ -36,6 +36,7 @@
 
 static inline uint64_t read_cntvct(void) {
     uint64_t val;
+    __asm__ volatile("isb" ::: "memory");
     __asm__ volatile("mrs %0, CNTVCT_EL0" : "=r"(val));
     return val;
 }

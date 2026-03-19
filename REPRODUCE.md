@@ -145,11 +145,16 @@ cd ..
 
 ### 4. Data Access
 
-Large trace files (>1MB) are gitignored. Available datasets:
-- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces) — included in repo
-- `data/tvla_traces.npz` (874KB, TVLA fixed/random traces) — included in repo
-- `data/raw_timing_traces_v4_vertical.csv` (25MB) — contact authors
-- Full 12.2M trace dataset — contact authors
+The repository contains representative sample datasets for immediate, low-friction validation of the sca-triage pipeline and all paper claims. The full 12.2 million trace dataset is available from the authors for exhaustive replication.
+
+**Included in the repository:**
+- `data/tvla_traces.npz` (854KB, 1M TVLA traces: 500K fixed + 500K random) — primary dataset for all pipeline validation
+- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces across 2,000 keys) — per-key analysis and secret-label experiments
+- `data/raw_timing_traces_vuln.csv` (579KB, 25K traces) — KyberSlash positive control
+
+**Available on request:**
+- `data/raw_timing_traces_v4_vertical.csv` (25MB) — patched v0.15.0 full trace set
+- Full 12.2M trace dataset across both platforms — contact authors
 
 ### Expected Runtimes
 

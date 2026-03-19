@@ -6,7 +6,7 @@
  *   - "fixed" mode: uses a single, fixed (ct, sk) pair for all measurements
  *   - "random" mode: generates a fresh keypair + ciphertext each measurement
  *
- * Uses CNTVCT_EL0 for cycle-accurate timing on Apple Silicon.
+ * Uses CNTVCT_EL0 for high-resolution timing on Apple Silicon.
  *
  * Usage: ./tvla_harness <mode> <num_traces>
  *   mode: "fixed" or "random"
@@ -21,6 +21,7 @@
 
 static inline uint64_t read_cntvct(void) {
     uint64_t val;
+    __asm__ volatile("isb" ::: "memory");
     __asm__ volatile("mrs %0, CNTVCT_EL0" : "=r"(val));
     return val;
 }
