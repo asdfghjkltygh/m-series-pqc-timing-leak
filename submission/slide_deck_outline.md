@@ -176,9 +176,9 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** When you group by actual secret key properties instead of fixed-vs-random, the distributions are identical.
 
-**Visual:** Two rows of small distribution plots. Top row labeled "TVLA grouping (fixed vs random)": two clearly separated distributions with "|t| = 8.42" annotation. Bottom row labeled "Secret grouping (key bit 0 vs key bit 1)": two perfectly overlapping distributions with "|t| = 0.3" annotation. Bold caption: "Remove the confound, the signal disappears. The leakage is input-dependent, not secret-dependent."
+**Visual:** Two rows of small distribution plots. Top row labeled "TVLA grouping (fixed vs random)": two clearly separated distributions with "|t| = 62.49" annotation (symmetric harness). Bottom row labeled "Secret grouping (key bit 0 vs key bit 1)": two perfectly overlapping distributions with "|t| = 0.3" annotation. Bold caption: "Remove the confound, the signal disappears. The leakage is input-dependent, not secret-dependent."
 
-**Speaker Notes:** "Here's the definitive proof. Top row: TVLA's fixed-vs-random comparison — big separation, big t-statistic. Bottom row: same traces, but now we group by actual secret key bits instead of by TVLA group assignment. The distributions are identical. Every pairwise comparison — by key bit, key byte, Hamming weight — shows no difference. The structure TVLA detects exists only in the fixed-vs-random framing. Remove that framing, and the signal vanishes completely. The leakage is input-dependent, not secret-dependent."
+**Speaker Notes:** "Here's the definitive proof. Top row: TVLA's fixed-vs-random comparison on the symmetric harness — |t| of 62, massive separation. Bottom row: same traces, but now we group by actual secret key bits instead of by TVLA group assignment. The distributions are identical. Every pairwise comparison — by key bit, key byte, Hamming weight — shows no difference. The structure TVLA detects exists only in the fixed-vs-random framing. Remove that framing, and the signal vanishes completely."
 
 ---
 
@@ -188,7 +188,7 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** False positives on safe code AND the real vulnerability falls below TVLA's detection floor.
 
-**Visual:** 2x2 matrix. Columns: "TVLA Says Safe" / "TVLA Says Leaking". Rows: "Actually Safe" / "Actually Leaking". Top-right cell (false positive): "ML-KEM v0.15.0 — |t| = 8.42" in red. Bottom-left cell (false negative): "KyberSlash v0.9.0 — d = 0.094, below TVLA floor" in red. Top-left and bottom-right are empty. Caption: "TVLA is wrong in both quadrants that matter."
+**Visual:** 2x2 matrix. Columns: "TVLA Says Safe" / "TVLA Says Leaking". Rows: "Actually Safe" / "Actually Leaking". Top-right cell (false positive): "ML-KEM v0.15.0 — |t| = 62.49" in red. Bottom-left cell (false negative): "KyberSlash v0.9.0 — d = 0.094, below TVLA floor" in red. Top-left and bottom-right are empty. Caption: "TVLA is wrong in both quadrants that matter."
 
 **Speaker Notes:** "And it gets worse. TVLA is not just producing false positives on hardened code. The KyberSlash vulnerability — a real, exploitable timing leak — has an effect size of d = 0.094. That falls below TVLA's practical detection floor. So TVLA simultaneously fails safe code and passes vulnerable code. It is wrong in both directions. Our ML classifier catches KyberSlash easily. TVLA cannot."
 
