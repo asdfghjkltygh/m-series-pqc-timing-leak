@@ -201,7 +201,18 @@ def main():
             print(f"    Vulnerable |t|: {v_tvla.get('abs_t', 'N/A'):.2f}" if v_tvla else "    Vulnerable: N/A")
             print(f"    Patched    |t|: {p_tvla.get('abs_t', 'N/A'):.2f}" if p_tvla else "    Patched: N/A")
     else:
-        print(f"\n  Patched data not found at {PATCHED_CSV}, skipping comparison.")
+        print(f"\n  Patched data not found at {PATCHED_CSV}")
+        print("  (Large file not included in repo — contact authors or see REPRODUCE.md)")
+        # Preserve pre-computed patched results from the committed JSON if available
+        if os.path.exists(OUTPUT_JSON):
+            try:
+                with open(OUTPUT_JSON) as f:
+                    existing = json.load(f)
+                if "patched" in existing:
+                    results["patched"] = existing["patched"]
+                    print("  Using pre-computed patched results from existing JSON.")
+            except (json.JSONDecodeError, KeyError):
+                pass
 
     # Verdict
     print("\n" + "=" * 60)
