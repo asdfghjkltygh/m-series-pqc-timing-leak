@@ -222,6 +222,16 @@ def print_terminal_report(
     verdict_text.append(f"\n  {label}\n\n", style=f"bold {color}")
     verdict_text.append(f"  {detail}\n", style="dim")
 
+    # Detection floor caveat on FALSE POSITIVE verdicts
+    if "FALSE POSITIVE" in label:
+        verdict_text.append(
+            "\n  ⚠ Verdict bounded by macro-timing detection floor "
+            "(d ≈ 0.275). Does not guarantee zero leakage\n"
+            "  against hardware/EM probing or sub-threshold "
+            "micro-architectural channels.\n",
+            style="bold yellow",
+        )
+
     console.print(Panel(
         verdict_text,
         title="[bold]Final Verdict[/bold]",

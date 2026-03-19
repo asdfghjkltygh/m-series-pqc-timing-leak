@@ -287,6 +287,11 @@ def main():
     print("preventing drift at the collection stage. This comparison applies")
     print("the shared statistical test to sequential data — the scenario FIPS")
     print("evaluation labs face under ISO 17825.")
+    print()
+    print("WARNING: FALSE POSITIVE verdict is bounded by the macro-timing")
+    print("detection floor (d ≈ 0.275). Does not guarantee zero leakage")
+    print("against hardware/EM probing or sub-threshold micro-architectural")
+    print("channels.")
     print(border)
     print()
 
