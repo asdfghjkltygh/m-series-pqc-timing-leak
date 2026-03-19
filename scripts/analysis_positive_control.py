@@ -91,7 +91,7 @@ def run_xgboost(agg, label):
     try:
         from xgboost import XGBClassifier
     except ImportError:
-        print("  XGBoost not available, skipping.")
+        print("  XGBoost not available, skipping (install with: pip3 install xgboost, or use Docker).")
         return {}
     from sklearn.model_selection import StratifiedKFold
     from sklearn.metrics import accuracy_score

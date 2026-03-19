@@ -3,7 +3,7 @@
     "dudect": {
       "method": "streaming Welch's t-test (dudect algorithm)",
       "abs_t": 8.42,
-      "verdict": "NON-CONSTANT-TIME",
+      "verdict": "FAIL",
       "progressive_trace": [
         {
           "n": 920000,
