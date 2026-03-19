@@ -50,14 +50,24 @@ def _verdict(
 
     any_pairwise_significant = any(pr.any_significant for pr in pairwise_results)
     any_mi_significant = any(mi.significant for mi in mi_results)
+    has_stage2 = len(pairwise_results) > 0
 
-    if tvla_failed and not any_pairwise_significant and not any_mi_significant:
+    if tvla_failed and has_stage2 and not any_pairwise_significant and not any_mi_significant:
         return (
-            "EXECUTION-CONTEXT CONFOUND (FALSE POSITIVE)",
+            "FALSE POSITIVE (Temporal Drift Confound)",
             "TVLA fails but no secret-dependent leakage detected by "
             "pairwise or MI tests. The timing difference is attributable "
-            "to execution-context confounds, not to key-dependent behaviour.",
+            "to temporal drift in sequential data collection, not to "
+            "key-dependent behaviour.",
             "green",
+        )
+    elif tvla_failed and not has_stage2:
+        return (
+            "TVLA FAIL — Stage 2 required for triage",
+            "TVLA reports leakage but Stage 2 (pairwise secret-group "
+            "decomposition) was not run. Re-run with --secret-labels "
+            "to determine whether this is a false positive or real leakage.",
+            "yellow",
         )
     elif any_pairwise_significant or any_mi_significant:
         return (

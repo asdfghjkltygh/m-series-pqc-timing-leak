@@ -18,10 +18,14 @@ This checks all 28 numerical claims in the paper against the data files in the r
 ## Run the Tool on Our Data
 
 ```bash
+# Quick TVLA check
 sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick
+
+# Full three-stage pipeline (TVLA + pairwise + MI → FALSE_POSITIVE)
+python scripts/dudect_comparison.py
 ```
 
-Expected: TVLA reports |t|=8.42 (FAIL). Verdict: FALSE_POSITIVE.
+The quick check runs Stage 1 (TVLA: |t|=8.42, FAIL). The full pipeline via `dudect_comparison.py` runs all three stages and produces the FALSE_POSITIVE verdict.
 
 ## Full Reproduction (Docker)
 

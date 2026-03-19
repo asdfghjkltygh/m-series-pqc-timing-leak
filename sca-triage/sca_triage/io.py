@@ -137,6 +137,24 @@ def load_csv(
     trace_path = pathlib.Path(trace_path)
     df = pd.read_csv(trace_path)
 
+    # --- Auto-detect column names if defaults don't match -----------------
+    if value_col not in df.columns:
+        timing_candidates = [c for c in df.columns
+                             if "timing" in c.lower() or "cycles" in c.lower()
+                             or "ticks" in c.lower()]
+        if timing_candidates:
+            value_col = timing_candidates[0]
+        else:
+            raise KeyError(
+                f"No timing column found. Columns: {list(df.columns)}. "
+                f"Pass --value-col explicitly."
+            )
+    if repeat_col not in df.columns:
+        repeat_candidates = [c for c in df.columns
+                             if "repeat" in c.lower()]
+        if repeat_candidates:
+            repeat_col = repeat_candidates[0]
+
     # --- Auto-detect label columns in the trace file ----------------------
     reserved = {key_col, repeat_col, value_col}
     inline_label_cols = [c for c in df.columns if c not in reserved]

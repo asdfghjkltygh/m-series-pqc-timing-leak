@@ -64,7 +64,7 @@
 
 **Key Message:** We spent six months and 12.2 million traces finding out.
 
-**Visual:** Full-screen text, minimal design. Center: "12,200,000 traces." Below: "100+ experiments." Below: "2 platforms." Below in bold: "Is the leakage real?" Dramatic pause slide.
+**Visual:** Full-screen text, minimal design. Center: "12,200,000 traces." Below: "150+ experiments." Below: "2 platforms." Below in bold: "Is the leakage real?" Dramatic pause slide.
 
 **Speaker Notes:** "So we asked the obvious question: is this leakage real? Can you actually recover key material from these timing differences? We spent six months trying. We collected 12.2 million traces. We ran every attack technique in the side-channel playbook. Here is what we found."
 
@@ -364,7 +364,7 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 
 1. **TVLA produces catastrophic false positives on Apple Silicon (|t|=62.49) and Intel x86 (|t|=6.70) for ML-KEM.**
 2. **Root cause: temporal drift from sequential data collection — interleaving drops |t| from 62 to 0.58 (100x reduction).**
-3. **12.2 million traces and 100+ experiments confirm: zero exploitable bits of secret information.**
+3. **12.2 million traces and 150+ experiments confirm: zero exploitable bits of secret information.**
 4. **TVLA is broken in both directions: false positives on safe code, and KyberSlash (d=0.094) falls below its detection floor.**
 5. **Fix: interleave collection + two-stage triage protocol + sca-triage open-source tool. Deploy PQC with confidence.**
 

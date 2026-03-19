@@ -50,3 +50,4 @@ __pycache__/
 data/models/
 *.pkl
 *.pt
+*.egg-info/

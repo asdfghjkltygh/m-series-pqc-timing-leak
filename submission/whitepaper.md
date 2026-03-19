@@ -256,28 +256,29 @@ Auditors integrate sca-triage into their FIPS evaluation workflow by running it 
 
 **How the verdict logic works.** Stage 1 runs the standard TVLA; if |t| <= 4.5, the implementation passes and no further analysis is needed. If TVLA fails, Stage 2 regroups the *same traces* by actual secret key properties and re-runs the t-test for each comparison. If the TVLA signal were real leakage, at least some secret-group comparisons would show significant differences. Stage 3 computes KSG mutual information validated by permutation testing to establish a null distribution. The verdict: if pairwise tests are all non-significant *and* MI is zero within the permutation confidence interval, the TVLA failure is classified as FALSE_POSITIVE.
 
-**Worked example.** Running sca-triage on our Apple Silicon asymmetric harness data (50,000 traces, |t| = 8.42) — we demonstrate on the asymmetric configuration because this represents what evaluation labs are most likely to encounter; the symmetric harness data produces the same FALSE_POSITIVE verdict at |t| = 62.49:
+**Worked example.** Running sca-triage on our Apple Silicon asymmetric harness data (50,000 traces, |t| = 8.42) — we demonstrate on the asymmetric configuration because this represents what evaluation labs are most likely to encounter; the symmetric harness data produces the same FALSE_POSITIVE verdict at |t| = 62.49. The full three-stage pipeline (reproduced by `python scripts/dudect_comparison.py`) produces:
 
 ```
-$ sca-triage analyze --timing-data data/tvla_traces.npz \
-    --targets sk_lsb --quick
-
-Loading data...
-
 [Stage 1] Running Fixed-vs-Random TVLA...
   |t| = 8.42  (FAIL)  variance ratio = 10.19
 
 [Stage 2] Running Pairwise Secret-Group Decomposition...
-  sk_lsb: Cohen's d = 0.0003, not significant
+  sk_lsb:   t=0.59, p=0.553  (not significant)
+  msg_hw:   t=0.84, p=0.402  (not significant)
 
 [Stage 3] Running Permutation MI Test...
-  sk_lsb: MI = 0.000000, p = 1.0000 (not significant)
+  MI = 0.000 bits, p=1.0  (not significant)
 
 VERDICT: FALSE_POSITIVE
-  TVLA signal is statistically significant but contains zero
-  secret-dependent information. Confound source: temporal drift
-  (sequential collection methodology).
 ```
+
+To run sca-triage directly on the repo's pre-collected TVLA traces:
+
+```
+$ sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick
+```
+
+This runs Stage 1 (TVLA: |t| = 8.42, FAIL) and reports that Stage 2 requires secret labels for full triage. The `dudect_comparison.py` script demonstrates the complete three-stage pipeline including pairwise decomposition and MI.
 
 The logic: pairwise decomposition splits the TVLA-failing traces by each of 13 secret-key properties (individual bits, byte values, Hamming weight, algebraic features) and re-runs the t-test within each partition. If the TVLA signal were secret-dependent, at least one partition would show significance — traces from keys with bit 0 = 1 would be measurably different from keys with bit 0 = 0. All 13 return non-significant — and remain non-significant after Holm-Bonferroni correction for 13 comparisons (the uncorrected family-wise error rate at α = 0.05 is approximately 0.49; zero of 13 tests reaching significance even without correction is itself strong evidence against secret dependence). This isolates the signal source to execution context (repeated vs. novel inputs) rather than secret material. KSG MI provides the model-free backstop: it captures any dependence of any functional form, including nonlinear interactions between multiple key bits that pairwise tests might miss.
 
