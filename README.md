@@ -6,34 +6,45 @@ ISO 17825 TVLA — the mandatory side-channel test for FIPS 140-3 certification 
 
 We release **sca-triage**, an open-source triage tool that distinguishes real side-channel leakage from false positives, and propose a two-stage evaluation protocol for ISO 17825.
 
-## Verify All Claims (30 seconds)
+## Quick Start
+
+**Prerequisites:** Python 3.10+ and pip. On macOS, if `python3 --version` fails, install via `brew install python` or download from [python.org](https://www.python.org/downloads/).
 
 ```bash
-pip install -e sca-triage
-python scripts/validate_paper_claims.py
+git clone https://github.com/asdfghjkltygh/m-series-pqc-timing-leak.git
+cd m-series-pqc-timing-leak
+pip3 install -e sca-triage
 ```
 
-This checks all 28 numerical claims in the paper against the data files in the repo. Expected: 28/28 PASS.
-
-## Run the Tool on Our Data
+### 1. Verify All Claims (30 seconds)
 
 ```bash
-# Quick TVLA check
+python3 scripts/validate_paper_claims.py
+```
+
+Checks all 28 numerical claims in the paper against the data files in the repo. Expected: **28/28 PASS**.
+
+### 2. Run the Tool on Our Data
+
+```bash
+# Quick TVLA check (Stage 1 only)
 sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick
 
 # Full three-stage pipeline (TVLA + pairwise + MI → FALSE_POSITIVE)
-python scripts/dudect_comparison.py
+python3 scripts/dudect_comparison.py
 ```
 
 The quick check runs Stage 1 (TVLA: |t|=8.42, FAIL). The full pipeline via `dudect_comparison.py` runs all three stages and produces the FALSE_POSITIVE verdict.
 
-## Full Reproduction (Docker)
+### 3. Full Reproduction (Docker — zero local dependencies)
+
+If you prefer not to install Python, Docker runs everything in an isolated container:
 
 ```bash
 docker-compose up --build run-all-experiments
 ```
 
-Runs all experiments (~5 minutes), validates all claims, outputs results to `data/` and `figures/`.
+Runs all experiments (~5 minutes), validates all claims, outputs results to `data/` and `figures/`. Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ## Key Results
 
