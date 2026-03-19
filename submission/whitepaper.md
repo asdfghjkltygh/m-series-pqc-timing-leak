@@ -37,15 +37,9 @@ There is no "borderline" TVLA failure — exceeding |t| = 4.5 triggers a remedia
 
 ## Related Work
 
-TVLA's limitations on general-purpose hardware are well-documented. Schneider & Moradi (CHES 2015) showed environmental noise produces statistically significant but non-exploitable results. Whitnall & Oswald (CHES 2011, J. Cryptographic Engineering 2014) quantified the gap between statistical distinguishability and key recovery. Mather et al. (2019) provided methodological guidance acknowledging TVLA overreporting. Bronchain & Standaert (TCHES 2021) introduced the Perceived Information framework specifically because TVLA detection does not imply exploitability.
+TVLA's limitations on general-purpose hardware are documented: Schneider & Moradi (CHES 2015) showed environmental noise produces non-exploitable statistical significance; Bronchain & Standaert (TCHES 2021) introduced Perceived Information because TVLA detection does not imply exploitability; Dunsche et al. (USENIX Security 2024, SILENT 2025) proposed improved statistical tests with controlled type-1 error. Our work is complementary — Dunsche et al. address the *statistical test*; we address the *measurement methodology* and provide a practical triage tool.
 
-In the software timing domain, dudect (Reparaz et al., DATE 2017) applies Welch's t-test to timing measurements to detect non-constant-time implementations. Crucially, dudect's measurement loop already interleaves: it randomly selects between fixed and random class inputs on each iteration, inherently preventing the temporal drift confound we characterize. This is an important validation of our diagnosis — dudect's collection mechanism avoids sequential measurement blocks by design. Our work targets a different problem: the ISO 17825 TVLA protocol as implemented by FIPS evaluation labs, which typically collects fixed and random measurement blocks sequentially rather than interleaving.
-
-Dunsche et al. (USENIX Security 2024) addressed false positives in timing side-channel analysis through improved statistical methodology, proposing tests with controlled type-1 error independent of noise distribution. Their follow-up SILENT (arXiv, April 2025) provides formal statistical guarantees for leakage detection. Our work is complementary: Dunsche et al. address the *statistical test* (better tests to reduce false positives given noisy data); we address the *measurement methodology* (better collection to prevent confounded data in the first place) and provide a practical triage tool for the specific ML-KEM/FIPS use case. FOBOS (Gaj et al., NIST LWC Workshop 2019) implements interleaved TVLA for hardware evaluation, reinforcing that interleaving is established practice in hardware power analysis — but absent from the ISO 17825 protocol and from most software FIPS evaluation lab implementations.
-
-GoFetch (Borah et al., 2024) demonstrated Apple's Data-Dependent Prefetcher as an *attack vector* for key extraction. We initially hypothesized DMP as a source of TVLA false positives, but our interleaved control experiment (Section 3) shows the confound is temporal drift from sequential collection, not DMP-specific architectural behavior.
-
-Our contribution is not discovering that interleaved collection prevents drift — this is known in hardware evaluation and embodied in dudect's design. It is demonstrating that ISO 17825's implicit sequential protocol, as widely implemented by FIPS evaluation labs, produces catastrophic false positives on ML-KEM on production hardware (100x inflation on Apple Silicon), quantifying the effect across two ISAs with a 2×2 experimental matrix that cleanly isolates temporal drift from harness asymmetry, proving non-exploitability through 150+ converging experiments, and releasing sca-triage — a practical triage workflow for the FIPS ecosystem that does not require labs to abandon their existing sequential collection infrastructure.
+dudect (Reparaz et al., DATE 2017) already interleaves fixed and random inputs by design, inherently preventing temporal drift — validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware (100x inflation on Apple Silicon), quantifying the effect across two ISAs, proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
 
 ---
 
@@ -73,9 +67,7 @@ A negative result is only meaningful if the apparatus can detect a positive. We 
 
 The results are unambiguous. On vulnerable code, our XGBoost classifier achieves +3.8% accuracy lift over random guessing. On the patched code (v0.15.0), the same classifier achieves +0.5% — consistent with statistical noise. For valid/invalid ciphertext classification (a simpler binary task), the classifier achieves 100% accuracy on both vulnerable and patched versions, confirming that the pipeline can detect input-dependent timing leakage regardless of whether secret-dependent leakage is present.
 
-Our apparatus provably detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure. It is a measurement.
-
-We note that KyberSlash represents a relatively large vulnerability (variable-time division). To quantify our sensitivity to *smaller* effects, we computed detection floors for both our statistical and ML pipelines. The pairwise t-test detection floor is d = 0.398 (454 cycles) at 80% power with our sample configuration. The ML classification floor is higher at d ≈ 0.85 (>55% accuracy in ≥80% of trials with 500 keys). The full sca-triage pipeline — combining pairwise tests, MI, and classification — achieves 80% detection rate at d ≈ 0.275, demonstrating that the multi-method approach is more sensitive than any single test. KyberSlash's d = 0.094 falls below all three per-experiment floors when using per-key aggregated features; our pipeline detected it through a fundamentally different mechanism — population-level aggregation across 500 keys, where the effect size is large enough for XGBoost to learn a weak but consistent signal (+3.8% lift). The per-experiment pipeline detection floor (d ≈ 0.275) and the population-level KyberSlash detection (d = 0.094) characterize complementary detection mechanisms, not the same pathway. Effects smaller than d ≈ 0.1 are below both detection mechanisms — and are unexploitable via userspace macro-timing.
+Our apparatus provably detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure. It is a measurement. Our pipeline's detection floor is d ≈ 0.275; effects below d ≈ 0.1 are below all detection mechanisms and unexploitable via userspace timing (full sensitivity characterization in Section 4).
 
 **Information-theoretic confirmation.** Six independent methods — Perceived Information (negative for all targets), KSG MI (0.000 bits, p = 1.0), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample) — all converge: zero extractable bits. Methodology details are in Appendix B. The TVLA result of |t| = 62.49 reports a signal that, by every other information-theoretic measure, does not exist — and that vanishes (|t| = 0.58) when collection is interleaved.
 
@@ -100,7 +92,7 @@ Reading across columns isolates the effect of each fix:
 - **Intel asymmetric interleaved** (column 3): Still fails (|t| = 8.10), confirming that live keygen+encaps cache pollution is a real secondary confound on Intel — independent of temporal drift.
 - **Both fixes combined** (column 4): Symmetric + interleaved passes on both platforms. This is the definitive result.
 
-The remainder of this section details the two confound sources and the per-platform evidence behind each cell.
+Two confound sources produce this pattern. Here's how we isolated each one.
 
 ### The Harness Asymmetry Problem
 
@@ -169,7 +161,7 @@ Symmetric interleaved passes (|t| = 1.65). The asymmetric interleaved failure (|
 
 ### The Proof: Pairwise Decomposition
 
-The definitive proof that the TVLA signal is not secret-dependent comes from pairwise decomposition. Instead of comparing fixed-vs-random (which confounds input repetition with secret identity), we compare timing distributions grouped by actual secret properties — individual key bits, Hamming weight (number of 1-bits) classes, key byte values — while holding the fixed-vs-random structure constant.
+The definitive proof that the TVLA signal is not secret-dependent comes from pairwise decomposition. Instead of comparing fixed-vs-random (which confounds input repetition with secret identity), we compare timing distributions grouped by actual secret properties — individual key bits, Hamming weight classes, key byte values — while holding the fixed-vs-random structure constant.
 
 When traces are split by actual secret properties instead of by TVLA group assignment, the distributions are identical. Every pairwise t-test, every distributional comparison, every classifier trained on actual secret labels performs at chance. The structure that TVLA detects vanishes entirely when the comparison is reframed around the secret rather than around input repetition.
 
@@ -187,7 +179,7 @@ We propose a two-stage protocol for non-invasive side-channel evaluation of cryp
 
 **Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If |t| <= 4.5, the implementation passes. No further analysis required. A TVLA pass remains a valid certificate of conformance.
 
-**Stage 2: Confound Triage.** If |t| > 4.5, do not immediately fail the implementation. Instead, run pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material.
+**Stage 2: Confound Triage.** If |t| > 4.5, do not immediately fail the implementation. Instead, run pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight — the number of 1-bits in the key) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material.
 
 The decision logic is clear:
 - If pairwise decomposition shows **no significant differences** between secret groups AND mutual information is **zero** (within permutation confidence): the TVLA failure is a **false positive** caused by temporal-drift confound. The implementation **passes**.
@@ -224,7 +216,7 @@ VERDICT: FALSE_POSITIVE
 
 Pairwise decomposition tests 13 secret-key properties; all return non-significant after Holm-Bonferroni correction. KSG MI provides a model-free backstop capturing nonlinear dependencies that pairwise tests might miss. A FALSE_POSITIVE verdict guarantees no secret-dependent leakage above the d ≈ 0.275 macro-timing noise floor — the limit of userspace exploitability. Below this threshold, hardware EM probing is required.
 
-**Sensitivity.** Synthetic injection at Cohen's d = {0.005–1.0} across 20 trials: 90% detection at d = 0.3, 100% at d = 0.5. The per-experiment floor is d ≈ 0.275. Population-level analysis extends sensitivity further — our KyberSlash positive control was detected at d = 0.094 via cross-key aggregation. Full triage completes in under 30 seconds on 50K traces.
+**Sensitivity and detection floors.** We validated detection capability by injecting synthetic timing leaks at Cohen's d = {0.005–1.0} across 20 trials per effect size: 90% detection at d = 0.3, 100% at d = 0.5. The per-experiment pipeline floor is d ≈ 0.275 (80% detection). The pairwise t-test floor alone is d = 0.398 (454 cycles at 80% power); the ML classification floor is d ≈ 0.85. The multi-method pipeline is more sensitive than any single test. KyberSlash (d = 0.094) falls below all per-experiment floors but was detected through a different mechanism — population-level aggregation across 500 keys, where XGBoost learns weak but consistent cross-key patterns (+3.8% lift). The per-experiment floor (d ≈ 0.275) and population-level detection (d = 0.094) characterize complementary mechanisms, not the same pathway. Effects below d ≈ 0.1 are below both and unexploitable via userspace macro-timing. Full triage completes in under 30 seconds on 50K traces.
 
 ### Comparison Against Existing Tools
 
@@ -241,11 +233,11 @@ Note: dudect's *measurement loop* already interleaves by design, preventing temp
 
 ### Recommendations for Standards Bodies
 
-1. **ISO 17825 should mandate interleaved collection or include Stage 2 as a mandatory follow-up.** The current standard's implicit assumption of sequential collection introduces temporal drift that produces false positives on general-purpose processors. Either mandating interleaved collection (alternating fixed and random measurements within a single loop) or requiring pairwise decomposition as a follow-up to any TVLA failure would eliminate the most common source of false positives.
+1. **Mandate interleaved collection.** ISO 17825's implicit sequential protocol introduces temporal drift that produces false positives on general-purpose processors. Mandating interleaved collection — or requiring pairwise decomposition as a mandatory follow-up to any TVLA failure — eliminates the most common source of false positives.
 
-2. **CMVP/FIPS 140-3 guidance should acknowledge the temporal-drift confound.** NIST's Implementation Guidance for FIPS 140-3 should include an informative note describing the confound, its root cause in sequential collection methodology, and the availability of triage tools and interleaved collection as mitigations. This prevents evaluation labs from independently discovering the problem and reaching inconsistent conclusions.
+2. **Acknowledge the confound in FIPS 140-3 guidance.** NIST's Implementation Guidance should describe the temporal-drift confound, its root cause, and available mitigations. Without this, evaluation labs independently discover the problem and reach inconsistent conclusions.
 
-3. **Evaluation labs should adopt interleaved collection and pairwise decomposition as standard practice.** Labs performing non-invasive evaluation on general-purpose processors (as opposed to embedded targets) should switch to interleaved trace collection and include pairwise secret-group analysis in their standard operating procedures. Interleaved collection eliminates temporal drift at the source; pairwise decomposition provides an additional safety net. The marginal cost is small — the traces are already collected — and together they eliminate the most common source of false positives.
+3. **Adopt pairwise decomposition in lab SOPs.** The marginal cost is small — the traces are already collected — and pairwise analysis provides a safety net even when interleaved collection is not feasible. Together, interleaving and pairwise decomposition eliminate the most common source of false positives on modern hardware.
 
 ---
 
