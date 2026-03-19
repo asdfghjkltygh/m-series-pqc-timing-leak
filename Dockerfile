@@ -82,4 +82,7 @@ CMD ["bash", "-c", "\
     echo '=== Validate all paper claims against data ===' && \
     python scripts/validate_paper_claims.py && \
     echo '' && \
+    echo '=== sca-triage smoke test ===' && \
+    sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick && \
+    echo '' && \
     echo '=== All experiments complete ==='"]

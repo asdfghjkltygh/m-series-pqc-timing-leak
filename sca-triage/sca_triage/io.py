@@ -248,8 +248,12 @@ def load_npz(
     npz_path = pathlib.Path(npz_path)
     data = np.load(npz_path, allow_pickle=True)
 
-    fixed_raw: np.ndarray = data["fixed_timings"].astype(np.float64)
-    random_raw: np.ndarray = data["random_timings"].astype(np.float64)
+    # Support both naming conventions: "fixed_timings"/"random_timings"
+    # and the shorter "fixed"/"random".
+    key_fixed = "fixed_timings" if "fixed_timings" in data else "fixed"
+    key_random = "random_timings" if "random_timings" in data else "random"
+    fixed_raw: np.ndarray = data[key_fixed].astype(np.float64)
+    random_raw: np.ndarray = data[key_random].astype(np.float64)
 
     # Flatten to 1-D for TVLA.
     fixed_flat = fixed_raw.ravel()
@@ -300,7 +304,7 @@ def load_npz(
 
     # --- Metadata ---------------------------------------------------------
     extra_keys = [k for k in data.files
-                  if k not in ("fixed_timings", "random_timings")]
+                  if k not in (key_fixed, key_random)]
     extra = {k: data[k] for k in extra_keys}
 
     metadata = {

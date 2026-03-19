@@ -50,11 +50,11 @@
 
 **Title:** We Ran ISO 17825 TVLA on liboqs ML-KEM
 
-**Key Message:** Both major platforms fail catastrophically — |t| = 8.42 on Apple, |t| = 12.95 on Intel.
+**Key Message:** Both major platforms fail catastrophically — |t| = 62.49 on Apple, |t| = 6.70 on Intel.
 
-**Visual:** Two large t-statistic values side by side. Left: Apple Silicon logo with "|t| = 8.42" in red. Right: Intel logo with "|t| = 12.95" in red. Horizontal dashed line at 4.5 labeled "FAILURE THRESHOLD." Both values tower above the line. Below: "liboqs v0.15.0 — the most widely used open-source PQC library."
+**Visual:** Two large t-statistic values side by side. Left: Apple Silicon logo with "|t| = 62.49" in red. Right: Intel logo with "|t| = 6.70" in red. Horizontal dashed line at 4.5 labeled "FAILURE THRESHOLD." Both values tower above the line. Below: "liboqs v0.15.0, symmetric harness (identical code paths, no harness asymmetry)."
 
-**Speaker Notes:** "We ran the standard test on liboqs — the reference open-source PQC library that dozens of products integrate — on Apple Silicon and Intel x86. Apple gives us a t-statistic of 8.42. Intel gives us 12.95. Both are far above the 4.5 failure threshold. If you take these results at face value, ML-KEM is dead on arrival for every FIPS-compliant organization."
+**Speaker Notes:** "We ran the standard test on liboqs — the reference open-source PQC library that dozens of products integrate — using a symmetric harness that eliminates the most obvious confound source. Apple gives us a t-statistic of 62. Intel gives us 6.7. Both are far above the 4.5 failure threshold. If you take these results at face value, ML-KEM is dead on arrival for every FIPS-compliant organization."
 
 ---
 

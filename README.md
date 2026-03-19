@@ -1,70 +1,52 @@
-# When TVLA Lies: ISO 17825 False Positives on ML-KEM
+# When TVLA Lies: How a Broken Standard Is Blocking Post-Quantum Crypto Deployment
 
-ISO 17825 TVLA reports catastrophic timing leakage in liboqs ML-KEM-768 on both Apple Silicon (|t|=8.42) and Intel x86 (|t|=12.95). **The leakage is not real.** We prove this with 12.2 million traces, 20+ experiments, and six independent information-theoretic methods converging on zero extractable bits.
+ISO 17825 TVLA — the mandatory side-channel test for FIPS 140-3 certification — produces catastrophic false positives on ML-KEM when run on modern hardware. The root cause is **temporal drift from sequential data collection**, not any weakness in the algorithm or its implementation.
 
-The root cause is an execution-context confound: TVLA's fixed-vs-random methodology confuses input-dependent microarchitectural optimization with secret-dependent leakage. This confound produces false positives on every modern processor architecture we tested.
+**Headline result:** Switching from sequential to interleaved measurement collection reduces Apple Silicon's |t| from **62.49 to 0.58** — a 100x reduction — with no change to the hardware, software, or cryptographic inputs. Intel x86 shows the same pattern: |t| drops from **6.70 to 1.65**. 12.2 million traces and 150+ experiments confirm zero exploitable bits of secret information.
 
-We release **sca-triage**, an open-source tool that triages TVLA false positives, and propose a two-stage evaluation protocol for ISO 17825.
+We release **sca-triage**, an open-source triage tool that distinguishes real side-channel leakage from false positives, and propose a two-stage evaluation protocol for ISO 17825.
 
-## Quick Start
+## Verify All Claims (30 seconds)
 
 ```bash
-# Install the triage tool
-cd sca-triage && pip install -e . && cd ..
-
-# Run the dudect vs TVLA vs sca-triage comparison
-python scripts/dudect_comparison.py
-
-# Run the full sensitivity curve
-python scripts/phase7_sensitivity_curve.py
+pip install -e sca-triage
+python scripts/validate_paper_claims.py
 ```
+
+This checks all 28 numerical claims in the paper against the data files in the repo. Expected: 28/28 PASS.
+
+## Run the Tool on Our Data
+
+```bash
+sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick
+```
+
+Expected: TVLA reports |t|=8.42 (FAIL). Verdict: FALSE_POSITIVE.
+
+## Full Reproduction (Docker)
+
+```bash
+docker-compose up --build run-all-experiments
+```
+
+Runs all experiments (~5 minutes), validates all claims, outputs results to `data/` and `figures/`.
 
 ## Key Results
 
-| Method | Result | Verdict |
-|--------|--------|---------|
-| dudect / TVLA (ISO 17825) | \|t\|=8.42 (Apple), \|t\|=12.95 (Intel) | FAIL — "leakage detected" |
-| sca-triage Stage 2 (pairwise) | All secret targets p>0.2 | No secret dependence |
-| sca-triage Stage 3 (MI) | 0.000 bits, p=1.0 | Zero extractable information |
-| Positive control (KyberSlash v0.9.0) | +3.8% accuracy lift | Real leakage detected |
-| Raw trace analysis (100K traces) | Cohen's d=0.0003 | No trace-level signal |
+| Collection | Platform | |t| | Verdict |
+|-----------|----------|-----|---------|
+| Sequential | Apple Silicon | 62.49 | **FAIL** |
+| Interleaved | Apple Silicon | 0.58 | **PASS** |
+| Sequential | Intel x86 | 6.70 | **FAIL** |
+| Interleaved | Intel x86 | 1.65 | **PASS** |
 
-## Repository Map
+Same hardware. Same code. Same inputs. The only difference is *when* the measurements were collected.
 
-```
-├── sca-triage/          # Open-source TVLA triage tool (pip install -e .)
-├── submission/          # Black Hat submission materials
-│   ├── whitepaper.md    # Full whitepaper
-│   ├── cfp_abstracts.md # Three CFP abstract versions
-│   └── slide_deck_outline.md
-├── scripts/             # Experiment scripts (Python)
-│   ├── dudect_comparison.py        # dudect vs TVLA vs sca-triage
-│   ├── phase6_raw_trace_analysis.py # Aggregation masking test
-│   ├── phase7_sensitivity_curve.py  # Tool sensitivity characterization
-│   └── phase8_ml_detection_floor.py # ML detection floor
-├── harnesses/           # C timing measurement harnesses
-│   ├── tvla_harness.c   # Apple Silicon TVLA harness
-│   └── timing_harness_v2.c
-├── x86-replication/     # Intel x86 cross-platform replication
-│   ├── tvla_harness_x86.c
-│   └── tvla_analysis_x86.py
-├── data/                # Experiment results (large CSVs gitignored)
-├── figures/             # Generated plots
-└── REPRODUCE.md         # Step-by-step reproduction guide
-```
+## Links
 
-## Citation
-
-If you use this work, please cite:
-
-```bibtex
-@misc{shenoy2026tvla,
-  title={When TVLA Lies: How a Broken Standard Is Blocking Post-Quantum Crypto Deployment},
-  author={Shenoy, Saahil},
-  year={2026},
-  howpublished={Black Hat Briefings}
-}
-```
+- **Whitepaper:** [submission/whitepaper.md](submission/whitepaper.md)
+- **Reproduction guide:** [REPRODUCE.md](REPRODUCE.md)
+- **sca-triage tool:** [sca-triage/](sca-triage/)
 
 ## License
 

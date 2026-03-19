@@ -230,7 +230,7 @@ pip install sca-triage
 ```bash
 # Full three-stage pipeline (TVLA → Pairwise → MI)
 sca-triage analyze \
-    --timing-data measurements.csv \
+    --timing-data data/tvla_traces.npz \
     --secret-labels keys.csv \
     --targets sk_lsb,sk_byte_0,sk_hw \
     --permutation-shuffles 10000 \
@@ -259,8 +259,8 @@ Auditors integrate sca-triage into their FIPS evaluation workflow by running it 
 **Worked example.** Running sca-triage on our Apple Silicon asymmetric harness data (50,000 traces, |t| = 8.42) — we demonstrate on the asymmetric configuration because this represents what evaluation labs are most likely to encounter; the symmetric harness data produces the same FALSE_POSITIVE verdict at |t| = 62.49:
 
 ```
-$ sca-triage analyze --timing-data apple_traces.csv \
-    --secret-labels keys.csv --targets sk_lsb --permutation-shuffles 10000
+$ sca-triage analyze --timing-data data/tvla_traces.npz \
+    --targets sk_lsb --quick
 
 Loading data...
 
