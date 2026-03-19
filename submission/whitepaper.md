@@ -53,7 +53,7 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 **Apple Silicon M-series.** Timing source: CNTVCT_EL0 at 24 MHz (~41.7 ns granularity), 99.2% zero-tick overhead. This conservative resolution means both the TVLA failure (|t| = 62.49) and the null pairwise result are robust to timer granularity. Performance governor pinned to high-performance; thermal throttling monitored.
 
-**Intel Xeon x86.** Timing source: RDTSC with CPUID serialization for cycle-accurate measurement (~1,778 cycles overhead per read). The overhead is a constant additive bias affecting both groups identically; it cancels in the t-test. While this overhead acts as a stationary noise source, our 50-repetition per-key aggregation suppresses this variance by a factor of √50 ≈ 7x (standard error of the mean), pushing the detection floor down to 454 cycles — the minimum detectable *difference* in decapsulation time, not the absolute timer resolution. Performance governor pinned; hyperthreading accounted for.
+**Intel Xeon x86.** Timing source: RDTSC with CPUID serialization for high-resolution cycle counting (~1,778 cycles overhead per read). The overhead is a constant additive bias affecting both groups identically; it cancels in the t-test. While this overhead acts as a stationary noise source, our 50-repetition per-key aggregation suppresses this variance by a factor of √50 ≈ 7x (standard error of the mean), pushing the detection floor down to 454 cycles — the minimum detectable *difference* in decapsulation time, accounting for both the attenuated timer overhead and residual OS scheduling noise. Performance governor pinned; hyperthreading accounted for.
 
 **Data collection.** 500 distinct keys × 50 repetitions per key per condition = 12.2 million measurements across both platforms. Collection automated and SHA-256 checksummed. Full details in Appendix C.
 
@@ -214,6 +214,10 @@ The tool runs three stages: (1) standard TVLA (Welch's t-test, pass/fail at |t| 
   MI = 0.000 bits, p=1.0  (not significant)
 
 VERDICT: FALSE_POSITIVE
+
+⚠ Verdict bounded by macro-timing detection floor (d ≈ 0.275).
+  Does not guarantee zero leakage against hardware/EM probing
+  or sub-threshold micro-architectural channels.
 ```
 
 Pairwise decomposition tests 13 secret-key properties; all return non-significant after Holm-Bonferroni correction. KSG MI provides a model-free backstop capturing nonlinear dependencies that pairwise tests might miss. A FALSE_POSITIVE verdict guarantees no secret-dependent leakage above the d ≈ 0.275 macro-timing noise floor — the limit of userspace exploitability. Below this threshold, hardware EM probing is required.
@@ -229,9 +233,10 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 | Analysis | Patched v0.15.0 (no real leak) | Vulnerable v0.9.0 (KyberSlash) |
 |------|------|------|
 | **Welch's t-test (sequential data)** | |t| = 8.42 → FAIL | |t| = 1.04 → Underpowered |
+| **dudect (interleaved collection)** | PASS (solves temporal drift) | PASS (blind to harness asymmetry) |
 | **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise d=0.0003, MI=0.0 bits) | REAL_LEAKAGE (XGBoost 56.6% vs 52.8% chance) |
 
-On the patched version, the t-test reports leakage that does not exist. On the vulnerable version, it is underpowered at 25K traces. sca-triage correctly triages both cases — identifying the false positive and detecting the real vulnerability via cross-key ML classification.
+On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves the temporal drift problem and correctly passes, but it is blind to harness asymmetry and cannot detect the real KyberSlash vulnerability at 25K traces. On the vulnerable version, the sequential t-test is underpowered. sca-triage correctly triages both cases — identifying the false positive and detecting the real vulnerability via cross-key ML classification.
 
 **Repository:** [https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage](https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage)
 
@@ -253,7 +258,7 @@ The bottom line for organizations deploying post-quantum cryptography: **ML-KEM 
 
 **Threat model scope.** We do not claim liboqs is perfectly constant-time. Our strict per-key detection floor is d ≈ 0.275 (454 cycles) — no secret-dependent macro-timing leak exceeds this threshold for any individual key. Vulnerabilities affecting multiple keys (like KyberSlash) are detected well below this floor (d = 0.094) by aggregating weak signals across the 500-key population: sca-triage's ML classifiers learn consistent cross-key patterns that per-key tests miss. These are complementary detection mechanisms — the per-key floor is the strict upper bound on undetected leakage for any single key, while population-level aggregation extends sensitivity to smaller effects that are consistent across keys.
 
-An attacker with kernel-level performance counter access could achieve cycle-accurate resolution, potentially detecting sub-threshold leakage. However, such an attacker already has ring-0 execution, placing them outside the remote/userspace threat model that FIPS 140-3 non-invasive evaluation targets.
+An attacker with kernel-level performance counter access could achieve high-resolution cycle counting, potentially detecting sub-threshold leakage. However, such an attacker already has ring-0 execution, placing them outside the remote/userspace threat model that FIPS 140-3 non-invasive evaluation targets.
 
 The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms that the known timing vulnerability in pre-patch versions is detectable and that the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe against remote and userspace adversaries constrained by OS scheduling noise and standard timer resolution.
 
