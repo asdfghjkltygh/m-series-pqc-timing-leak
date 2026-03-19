@@ -77,9 +77,20 @@ def run_demo(
     # ACT 1: "The Audit Trap"
     _act1(console, fixed_timings, random_timings, precomputed)
 
-    # ACT 2: "The Autopsy"
-    _act2(console, per_key_features, per_key_labels, target_names,
-          n_shuffles, precomputed)
+    # ACT 2: "The Autopsy" (skip if no secret labels available)
+    if per_key_labels:
+        _act2(console, per_key_features, per_key_labels, target_names,
+              n_shuffles, precomputed)
+    else:
+        console.print()
+        console.print(Panel(
+            Text("Stage 2 skipped — no secret labels available.\n"
+                 "Re-run with --secret-labels to see pairwise decomposition.",
+                 style="bold yellow", justify="center"),
+            border_style="yellow",
+            padding=(1, 2),
+        ))
+        console.print()
 
     # ACT 3: "The Positive Control" (if vulnerable data provided)
     if vuln_features is not None and vuln_labels is not None:
@@ -113,11 +124,11 @@ def _act0(
 
     # Sequential result
     if precomputed:
-        time.sleep(2.0)
+        time.sleep(1.0)
     console.print("  [bold cyan]Sequential collection[/bold cyan] "
                    "(all fixed, then all random):")
     if precomputed:
-        time.sleep(1.5)
+        time.sleep(0.5)
 
     seq_color = "red" if sequential_t > 4.5 else "green"
     seq_verdict = "FAIL" if sequential_t > 4.5 else "PASS"
@@ -129,14 +140,14 @@ def _act0(
     ))
 
     if precomputed:
-        time.sleep(3.0)
+        time.sleep(1.0)
 
     # Interleaved result
     console.print()
     console.print("  [bold cyan]Interleaved collection[/bold cyan] "
                    "(alternating fixed[i] / random[i]):")
     if precomputed:
-        time.sleep(1.5)
+        time.sleep(0.5)
 
     int_color = "green" if interleaved_t <= 4.5 else "red"
     int_verdict = "PASS" if interleaved_t <= 4.5 else "FAIL"
@@ -148,7 +159,7 @@ def _act0(
     ))
 
     if precomputed:
-        time.sleep(2.0)
+        time.sleep(0.5)
 
     # The punchline
     reduction = sequential_t / interleaved_t if interleaved_t > 0 else float('inf')
@@ -164,7 +175,7 @@ def _act0(
     ))
 
     if precomputed:
-        time.sleep(5.0)
+        time.sleep(1.0)
     console.print()
 
 
@@ -232,7 +243,7 @@ def _act1_precomputed(
     fixed_timings: np.ndarray,
     random_timings: np.ndarray,
 ) -> None:
-    """Display pre-cached Act 1 results with realistic pacing (~30s)."""
+    """Display pre-cached Act 1 results with fast pacing (~8s)."""
     steps = 10
     n_fixed = len(fixed_timings)
     n_random = len(random_timings)
@@ -265,18 +276,18 @@ def _act1_precomputed(
                             description=f"Evaluating TVLA... |t| = {t_val:.2f}")
 
             if t_val >= 4.5 and i >= 7:
-                time.sleep(1.5)
+                time.sleep(0.5)
                 console.print(Panel(
                     Text(f"CRITICAL: TIMING LEAKAGE DETECTED  |t| = {t_val:.2f}",
                          style="bold white on red", justify="center"),
                     border_style="red",
                 ))
-                time.sleep(1.0)
+                time.sleep(0.3)
             else:
-                time.sleep(2.5)
+                time.sleep(0.5)
 
     _display_tvla_verdict(console, final_result)
-    time.sleep(5.0)
+    time.sleep(1.0)
 
 
 def _act1_live(
@@ -382,7 +393,7 @@ def _act2_precomputed(
     target_names: list[str],
     n_shuffles: int,
 ) -> None:
-    """Display pre-cached Act 2 results with ~45s pacing."""
+    """Display pre-cached Act 2 results with fast pacing."""
     # Use mean column (index 2) for pairwise
     means = per_key_features[:, 2] if per_key_features.shape[1] > 2 else per_key_features[:, 0]
 
@@ -397,7 +408,7 @@ def _act2_precomputed(
         target_names=available,
     )
     for pr in pairwise_results:
-        time.sleep(3.0)
+        time.sleep(0.5)
         sig_style = "bold red" if pr.any_significant else "bold green"
         sig_text = "SIGNIFICANT" if pr.any_significant else "not significant"
         console.print(
@@ -421,10 +432,11 @@ def _act2_precomputed(
     ) as progress:
         for name in available:
             task = progress.add_task(f"  MI({name})", total=n_shuffles)
-            # Simulate progress
-            for s in range(n_shuffles):
+            # Simulate progress in chunks
+            chunk = max(1, n_shuffles // 5)
+            for s in range(0, n_shuffles, chunk):
                 time.sleep(0.3)
-                progress.update(task, advance=1)
+                progress.update(task, advance=min(chunk, n_shuffles - s))
 
     # Actually compute MI
     mi_results = run_all_mi(
@@ -544,6 +556,11 @@ def _display_false_positive_verdict(console: Console) -> None:
         "This implementation is SAFE for deployment.\n",
         style="dim",
     )
+    text.append(
+        "\n⚠ Verdict bounded by macro-timing detection floor (d ≈ 0.275).\n"
+        "Does not guarantee zero leakage against hardware/EM probing.\n",
+        style="bold yellow",
+    )
 
     console.print(Panel(text, title="[bold green]SCA-TRIAGE VERDICT[/bold green]",
                         border_style="green", padding=(1, 2)))
@@ -595,7 +612,7 @@ def _act3(
     if precomputed:
         # Simulated pacing
         console.print("  [bold cyan]Pairwise analysis on vulnerable build...[/bold cyan]")
-        time.sleep(3.0)
+        time.sleep(1.0)
 
     vuln_pairwise = run_all_pairwise(
         means, {k: vuln_labels[k] for k in available},

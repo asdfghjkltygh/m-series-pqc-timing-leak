@@ -137,6 +137,12 @@ def load_csv(
     trace_path = pathlib.Path(trace_path)
     df = pd.read_csv(trace_path)
 
+    # --- Derive common targets if not present -----------------------------
+    if "sk_lsb" not in df.columns and "sk_byte0" in df.columns:
+        df["sk_lsb"] = df["sk_byte0"] % 2
+    if "msg_hw_parity" not in df.columns and "message_hw" in df.columns:
+        df["msg_hw_parity"] = df["message_hw"] % 2
+
     # --- Auto-detect column names if defaults don't match -----------------
     if value_col not in df.columns:
         timing_candidates = [c for c in df.columns
@@ -315,6 +321,26 @@ def load_npz(
     labels: Optional[Dict[str, np.ndarray]] = None
     if label_path is not None:
         label_df = pd.read_csv(label_path)
+        # Derive common targets if not present
+        if "sk_lsb" not in label_df.columns and "sk_byte0" in label_df.columns:
+            label_df["sk_lsb"] = label_df["sk_byte0"] % 2
+        if "msg_hw_parity" not in label_df.columns and "message_hw" in label_df.columns:
+            label_df["msg_hw_parity"] = label_df["message_hw"] % 2
+
+        # If the label CSV has per-key data (with key_id and repeats),
+        # aggregate to one row per key and build matching per-key features.
+        if key_col in label_df.columns and not _is_preaggregated(label_df, key_col):
+            # Build per-key features from the label CSV's timing data
+            value_candidates = [c for c in label_df.columns
+                                if "timing" in c.lower() or "cycles" in c.lower()
+                                or "ticks" in c.lower()]
+            if value_candidates:
+                per_key_agg = _aggregate_per_key(label_df, key_col, value_candidates[0])
+                per_key_agg = per_key_agg.reset_index()
+                features = per_key_agg[FEATURE_NAMES].values
+
+            label_df = label_df.drop_duplicates(subset=[key_col]).sort_values(key_col)
+
         candidates = [c for c in label_df.columns if c != key_col]
         if target_cols:
             candidates = [c for c in candidates if c in target_cols]
