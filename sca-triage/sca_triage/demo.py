@@ -239,11 +239,47 @@ def _run_precomputed(
     console.print()
     time.sleep(3.0)
 
+    # --- Why sequential collection is the problem ---
+    console.print(
+        "  But here's the problem with collecting one group after the other:",
+        style="white", highlight=False)
+    console.print()
+    time.sleep(1.5)
+
+    console.print(
+        "  \u2500\u2500\u2500 Group A (one key) "
+        "\u2500\u2500\u2500\u2500\u2502"
+        "\u2500\u2500\u2500 Group B (many keys) "
+        "\u2500\u2500\u2500\u2500",
+        style="bold cyan", highlight=False)
+    console.print(
+        "  time \u2192         ",
+        style="dim", highlight=False, end="")
+    console.print("cool CPU", style="cyan", highlight=False, end="")
+    console.print(" \u2500\u2500\u2500\u2500\u2500\u2500\u2192 ",
+                  style="dim", highlight=False, end="")
+    console.print("warm CPU", style="red", highlight=False)
+    console.print()
+
+    console.print(
+        "  The computer's temperature, clock speed, and OS scheduling",
+        style="dim", highlight=False)
+    console.print(
+        "  all change between the first half and the second half.",
+        style="dim", highlight=False)
+    console.print(
+        "  The test blames the KEY. But it's actually the ENVIRONMENT.",
+        style="bold white", highlight=False)
+    console.print()
+    time.sleep(3.5)
+
     # --- Method 2: Interleaved ---
     console.print(
-        "  But what if we collect A and B at the SAME time "
-        "instead of one after the other?",
-        style="white", highlight=False)
+        "  Fix: collect A and B in alternating order. Now both groups",
+        style="bold green", highlight=False)
+    console.print(
+        "  experience the exact same conditions.",
+        style="bold green", highlight=False)
     console.print()
 
     console.print(
@@ -252,7 +288,7 @@ def _run_precomputed(
         "\u2500\u2500 A \u2500\u2500 B \u2500\u2500",
         style="bold green", highlight=False)
     console.print(
-        "  time \u2192",
+        "  time \u2192  (both groups see the same temperature, same CPU state)",
         style="dim", highlight=False)
     console.print()
     time.sleep(2.0)
@@ -269,7 +305,17 @@ def _run_precomputed(
     console.print("  score: 0.58    (<4.5 = PASS)                           PASS",
                   style="bold green", highlight=False)
     console.print()
-    time.sleep(3.0)
+    time.sleep(2.0)
+
+    # Credibility footnote
+    console.print(
+        "  (Alternating collection is already standard in hardware testing",
+        style="dim", highlight=False)
+    console.print(
+        "   and is built into the dudect timing analysis tool.)",
+        style="dim", highlight=False)
+    console.print()
+    time.sleep(2.0)
 
     # --- Punchline ---
     _typed(console,
