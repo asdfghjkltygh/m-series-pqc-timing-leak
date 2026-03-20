@@ -14,7 +14,7 @@
 
 **Visual:** Title text over a dark background. Subtitle: "12.2 Million Traces, Zero Exploitable Bits, and an Industry-Wide False Positive." Author name, affiliation, and Black Hat logo. Small icons for Apple Silicon and Intel at bottom.
 
-**Speaker Notes:** "Good afternoon. My name is Saahil Shenoy. I'm going to tell you about a broken standard that is about to block post-quantum cryptography deployment across the federal government — and how we proved it, fixed it, and released a tool so you don't have to spend six months doing what we did."
+**Speaker Notes:** "Good afternoon. My name is Saahil Shenoy. I'm going to tell you about a broken standard that is about to block post-quantum cryptography deployment across the federal government, and how we proved it, fixed it, and released a tool so you don't have to spend six months doing what we did."
 
 ---
 
@@ -24,13 +24,13 @@
 
 ### Slide 2: The Post-Quantum Transition Is Happening Now
 
-**Title:** PQC Migration Is Not Coming — It's Here
+**Title:** PQC Migration Is Not Coming; It's Here
 
 **Key Message:** ML-KEM is shipping in production systems today and every implementation needs FIPS certification.
 
 **Visual:** Timeline graphic showing: NIST standardization (Aug 2024), Apple iMessage (2024), Chrome/Cloudflare TLS (2024), CNSA 2.0 deadline (2033). Logos of major adopters (Apple, Google, Cloudflare, AWS) along the timeline.
 
-**Speaker Notes:** "NIST finalized ML-KEM — that's Kyber — as the post-quantum KEM standard in 2024. It's already in iMessage, Chrome, Cloudflare. CNSA 2.0 says national security systems must be quantum-resistant by 2033. This is not a research exercise anymore. It's a deployment program with hard deadlines."
+**Speaker Notes:** "NIST finalized ML-KEM (that's Kyber) as the post-quantum KEM standard in 2024. It's already in iMessage, Chrome, Cloudflare. CNSA 2.0 says national security systems must be quantum-resistant by 2033. This is not a research exercise anymore. It's a deployment program with hard deadlines."
 
 ---
 
@@ -42,7 +42,7 @@
 
 **Visual:** Flow diagram: Implementation -> FIPS 140-3 Evaluation -> ISO 17825 Side-Channel Test -> TVLA (Fixed vs Random) -> Pass (|t| <= 4.5) or Fail (|t| > 4.5). The "Fail" path is highlighted in red with a stop sign.
 
-**Speaker Notes:** "Before any PQC implementation ships in a FIPS-validated module, it has to pass non-invasive side-channel evaluation under ISO 17825. That evaluation uses the Test Vector Leakage Assessment — TVLA. You feed the implementation fixed and random inputs, compare the timing distributions, and if the t-statistic exceeds 4.5, you fail. No exceptions. No gray area."
+**Speaker Notes:** "Before any PQC implementation ships in a FIPS-validated module, it has to pass non-invasive side-channel evaluation under ISO 17825. That evaluation uses the Test Vector Leakage Assessment, or TVLA. You feed the implementation fixed and random inputs, compare the timing distributions, and if the t-statistic exceeds 4.5, you fail. No exceptions. No gray area."
 
 ---
 
@@ -50,11 +50,11 @@
 
 **Title:** We Ran ISO 17825 TVLA on liboqs ML-KEM
 
-**Key Message:** Both major platforms fail catastrophically — |t| = 62.49 on Apple, |t| = 6.70 on Intel.
+**Key Message:** Both major platforms fail catastrophically: |t| = 62.49 on Apple, |t| = 6.70 on Intel.
 
 **Visual:** Two large t-statistic values side by side. Left: Apple Silicon logo with "|t| = 62.49" in red. Right: Intel logo with "|t| = 6.70" in red. Horizontal dashed line at 4.5 labeled "FAILURE THRESHOLD." Both values tower above the line. Below: "liboqs v0.15.0, symmetric harness (identical code paths, no harness asymmetry)."
 
-**Speaker Notes:** "We ran the standard test on liboqs — the reference open-source PQC library that dozens of products integrate — using a symmetric harness that eliminates the most obvious confound source. Apple gives us a t-statistic of 62. Intel gives us 6.7. Both are far above the 4.5 failure threshold. If you take these results at face value, ML-KEM is dead on arrival for every FIPS-compliant organization."
+**Speaker Notes:** "We ran the standard test on liboqs (the reference open-source PQC library that dozens of products integrate) using a symmetric harness that eliminates the most obvious confound source. Apple gives us a t-statistic of 62. Intel gives us 6.7. Both are far above the 4.5 failure threshold. If you take these results at face value, ML-KEM is dead on arrival for every FIPS-compliant organization."
 
 ---
 
@@ -80,9 +80,9 @@
 
 **Key Message:** Over 100 experiments across every major side-channel technique produced zero exploitable information.
 
-**Visual:** Heatmap figure from the paper — experiment matrix with rows as techniques (XGBoost, Random Forest, CNN, Template, KS-test, PCA, t-SNE, MI, PI, SNR) and columns as targets (key bit, key byte, Hamming weight, etc.). Every cell is green/blue (at or below baseline). No red cells. Title on heatmap: "Accuracy vs. Majority Baseline." Color legend: green = at baseline, blue = below baseline.
+**Visual:** Heatmap figure from the paper: experiment matrix with rows as techniques (XGBoost, Random Forest, CNN, Template, KS-test, PCA, t-SNE, MI, PI, SNR) and columns as targets (key bit, key byte, Hamming weight, etc.). Every cell is green/blue (at or below baseline). No red cells. Title on heatmap: "Accuracy vs. Majority Baseline." Color legend: green = at baseline, blue = below baseline.
 
-**Speaker Notes:** "This is the experiment heatmap. Rows are techniques — gradient-boosted trees, random forests, neural networks, template attacks, distributional tests, information-theoretic measures. Columns are targets — key bits, key bytes, Hamming weight. Every cell you see is green or blue, meaning at or below random guessing. We tried everything. Nothing worked. XGBoost gets 50.2% on a 50/50 binary task. The CNN converges to majority-class prediction in three epochs. Template attack posteriors are indistinguishable from the prior."
+**Speaker Notes:** "This is the experiment heatmap. Rows are techniques: gradient-boosted trees, random forests, neural networks, template attacks, distributional tests, information-theoretic measures. Columns are targets: key bits, key bytes, Hamming weight. Every cell you see is green or blue, meaning at or below random guessing. We tried everything. Nothing worked. XGBoost gets 50.2% on a 50/50 binary task. The CNN converges to majority-class prediction in three epochs. Template attack posteriors are indistinguishable from the prior."
 
 ---
 
@@ -105,7 +105,7 @@
 
 Below the table, bold text: "Zero bits. Not low. Not marginal. Zero."
 
-**Speaker Notes:** "Let me give you the numbers that matter. Perceived Information is negative — the traces tell you less than flipping a coin. KSG mutual information is exactly zero with a permutation p-value of 1.0, meaning the real estimate is indistinguishable from noise. We scaled the dataset to 15 times the theoretically predicted minimum for detecting leakage at the effect size TVLA reports. The accuracy curve is perfectly flat. The information is not there."
+**Speaker Notes:** "Let me give you the numbers that matter. Perceived Information is negative; the traces tell you less than flipping a coin. KSG mutual information is exactly zero with a permutation p-value of 1.0, meaning the real estimate is indistinguishable from noise. We scaled the dataset to 15 times the theoretically predicted minimum for detecting leakage at the effect size TVLA reports. The accuracy curve is perfectly flat. The information is not there."
 
 ---
 
@@ -113,11 +113,11 @@ Below the table, bold text: "Zero bits. Not low. Not marginal. Zero."
 
 **Title:** Positive Control: KyberSlash
 
-**Key Message:** The same pipeline detects real leakage in vulnerable code — proving the null result is real.
+**Key Message:** The same pipeline detects real leakage in vulnerable code, proving the null result is real.
 
 **Visual:** Split screen. Left half labeled "Vulnerable (v0.9.0)": accuracy bar at +3.8% above baseline, highlighted in red. Right half labeled "Patched (v0.15.0)": accuracy bar at +0.5%, highlighted in green. Below both: "Valid/Invalid CT Classification: 100% on both versions." At bottom: "The pipeline works. The leakage doesn't exist."
 
-**Speaker Notes:** "A negative result means nothing if your detector is broken. So we ran the exact same pipeline against liboqs v0.9.0 — the version with the KyberSlash vulnerability. Our XGBoost classifier picks up a 3.8% accuracy lift on vulnerable code. On the patched version, it's 0.5% — noise. For the simpler task of classifying valid vs invalid ciphertexts, we get 100% on both. Our apparatus works. The leakage that TVLA reports in patched ML-KEM genuinely does not exist."
+**Speaker Notes:** "A negative result means nothing if your detector is broken. So we ran the exact same pipeline against liboqs v0.9.0, the version with the KyberSlash vulnerability. Our XGBoost classifier picks up a 3.8% accuracy lift on vulnerable code. On the patched version, it's 0.5%, which is noise. For the simpler task of classifying valid vs invalid ciphertexts, we get 100% on both. Our apparatus works. The leakage that TVLA reports in patched ML-KEM genuinely does not exist."
 
 ---
 
@@ -133,11 +133,11 @@ Below the table, bold text: "Zero bits. Not low. Not marginal. Zero."
 
 **Visual:** Diagram showing TVLA's assumption vs. reality. Left ("What TVLA assumes"): two boxes labeled "Fixed" and "Random" with arrow pointing to "Timing difference = secret leakage." Right ("What actually happens"): timeline showing "Block 1: Fixed traces" then "Block 2: Random traces" with annotation arrows: "thermal state drifts," "OS scheduler activity changes," "DVFS adjusts frequency." Arrow pointing to "Timing difference = when you measured, not what you measured."
 
-**Speaker Notes:** "Here's what's actually happening. The standard protocol collects all fixed-input traces in one block, then all random-input traces in a second block. Between those blocks, the system state drifts — thermal conditions change, the OS scheduler intervenes differently, DVFS adjusts clock frequency. TVLA sees a timing difference between the two groups and calls it leakage. But the difference is temporal — it's about when you measured, not what you measured. We proved this by interleaving the measurements: alternate fixed and random on every iteration, and the signal vanishes. 62 to 0.5."
+**Speaker Notes:** "Here's what's actually happening. The standard protocol collects all fixed-input traces in one block, then all random-input traces in a second block. Between those blocks, the system state drifts: thermal conditions change, the OS scheduler intervenes differently, DVFS adjusts clock frequency. TVLA sees a timing difference between the two groups and calls it leakage. But the difference is temporal; it's about when you measured, not what you measured. We proved this by interleaving the measurements: alternate fixed and random on every iteration, and the signal vanishes. 62 to 0.5."
 
 ---
 
-### Slide 10: The Proof — Sequential vs Interleaved
+### Slide 10: The Proof: Sequential vs Interleaved
 
 **Title:** One Change Eliminates the Confound
 
@@ -154,7 +154,7 @@ Below the table, bold text: "Zero bits. Not low. Not marginal. Zero."
 
 Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hardware changes."
 
-**Speaker Notes:** "Here's the proof. Same symmetric harness — identical code paths, no keygen, no encaps in the measurement loop. On Apple Silicon, sequential collection gives |t| of 62. Switch to interleaved — alternate fixed and random on every iteration — and it drops to 0.58. That's a 100x reduction. On Intel, same pattern: 6.70 drops to 1.65. Two platforms, same result. The confound is temporal drift from sequential collection, not anything architectural."
+**Speaker Notes:** "Here's the proof. Same symmetric harness, identical code paths, no keygen, no encaps in the measurement loop. On Apple Silicon, sequential collection gives |t| of 62. Switch to interleaved (alternate fixed and random on every iteration) and it drops to 0.58. That's a 100x reduction. On Intel, same pattern: 6.70 drops to 1.65. Two platforms, same result. The confound is temporal drift from sequential collection, not anything architectural."
 
 ---
 
@@ -164,13 +164,13 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** Different variance signatures, different microarchitectures, but the same temporal drift confound explains both.
 
-**Visual:** Side-by-side comparison. Apple Silicon: sequential variance ratio 7.71x (fixed > random), interleaved ratio 0.95x (≈1:1). Intel x86: sequential variance ratio 0.43x (random > fixed), interleaved near unity. Annotation: "Sequential collection creates platform-specific variance artifacts. Interleaving removes them on both." Below: Intel asymmetric interleaved |t|=8.10 still fails — labeled "secondary confound: harness asymmetry (live keygen+encaps)."
+**Visual:** Side-by-side comparison. Apple Silicon: sequential variance ratio 7.71x (fixed > random), interleaved ratio 0.95x (≈1:1). Intel x86: sequential variance ratio 0.43x (random > fixed), interleaved near unity. Annotation: "Sequential collection creates platform-specific variance artifacts. Interleaving removes them on both." Below: Intel asymmetric interleaved |t|=8.10 still fails, labeled "secondary confound: harness asymmetry (live keygen+encaps)."
 
-**Speaker Notes:** "The variance signatures look different — Apple has higher fixed variance, Intel has higher random variance. This initially suggested different architectural mechanisms. But when you interleave, both platforms show near-unity variance ratios. The sequential variance signatures were artifacts of how system state drifted during each platform's collection window, not of fundamentally different hardware responses. On Intel, the asymmetric interleaved harness still fails at |t|=8.10 — that's a secondary confound from cache pollution by live keygen and encaps, independent of temporal drift."
+**Speaker Notes:** "The variance signatures look different: Apple has higher fixed variance, Intel has higher random variance. This initially suggested different architectural mechanisms. But when you interleave, both platforms show near-unity variance ratios. The sequential variance signatures were artifacts of how system state drifted during each platform's collection window, not of fundamentally different hardware responses. On Intel, the asymmetric interleaved harness still fails at |t|=8.10; that's a secondary confound from cache pollution by live keygen and encaps, independent of temporal drift."
 
 ---
 
-### Slide 12: The Proof — It's Not the Key
+### Slide 12: The Proof: It's Not the Key
 
 **Title:** Pairwise Decomposition: The Leakage Is Not Secret-Dependent
 
@@ -178,7 +178,7 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Visual:** Two rows of small distribution plots. Top row labeled "TVLA grouping (fixed vs random)": two clearly separated distributions with "|t| = 62.49" annotation (symmetric harness). Bottom row labeled "Secret grouping (key bit 0 vs key bit 1)": two perfectly overlapping distributions with "|t| = 0.3" annotation. Bold caption: "Remove the confound, the signal disappears. The leakage is input-dependent, not secret-dependent."
 
-**Speaker Notes:** "Here's the definitive proof. Top row: TVLA's fixed-vs-random comparison on the symmetric harness — |t| of 62, massive separation. Bottom row: same traces, but now we group by actual secret key bits instead of by TVLA group assignment. The distributions are identical. Every pairwise comparison — by key bit, key byte, Hamming weight — shows no difference. The structure TVLA detects exists only in the fixed-vs-random framing. Remove that framing, and the signal vanishes completely."
+**Speaker Notes:** "Here's the definitive proof. Top row: TVLA's fixed-vs-random comparison on the symmetric harness, |t| of 62, massive separation. Bottom row: same traces, but now we group by actual secret key bits instead of by TVLA group assignment. The distributions are identical. Every pairwise comparison (by key bit, key byte, Hamming weight) shows no difference. The structure TVLA detects exists only in the fixed-vs-random framing. Remove that framing, and the signal vanishes completely."
 
 ---
 
@@ -188,9 +188,9 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** False positives on safe code AND the real vulnerability falls below TVLA's detection floor.
 
-**Visual:** 2x2 matrix. Columns: "TVLA Says Safe" / "TVLA Says Leaking". Rows: "Actually Safe" / "Actually Leaking". Top-right cell (false positive): "ML-KEM v0.15.0 — |t| = 62.49" in red. Bottom-left cell (false negative): "KyberSlash v0.9.0 — d = 0.094, below TVLA floor" in red. Top-left and bottom-right are empty. Caption: "TVLA is wrong in both quadrants that matter."
+**Visual:** 2x2 matrix. Columns: "TVLA Says Safe" / "TVLA Says Leaking". Rows: "Actually Safe" / "Actually Leaking". Top-right cell (false positive): "ML-KEM v0.15.0, |t| = 62.49" in red. Bottom-left cell (false negative): "KyberSlash v0.9.0, d = 0.094, below TVLA floor" in red. Top-left and bottom-right are empty. Caption: "TVLA is wrong in both quadrants that matter."
 
-**Speaker Notes:** "And it gets worse. TVLA is not just producing false positives on hardened code. The KyberSlash vulnerability — a real, exploitable timing leak — has an effect size of d = 0.094. That falls below TVLA's practical detection floor. So TVLA simultaneously fails safe code and passes vulnerable code. It is wrong in both directions. Our ML classifier catches KyberSlash easily. TVLA cannot."
+**Speaker Notes:** "And it gets worse. TVLA is not just producing false positives on hardened code. The KyberSlash vulnerability, a real, exploitable timing leak, has an effect size of d = 0.094. That falls below TVLA's practical detection floor. So TVLA simultaneously fails safe code and passes vulnerable code. It is wrong in both directions. Our ML classifier catches KyberSlash easily. TVLA cannot."
 
 ---
 
@@ -204,13 +204,13 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** Stage 1 is standard TVLA; Stage 2 triages failures with pairwise decomposition and mutual information.
 
-**Visual:** Flow diagram. Start: "Run TVLA". Branch: |t| <= 4.5 -> green box "PASS". Branch: |t| > 4.5 -> "Stage 2: Pairwise Decomposition + MI". From Stage 2: "Pairwise = no difference AND MI = 0" -> yellow box "FALSE POSITIVE — PASS". "Pairwise = difference OR MI > 0" -> red box "REAL LEAKAGE — FAIL". Clean, decision-tree style.
+**Visual:** Flow diagram. Start: "Run TVLA". Branch: |t| <= 4.5 -> green box "PASS". Branch: |t| > 4.5 -> "Stage 2: Pairwise Decomposition + MI". From Stage 2: "Pairwise = no difference AND MI = 0" -> yellow box "FALSE POSITIVE: PASS". "Pairwise = difference OR MI > 0" -> red box "REAL LEAKAGE: FAIL". Clean, decision-tree style.
 
-**Speaker Notes:** "Here is the fix. Stage 1: run TVLA as normal. If you pass, you're done. If you fail, don't panic — run Stage 2. Split your traces by actual secret key properties. Recompute the comparisons. Run permutation-validated mutual information. If the pairwise analysis shows no secret-dependent differences and MI is zero, the TVLA failure is a false positive. Pass the implementation. If pairwise detects real differences, it's real leakage. Fail it. Simple, principled, and it preserves TVLA's role as a first-pass screen."
+**Speaker Notes:** "Here is the fix. Stage 1: run TVLA as normal. If you pass, you're done. If you fail, don't panic; run Stage 2. Split your traces by actual secret key properties. Recompute the comparisons. Run permutation-validated mutual information. If the pairwise analysis shows no secret-dependent differences and MI is zero, the TVLA failure is a false positive. Pass the implementation. If pairwise detects real differences, it's real leakage. Fail it. Simple, principled, and it preserves TVLA's role as a first-pass screen."
 
 ---
 
-### Slide 15: The Tool — sca-triage
+### Slide 15: The Tool: sca-triage
 
 **Title:** sca-triage: Open-Source TVLA False Positive Triage
 
@@ -261,15 +261,15 @@ Below: sample terminal output showing Stage 1 FAIL (|t|=8.42), Stage 2 pairwise 
 
 **Key Message:** Transitioning to terminal for a four-part demonstration.
 
-**Visual:** Dark slide with terminal prompt icon. Text: "LIVE DEMO" in large font. Four numbered items: "0. The Broken Test — sequential vs interleaved, same everything else. 1. The Audit Trap — watch TVLA fail. 2. The Autopsy — watch the signal disappear. 3. The Proof — watch it catch KyberSlash." Below: "All commands run on this machine, no pre-recorded output."
+**Visual:** Dark slide with terminal prompt icon. Text: "LIVE DEMO" in large font. Four numbered items: "0. The Broken Test: sequential vs interleaved, same everything else. 1. The Audit Trap: watch TVLA fail. 2. The Autopsy: watch the signal disappear. 3. The Proof: watch it catch KyberSlash." Below: "All commands run on this machine, no pre-recorded output."
 
-**Speaker Notes:** "Let's see this in action. I'm going to switch to a terminal and show you four things. First, the headline result — I'll run the same TVLA test two ways and you'll see a 100x difference from one methodological change. Then TVLA failing on ML-KEM. Then sca-triage showing it's a false positive. And finally, the same tool catching a real vulnerability. Everything runs live."
+**Speaker Notes:** "Let's see this in action. I'm going to switch to a terminal and show you four things. First, the headline result. I'll run the same TVLA test two ways and you'll see a 100x difference from one methodological change. Then TVLA failing on ML-KEM. Then sca-triage showing it's a false positive. And finally, the same tool catching a real vulnerability. Everything runs live."
 
 ---
 
 ### Slide 18: Demo Screen (Terminal)
 
-**Title:** [Terminal — full screen]
+**Title:** [Terminal, full screen]
 
 **Key Message:** Live execution of the four-act demo via sca-triage.
 
@@ -281,11 +281,11 @@ sca-triage demo --timing-data data/tvla_traces.npz --precomputed
 
 The demo runs four acts automatically:
 - **Act 0:** Sequential |t|=62.49 (FAIL, red) → Interleaved |t|=0.58 (PASS, green). "Same hardware. Same code. Same inputs."
-- **Act 1:** Progressive TVLA on sequential data — |t| climbs past 4.5 in real time.
-- **Act 2:** Pairwise decomposition — all secret groups non-significant. MI = 0.000. Verdict: FALSE_POSITIVE (green banner).
-- **Act 3:** Same tool on KyberSlash — Verdict: REAL_LEAKAGE (red banner).
+- **Act 1:** Progressive TVLA on sequential data; |t| climbs past 4.5 in real time.
+- **Act 2:** Pairwise decomposition, all secret groups non-significant. MI = 0.000. Verdict: FALSE_POSITIVE (green banner).
+- **Act 3:** Same tool on KyberSlash. Verdict: REAL_LEAKAGE (red banner).
 
-**Speaker Notes:** "Act 0: two numbers. Sequential collection — |t| is 62. Interleaved collection — |t| is 0.58. Same laptop, same code, same ML-KEM, same liboqs. The only thing I changed is when I collected the measurements. That's a 100x reduction. Act 1: TVLA on the sequential data — watch the t-statistic climb past the failure threshold. Act 2: sca-triage decomposes by secret key bits. Every comparison is non-significant. Zero mutual information. Verdict: false positive. Act 3: same tool, KyberSlash data. Now it finds real differences. The tool works. TVLA doesn't."
+**Speaker Notes:** "Act 0: two numbers. Sequential collection, |t| is 62. Interleaved collection, |t| is 0.58. Same laptop, same code, same ML-KEM, same liboqs. The only thing I changed is when I collected the measurements. That's a 100x reduction. Act 1: TVLA on the sequential data; watch the t-statistic climb past the failure threshold. Act 2: sca-triage decomposes by secret key bits. Every comparison is non-significant. Zero mutual information. Verdict: false positive. Act 3: same tool, KyberSlash data. Now it finds real differences. The tool works. TVLA doesn't."
 
 ---
 
@@ -296,12 +296,12 @@ The demo runs four acts automatically:
 **Key Message:** The test is broken by sequential collection. sca-triage triages correctly. Real vulnerabilities are caught.
 
 **Visual:** Four-panel summary with color indicators:
-0. "Sequential vs Interleaved: |t|=62.49 → |t|=0.58 — same hardware, same code" (magenta highlight)
-1. "TVLA on ML-KEM v0.15.0: |t| > 4.5 — TVLA says FAIL" (red X)
-2. "sca-triage pairwise: no secret-dependent differences — Verdict: FALSE POSITIVE" (green checkmark)
-3. "sca-triage on KyberSlash: secret-dependent differences detected — Verdict: REAL LEAKAGE" (red alert icon)
+0. "Sequential vs Interleaved: |t|=62.49 → |t|=0.58, same hardware, same code" (magenta highlight)
+1. "TVLA on ML-KEM v0.15.0: |t| > 4.5, TVLA says FAIL" (red X)
+2. "sca-triage pairwise: no secret-dependent differences. Verdict: FALSE POSITIVE" (green checkmark)
+3. "sca-triage on KyberSlash: secret-dependent differences detected. Verdict: REAL LEAKAGE" (red alert icon)
 
-**Speaker Notes:** "To recap: the sequential collection methodology breaks TVLA — same code gives you 62 or 0.5 depending on when you collect. TVLA fails safe code. sca-triage correctly identifies the false positive. And when we give it actually vulnerable code, it catches it. The tool works in both directions."
+**Speaker Notes:** "To recap: the sequential collection methodology breaks TVLA. Same code gives you 62 or 0.5 depending on when you collect. TVLA fails safe code. sca-triage correctly identifies the false positive. And when we give it actually vulnerable code, it catches it. The tool works in both directions."
 
 ---
 
@@ -309,7 +309,7 @@ The demo runs four acts automatically:
 
 ---
 
-### Slide 20: PQC Migration — Proceed
+### Slide 20: PQC Migration: Proceed
 
 **Title:** ML-KEM Deployment Should Not Be Delayed
 
@@ -322,7 +322,7 @@ The demo runs four acts automatically:
 
 Bottom: "Point your evaluators to this paper and sca-triage."
 
-**Speaker Notes:** "The bottom line for anyone deploying PQC: proceed. The algorithm is sound. The liboqs implementation is sound. The KyberSlash fix works — we proved it with our positive control. If your evaluation lab has reported a TVLA failure on ML-KEM running on Apple or Intel hardware, request a Stage 2 analysis. Point them to this paper and the tool."
+**Speaker Notes:** "The bottom line for anyone deploying PQC: proceed. The algorithm is sound. The liboqs implementation is sound. The KyberSlash fix works; we proved it with our positive control. If your evaluation lab has reported a TVLA failure on ML-KEM running on Apple or Intel hardware, request a Stage 2 analysis. Point them to this paper and the tool."
 
 ---
 
@@ -330,11 +330,11 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 
 **Title:** The Confound Is Methodological, Not Algorithm-Specific
 
-**Key Message:** Any TVLA evaluation using sequential collection on any platform will produce false positives — regardless of algorithm.
+**Key Message:** Any TVLA evaluation using sequential collection on any platform will produce false positives, regardless of algorithm.
 
-**Visual:** Grid of PQC algorithm names, each with a warning triangle: ML-KEM (tested — confirmed), ML-DSA (predicted), SLH-DSA (predicted), BIKE (predicted), HQC (predicted). Below: "The confound comes from sequential collection methodology, not from any algorithm or platform. Any fixed-vs-random comparison collected in separate blocks will fail." Processor icons (Apple M-series, Intel, AMD, Qualcomm) all with warning marks.
+**Visual:** Grid of PQC algorithm names, each with a warning triangle: ML-KEM (tested, confirmed), ML-DSA (predicted), SLH-DSA (predicted), BIKE (predicted), HQC (predicted). Below: "The confound comes from sequential collection methodology, not from any algorithm or platform. Any fixed-vs-random comparison collected in separate blocks will fail." Processor icons (Apple M-series, Intel, AMD, Qualcomm) all with warning marks.
 
-**Speaker Notes:** "This is not an ML-KEM problem and it's not a hardware problem. The confound comes from how TVLA data is collected — in sequential blocks. System state drifts between blocks, and TVLA interprets that drift as leakage. Any algorithm, any platform, any implementation evaluated with sequential collection will hit this. ML-DSA, SLH-DSA, BIKE, HQC — all of them. The fix is interleaved collection or Stage 2 triage."
+**Speaker Notes:** "This is not an ML-KEM problem and it's not a hardware problem. The confound comes from how TVLA data is collected, in sequential blocks. System state drifts between blocks, and TVLA interprets that drift as leakage. Any algorithm, any platform, any implementation evaluated with sequential collection will hit this. ML-DSA, SLH-DSA, BIKE, HQC, all of them. The fix is interleaved collection or Stage 2 triage."
 
 ---
 
@@ -346,7 +346,7 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 
 **Visual:** Split visual. Left side: simple smartcard chip diagram, labeled "Deterministic timing, simple pipeline, TVLA works." Right side: modern processor die shot with labeled speculative execution units, prefetchers, multi-level cache, labeled "Adaptive timing, speculative execution, TVLA breaks." Arrow between them labeled "The gap between 'detectable' and 'exploitable' is a chasm."
 
-**Speaker Notes:** "TVLA was designed for embedded devices — smartcards and FPGAs with simple, deterministic timing. On those targets, a TVLA detection usually means real exploitable leakage. Modern processors are a completely different world. Speculative execution, branch prediction, data-dependent prefetching — these create timing variation that has nothing to do with secrets. The gap between what TVLA detects and what an attacker can exploit is wider than the community has understood. The two-stage protocol is a practical fix. But the deeper lesson is that our evaluation standards have to evolve with the hardware."
+**Speaker Notes:** "TVLA was designed for embedded devices: smartcards and FPGAs with simple, deterministic timing. On those targets, a TVLA detection usually means real exploitable leakage. Modern processors are a completely different world. Speculative execution, branch prediction, data-dependent prefetching; these create timing variation that has nothing to do with secrets. The gap between what TVLA detects and what an attacker can exploit is wider than the community has understood. The two-stage protocol is a practical fix. But the deeper lesson is that our evaluation standards have to evolve with the hardware."
 
 ---
 
@@ -363,12 +363,12 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 **Visual:** Numbered list, large font, clean layout:
 
 1. **TVLA produces catastrophic false positives on Apple Silicon (|t|=62.49) and Intel x86 (|t|=6.70) for ML-KEM.**
-2. **Root cause: temporal drift from sequential data collection — interleaving drops |t| from 62 to 0.58 (100x reduction).**
+2. **Root cause: temporal drift from sequential data collection; interleaving drops |t| from 62 to 0.58 (100x reduction).**
 3. **12.2 million traces and 150+ experiments confirm: zero exploitable bits of secret information.**
 4. **TVLA is broken in both directions: false positives on safe code, and KyberSlash (d=0.094) falls below its detection floor.**
 5. **Fix: interleave collection + two-stage triage protocol + sca-triage open-source tool. Deploy PQC with confidence.**
 
-**Speaker Notes:** "If you remember five things from this talk: TVLA fails ML-KEM on both major platforms. Twelve million traces prove the leakage is not real. The root cause is a microarchitectural confound, not a crypto weakness. TVLA is wrong in both directions — false positives on safe code and it misses the real KyberSlash vulnerability. And the fix is a two-stage protocol with an open-source tool you can use today."
+**Speaker Notes:** "If you remember five things from this talk: TVLA fails ML-KEM on both major platforms. Twelve million traces prove the leakage is not real. The root cause is a microarchitectural confound, not a crypto weakness. TVLA is wrong in both directions: false positives on safe code and it misses the real KyberSlash vulnerability. And the fix is a two-stage protocol with an open-source tool you can use today."
 
 ---
 
@@ -387,7 +387,7 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 
 QR code linking to the sca-triage GitHub repository.
 
-**Speaker Notes:** "Thank you. The tool is open source and available now — the QR code takes you to the GitHub repo. The full dataset, all reproduction scripts, and the paper are in the supplementary repository. I'm happy to take questions."
+**Speaker Notes:** "Thank you. The tool is open source and available now; the QR code takes you to the GitHub repo. The full dataset, all reproduction scripts, and the paper are in the supplementary repository. I'm happy to take questions."
 
 ---
 

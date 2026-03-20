@@ -39,10 +39,10 @@ cd ..
 
 These scripts use pre-collected timing data in `data/`. The following data files are included in the repo:
 
-- `data/tvla_traces.npz` (854KB) — Apple Silicon TVLA traces (fixed + random, asymmetric + symmetric)
-- `data/phase11_interleaved_control.json` — Apple Silicon interleaved control results
-- `data/intel_interleaved_results.json` — Intel x86 interleaved control results
-- `data/phase9_symmetric_control_x86.json` — Intel x86 sequential symmetric results
+- `data/tvla_traces.npz` (854KB): Apple Silicon TVLA traces (fixed + random, asymmetric + symmetric)
+- `data/phase11_interleaved_control.json`: Apple Silicon interleaved control results
+- `data/intel_interleaved_results.json`: Intel x86 interleaved control results
+- `data/phase9_symmetric_control_x86.json`: Intel x86 sequential symmetric results
 
 Large raw CSV files (>1MB) are gitignored. To obtain them, contact the authors or regenerate from the harness binaries using the scripts below. The Docker container generates a small sample dataset automatically for pipeline validation.
 
@@ -52,7 +52,7 @@ python scripts/dudect_comparison.py
 ```
 **Expected:** dudect and TVLA both report |t|>4.5 (FAIL). sca-triage triages as FALSE POSITIVE.
 
-### Raw trace analysis — aggregation masking test (~30 seconds)
+### Raw trace analysis: aggregation masking test (~30 seconds)
 ```bash
 python scripts/phase6_raw_trace_analysis.py
 ```
@@ -70,7 +70,7 @@ python scripts/phase8_ml_detection_floor.py
 ```
 **Expected:** XGBoost floor at d ≈ 0.85. T-test floor at d = 0.398.
 
-### Positive control — KyberSlash validation (~2 minutes)
+### Positive control: KyberSlash validation (~2 minutes)
 ```bash
 python scripts/analysis_positive_control.py
 ```
@@ -98,12 +98,12 @@ python3 scripts/phase10_compiler_flags.py
 **Expected (symmetric control):** Symmetric |t|=62.49 (FAIL), asymmetric |t|=3.00 (PASS).
 **Expected (compiler flags):** All 5 flags exhibit the confound. -O0, -O1, -O2, -O3 fail outright. -Os shows run-to-run variability (|t| ranges from 1.73 to 11.47); Levene's test confirms variance asymmetry is always present.
 
-### Interleaved Control — Temporal Drift Isolation (Apple Silicon)
+### Interleaved Control: Temporal Drift Isolation (Apple Silicon)
 ```bash
 # Compile and run interleaved harnesses (500K traces per group, ~1 hour)
 python3 scripts/phase11_interleaved_control.py
 ```
-**Expected:** Symmetric interleaved |t|=0.58 (PASS), asymmetric interleaved |t|=0.99 (PASS). This is the paper's flagship result — the 100x attenuation from sequential |t|=62.49 to interleaved |t|=0.58 proves the confound is temporal drift, not architectural.
+**Expected:** Symmetric interleaved |t|=0.58 (PASS), asymmetric interleaved |t|=0.99 (PASS). This is the paper's flagship result: the 100x attenuation from sequential |t|=62.49 to interleaved |t|=0.58 proves the confound is temporal drift, not architectural.
 
 Results saved to `data/phase11_interleaved_control.json`. Raw traces saved to `data/apple_symmetric_interleaved.csv` and `data/apple_asymmetric_interleaved.csv`.
 
@@ -121,9 +121,9 @@ python3 ../scripts/intel_symmetric_control.py
 cd ..
 ```
 **Expected (asymmetric):** |t|=12.95, variance ratio 0.47x (FAIL).
-**Expected (symmetric control):** Both harnesses fail — asymmetric |t|=5.35, symmetric |t|=6.70.
+**Expected (symmetric control):** Both harnesses fail: asymmetric |t|=5.35, symmetric |t|=6.70.
 
-### Interleaved Control — Temporal Drift Isolation (Intel x86)
+### Interleaved Control: Temporal Drift Isolation (Intel x86)
 ```bash
 cd x86-replication
 
@@ -148,13 +148,13 @@ cd ..
 The repository contains representative sample datasets for immediate, low-friction validation of the sca-triage pipeline and all paper claims. The full 12.2 million trace dataset is available from the authors for exhaustive replication.
 
 **Included in the repository:**
-- `data/tvla_traces.npz` (854KB, 1M TVLA traces: 500K fixed + 500K random) — primary dataset for all pipeline validation
-- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces across 2,000 keys) — per-key analysis and secret-label experiments
-- `data/raw_timing_traces_vuln.csv` (579KB, 25K traces) — KyberSlash positive control
+- `data/tvla_traces.npz` (854KB, 1M TVLA traces: 500K fixed + 500K random): primary dataset for all pipeline validation
+- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces across 2,000 keys): per-key analysis and secret-label experiments
+- `data/raw_timing_traces_vuln.csv` (579KB, 25K traces): KyberSlash positive control
 
 **Available on request:**
-- `data/raw_timing_traces_v4_vertical.csv` (25MB) — patched v0.15.0 full trace set
-- Full 12.2M trace dataset across both platforms — contact authors
+- `data/raw_timing_traces_v4_vertical.csv` (25MB): patched v0.15.0 full trace set
+- Full 12.2M trace dataset across both platforms: contact authors
 
 ### Expected Runtimes
 
