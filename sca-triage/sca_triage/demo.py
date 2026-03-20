@@ -308,12 +308,15 @@ def _run_precomputed(
     time.sleep(2.0)
 
     # Credibility footnote
-    console.print(
-        "  (Alternating collection is already standard in hardware testing",
-        style="dim", highlight=False)
-    console.print(
-        "   and is built into the dudect timing analysis tool.)",
-        style="dim", highlight=False)
+    console.print()
+    console.print("  (Alternating collection is already standard in hardware testing",
+                  style="dim")
+    console.print("   and built into tools like dudect. But the mandatory certification",
+                  style="dim")
+    console.print("   standard, ISO 17825, still prescribes sequential collection.",
+                  style="dim")
+    console.print("   Every FIPS lab in the country runs the test the broken way.)",
+                  style="dim")
     console.print()
     time.sleep(2.0)
 
