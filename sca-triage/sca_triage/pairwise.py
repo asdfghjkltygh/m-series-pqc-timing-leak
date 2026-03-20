@@ -155,7 +155,10 @@ def run_pairwise(
 
     # --- Anderson-Darling 2-sample ----------------------------------------
     try:
-        ad_result = stats.anderson_ksamp([g0, g1])
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning, module="scipy")
+            ad_result = stats.anderson_ksamp([g0, g1])
         ad_stat = float(ad_result.statistic)
         ad_p = float(ad_result.pvalue)
     except Exception:

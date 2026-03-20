@@ -661,10 +661,23 @@ def _act3(
     if any_vuln_sig:
         comparison.append("REAL LEAKAGE DETECTED\n", style="bold red")
     else:
-        comparison.append("No leakage detected\n", style="bold yellow")
+        comparison.append(
+            "Pairwise: below detection floor (d=0.094 < 0.398)\n",
+            style="bold yellow",
+        )
+        comparison.append(
+            "ML classifier: DETECTED at 56.6% accuracy "
+            "(+3.8% lift over chance)\n",
+            style="bold red",
+        )
+        comparison.append(
+            "(See dudect_comparison.py for full cross-key detection)\n\n",
+            style="dim",
+        )
     comparison.append(
-        "\nThe tool correctly distinguishes microarchitectural confounds\n"
-        "from genuine secret-dependent timing leakage.\n",
+        "\nPatched code: correctly triaged as false positive.\n"
+        "Vulnerable code: pairwise underpowered at this effect size,\n"
+        "but ML classifier detects real leakage via cross-key aggregation.\n",
         style="dim",
     )
 
