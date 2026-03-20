@@ -1,4 +1,4 @@
-"""Three-act Black Hat demo harness for sca-triage.
+"""Four-act Black Hat demo harness for sca-triage.
 
 Provides a dramatic stage-presentation experience with rich terminal output,
 progressive reveals, and precomputed-mode pacing for live demos.
@@ -13,6 +13,7 @@ import numpy as np
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.rule import Rule
 from rich.text import Text
 from rich.table import Table
 
@@ -39,39 +40,16 @@ def run_demo(
     precomputed: bool = False,
     dark: bool = False,
 ) -> None:
-    """Execute the four-act demo presentation.
+    """Execute the four-act demo presentation."""
+    if dark:
+        console = Console(force_terminal=True, color_system="truecolor")
+    else:
+        console = Console()
 
-    Parameters
-    ----------
-    fixed_timings : np.ndarray
-        1-D array of fixed-key timing measurements.
-    random_timings : np.ndarray
-        1-D array of random-key timing measurements.
-    per_key_features : np.ndarray
-        2-D array (n_keys, n_features) of per-key aggregated statistics.
-    per_key_labels : dict[str, np.ndarray]
-        Mapping from target name to binary label array.
-    target_names : list[str]
-        Names of secret targets to analyse.
-    vuln_features : np.ndarray, optional
-        Per-key features for a known-vulnerable implementation (Act 3).
-    vuln_labels : dict[str, np.ndarray], optional
-        Labels for the vulnerable implementation (Act 3).
-    sequential_t : float
-        Pre-measured sequential |t| for Act 0 display (default: Apple Silicon).
-    interleaved_t : float
-        Pre-measured interleaved |t| for Act 0 display (default: Apple Silicon).
-    n_shuffles : int
-        Number of MI permutation rounds.
-    precomputed : bool
-        If ``True``, skip real computation and display pre-cached results
-        with realistic sleep pacing.
-    dark : bool
-        Hint for dark terminal theme (currently unused; reserved).
-    """
-    console = Console()
+    # Title card
+    _title_card(console, precomputed)
 
-    # ACT 0: "The Broken Test" — sequential vs interleaved comparison
+    # ACT 0: "The Broken Test"
     _act0(console, sequential_t, interleaved_t, precomputed)
 
     # ACT 1: "The Audit Trap"
@@ -84,7 +62,7 @@ def run_demo(
     else:
         console.print()
         console.print(Panel(
-            Text("Stage 2 skipped — no secret labels available.\n"
+            Text("Stage 2 skipped: no secret labels available.\n"
                  "Re-run with --secret-labels to see pairwise decomposition.",
                  style="bold yellow", justify="center"),
             border_style="yellow",
@@ -95,6 +73,29 @@ def run_demo(
     # ACT 3: "The Positive Control" (if vulnerable data provided)
     if vuln_features is not None and vuln_labels is not None:
         _act3(console, vuln_features, vuln_labels, target_names, precomputed)
+
+    # Closing
+    _closing(console, precomputed)
+
+
+# ---------------------------------------------------------------------------
+# Title card
+# ---------------------------------------------------------------------------
+
+def _title_card(console: Console, precomputed: bool) -> None:
+    """Opening title card."""
+    console.print()
+    console.print(Rule(style="bright_magenta"))
+    console.print()
+    title = Text(justify="center")
+    title.append("WHEN TVLA LIES\n\n", style="bold bright_magenta")
+    title.append("How a Broken Standard Is Blocking\n", style="bold white")
+    title.append("Post-Quantum Crypto Deployment\n\n", style="bold white")
+    title.append("sca-triage live demo\n", style="dim")
+    console.print(Panel(title, border_style="bright_magenta", padding=(1, 4)))
+    console.print()
+    if precomputed:
+        time.sleep(2.0)
 
 
 # ---------------------------------------------------------------------------
@@ -107,8 +108,8 @@ def _act0(
     interleaved_t: float,
     precomputed: bool,
 ) -> None:
-    """Show the sequential vs interleaved comparison — the paper's headline."""
-    console.print()
+    """Show the sequential vs interleaved comparison."""
+    console.print(Rule(style="bright_magenta"))
     console.print(Panel(
         Text("ACT 0: THE BROKEN TEST", style="bold white", justify="center"),
         border_style="bright_magenta",
@@ -167,7 +168,7 @@ def _act0(
     console.print(Panel(
         Text(f"Same hardware. Same code. Same inputs.\n"
              f"The only difference is WHEN the measurements were collected.\n\n"
-             f"{sequential_t:.2f} → {interleaved_t:.2f}  "
+             f"{sequential_t:.2f} \u2192 {interleaved_t:.2f}  "
              f"({reduction:.0f}x reduction)",
              style="bold white", justify="center"),
         border_style="bright_magenta",
@@ -216,48 +217,64 @@ def _act1(
     precomputed: bool,
 ) -> None:
     """FIPS 140-3 TVLA evaluation with progressive trace reveal."""
-    console.print()
+    console.print(Rule(style="bright_magenta"))
     console.print(Panel(
-        Text("FIPS 140-3 NON-INVASIVE EVALUATION -- ISO 17825 TVLA",
-             style="bold white", justify="center"),
-        border_style="cyan",
+        Text("ACT 1: THE AUDIT TRAP", style="bold white", justify="center"),
+        border_style="bright_magenta",
         padding=(1, 2),
     ))
+    console.print(Text("FIPS 140-3 Non-Invasive Evaluation (ISO 17825 TVLA)",
+                        style="dim", justify="center"))
+    console.print()
 
-    # Platform detection
     plat = _detect_platform()
+    if precomputed:
+        display_n_fixed = 500_000
+        display_n_random = 500_000
+    else:
+        display_n_fixed = len(fixed_timings)
+        display_n_random = len(random_timings)
+
     console.print(f"  [dim]Platform:[/dim] [bold]{plat}[/bold]")
     console.print(f"  [dim]Algorithm:[/dim] [bold]ML-KEM-768 decapsulation[/bold]")
-    console.print(f"  [dim]Fixed traces:[/dim] [bold]{len(fixed_timings):,}[/bold]")
-    console.print(f"  [dim]Random traces:[/dim] [bold]{len(random_timings):,}[/bold]")
+    console.print(f"  [dim]Fixed traces:[/dim] [bold]{display_n_fixed:,}[/bold]")
+    console.print(f"  [dim]Random traces:[/dim] [bold]{display_n_random:,}[/bold]")
     console.print()
 
     if precomputed:
-        _act1_precomputed(console, fixed_timings, random_timings)
+        _act1_precomputed(console)
     else:
         _act1_live(console, fixed_timings, random_timings)
 
 
-def _act1_precomputed(
-    console: Console,
-    fixed_timings: np.ndarray,
-    random_timings: np.ndarray,
-) -> None:
-    """Display pre-cached Act 1 results with fast pacing (~8s)."""
+def _act1_precomputed(console: Console) -> None:
+    """Display pre-cached Act 1 results with fast pacing."""
     steps = 10
-    n_fixed = len(fixed_timings)
-    n_random = len(random_timings)
+    n_fixed = 500_000
+    n_random = 500_000
+    total_traces = n_fixed + n_random
 
-    # Pre-compute the final result for display
-    final_result = run_tvla(fixed_timings, random_timings)
+    # Hardcoded result from the paper's asymmetric harness
+    hardcoded_result = TVLAResult(
+        t_statistic=8.4247,
+        p_value=3.63e-17,
+        threshold=4.5,
+        passed=False,
+        variance_ratio=100.1226,
+        n_fixed=n_fixed,
+        n_random=n_random,
+    )
+
+    final_t = abs(hardcoded_result.t_statistic)
 
     # Simulate progressive t-statistics growing toward the final value
     simulated_t = [
         0.8, 1.4, 2.1, 2.9, 3.5, 3.9, 4.2, 4.6,
-        abs(final_result.t_statistic) * 0.95,
-        abs(final_result.t_statistic),
+        final_t * 0.95,
+        final_t,
     ]
 
+    alert_shown = False
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -265,28 +282,28 @@ def _act1_precomputed(
         TextColumn("{task.completed}/{task.total} traces"),
         console=console,
     ) as progress:
-        task = progress.add_task("Evaluating TVLA...", total=n_fixed + n_random)
+        task = progress.add_task("Evaluating TVLA...", total=total_traces)
 
         for i in range(steps):
             frac = (i + 1) / steps
-            current_n = int((n_fixed + n_random) * frac)
+            current_n = int(total_traces * frac)
             t_val = simulated_t[i]
 
             progress.update(task, completed=current_n,
                             description=f"Evaluating TVLA... |t| = {t_val:.2f}")
+            time.sleep(0.4)
 
-            if t_val >= 4.5 and i >= 7:
-                time.sleep(0.5)
+            # Show ONE alert when crossing threshold
+            if t_val >= 4.5 and not alert_shown:
+                alert_shown = True
                 console.print(Panel(
-                    Text(f"CRITICAL: TIMING LEAKAGE DETECTED  |t| = {t_val:.2f}",
+                    Text(f"\u26a0 LEAKAGE DETECTED  |t| = {t_val:.2f} exceeds 4.5 threshold",
                          style="bold white on red", justify="center"),
                     border_style="red",
                 ))
-                time.sleep(0.3)
-            else:
-                time.sleep(0.5)
+                time.sleep(0.8)
 
-    _display_tvla_verdict(console, final_result)
+    _display_tvla_verdict(console, hardcoded_result)
     time.sleep(1.0)
 
 
@@ -301,6 +318,7 @@ def _act1_live(
 
     results = run_progressive_tvla(fixed_timings, random_timings, steps=steps)
 
+    alert_shown = False
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -309,7 +327,6 @@ def _act1_live(
         console=console,
     ) as progress:
         task = progress.add_task("Evaluating TVLA...", total=n_total)
-        alert_shown = False
 
         for i, result in enumerate(results):
             frac = (i + 1) / steps
@@ -323,37 +340,48 @@ def _act1_live(
             if t_val >= 4.5 and not alert_shown:
                 alert_shown = True
                 console.print(Panel(
-                    Text(f"CRITICAL: TIMING LEAKAGE DETECTED  |t| = {t_val:.2f}",
+                    Text(f"\u26a0 LEAKAGE DETECTED  |t| = {t_val:.2f} exceeds 4.5 threshold",
                          style="bold white on red", justify="center"),
                     border_style="red",
                 ))
-                time.sleep(1.0)
+                time.sleep(0.8)
 
     final_result = results[-1]
     _display_tvla_verdict(console, final_result)
-    time.sleep(5.0)
+    time.sleep(2.0)
 
 
 def _display_tvla_verdict(console: Console, result: TVLAResult) -> None:
-    """Show the TVLA pass/fail panel with statistics."""
+    """Show the TVLA pass/fail panel (simplified for stage)."""
     t_abs = abs(result.t_statistic)
-    status = "FAIL -- DO NOT DEPLOY" if not result.passed else "PASS"
-    color = "red" if not result.passed else "green"
+    passed = result.passed
 
-    text = Text()
-    text.append(f"\n  Welch's t-statistic : {result.t_statistic:+.4f}\n")
-    text.append(f"  |t|                 : {t_abs:.4f}\n")
-    text.append(f"  Threshold           : {result.threshold}\n")
-    text.append(f"  p-value             : {result.p_value:.2e}\n")
-    text.append(f"  Variance ratio      : {result.variance_ratio:.4f}\n")
-    text.append(f"  n(fixed)            : {result.n_fixed:,}\n")
-    text.append(f"  n(random)           : {result.n_random:,}\n")
-    text.append(f"\n  ISO 17825 \u00a77.2 Result: ", style="bold")
-    text.append(status, style=f"bold {color}")
-    text.append("\n")
+    if not passed:
+        verdict_text = Text(justify="center")
+        verdict_text.append("\n")
+        verdict_text.append(f"|t| = {t_abs:.2f}\n\n", style="bold red")
+        verdict_text.append("ISO 17825 VERDICT: ", style="bold white")
+        verdict_text.append("FAIL\n", style="bold white on red")
+        verdict_text.append("DO NOT DEPLOY\n", style="bold red")
+        border = "red"
+    else:
+        verdict_text = Text(justify="center")
+        verdict_text.append("\n")
+        verdict_text.append(f"|t| = {t_abs:.2f}\n\n", style="bold green")
+        verdict_text.append("ISO 17825 VERDICT: ", style="bold white")
+        verdict_text.append("PASS\n", style="bold green")
+        border = "green"
 
-    console.print(Panel(text, title="[bold]TVLA Result[/bold]",
-                        border_style=color))
+    console.print(Panel(verdict_text, title="[bold]TVLA Result[/bold]",
+                        border_style=border, padding=(1, 4)))
+
+    # Detail line underneath (dim, not in a panel)
+    console.print(Text(
+        f"  p = {result.p_value:.2e}  |  "
+        f"variance ratio = {result.variance_ratio:.4f}  |  "
+        f"n = {result.n_fixed:,} + {result.n_random:,} traces",
+        style="dim",
+    ))
 
 
 # ---------------------------------------------------------------------------
@@ -370,12 +398,14 @@ def _act2(
 ) -> None:
     """Deep analysis: pairwise decomposition + permutation MI."""
     console.print()
+    console.print(Rule(style="bright_magenta"))
     console.print(Panel(
-        Text("Running SCA-TRIAGE deep analysis...",
-             style="bold yellow", justify="center"),
-        border_style="yellow",
+        Text("ACT 2: THE AUTOPSY", style="bold white", justify="center"),
+        border_style="bright_magenta",
         padding=(1, 2),
     ))
+    console.print(Text("SCA-TRIAGE Deep Analysis",
+                        style="dim", justify="center"))
     console.print()
 
     if precomputed:
@@ -511,7 +541,6 @@ def _act2_live(
     ) as progress:
         for name in available:
             task = progress.add_task(f"  MI({name})", total=n_shuffles)
-            # Run MI in chunks to update progress
             result = run_all_mi(
                 per_key_features,
                 {name: per_key_labels[name]},
@@ -557,8 +586,9 @@ def _display_false_positive_verdict(console: Console) -> None:
         style="dim",
     )
     text.append(
-        "\n⚠ Verdict bounded by macro-timing detection floor (d ≈ 0.275).\n"
-        "Does not guarantee zero leakage against hardware/EM probing.\n",
+        "\n\u26a0 Verdict bounded by macro-timing detection floor (d \u2248 0.275).\n"
+        "Does not guarantee zero leakage against hardware/EM probing\n"
+        "or sub-threshold micro-architectural channels.\n",
         style="bold yellow",
     )
 
@@ -595,12 +625,14 @@ def _act3(
 ) -> None:
     """Validate against known-vulnerable implementation."""
     console.print()
+    console.print(Rule(style="bright_magenta"))
     console.print(Panel(
-        Text("VALIDATION: Running against KNOWN-VULNERABLE liboqs v0.9.0...",
-             style="bold red", justify="center"),
-        border_style="red",
+        Text("ACT 3: THE PROOF", style="bold white", justify="center"),
+        border_style="bright_magenta",
         padding=(1, 2),
     ))
+    console.print(Text("Validation against KNOWN-VULNERABLE liboqs v0.9.0",
+                        style="dim", justify="center"))
     console.print()
 
     means = vuln_features[:, 2] if vuln_features.shape[1] > 2 else vuln_features[:, 0]
@@ -610,7 +642,6 @@ def _act3(
         available = list(vuln_labels.keys())
 
     if precomputed:
-        # Simulated pacing
         console.print("  [bold cyan]Pairwise analysis on vulnerable build...[/bold cyan]")
         time.sleep(1.0)
 
@@ -639,11 +670,11 @@ def _act3(
         )
 
     if precomputed:
-        time.sleep(2.0)
+        time.sleep(1.5)
 
     console.print(Panel(
         table,
-        title="[bold]Vulnerable Build -- Pairwise Results[/bold]",
+        title="[bold]Vulnerable Build: Pairwise Results[/bold]",
         border_style="red",
     ))
 
@@ -686,4 +717,41 @@ def _act3(
                         border_style="cyan", padding=(1, 2)))
 
     if precomputed:
-        time.sleep(5.0)
+        time.sleep(2.0)
+
+
+# ---------------------------------------------------------------------------
+# Closing
+# ---------------------------------------------------------------------------
+
+def _closing(console: Console, precomputed: bool) -> None:
+    """Final summary and call to action."""
+    console.print()
+    console.print(Rule(style="bright_magenta"))
+    console.print()
+
+    summary = Text(justify="center")
+    summary.append("\n")
+    summary.append("KEY FINDINGS\n\n", style="bold bright_magenta")
+    summary.append("1. ", style="bold white")
+    summary.append("ISO 17825 TVLA produces catastrophic false positives\n", style="white")
+    summary.append("   on ML-KEM due to temporal drift in sequential collection.\n\n", style="dim")
+    summary.append("2. ", style="bold white")
+    summary.append("Interleaved collection eliminates the confound entirely:\n", style="white")
+    summary.append("   |t| = 62.49 \u2192 0.58  (100x reduction)\n\n", style="bold green")
+    summary.append("3. ", style="bold white")
+    summary.append("sca-triage distinguishes false positives from real leakage\n", style="white")
+    summary.append("   in under 30 seconds on pre-collected traces.\n\n", style="dim")
+
+    console.print(Panel(summary, border_style="bright_magenta", padding=(1, 4)))
+
+    # Repo link
+    console.print()
+    console.print(Text(
+        "github.com/asdfghjkltygh/m-series-pqc-timing-leak",
+        style="bold cyan", justify="center",
+    ))
+    console.print()
+
+    if precomputed:
+        time.sleep(2.0)
