@@ -62,12 +62,20 @@ def _shared_bin_edges(g0: np.ndarray, g1: np.ndarray, n_bins: int = 15) -> np.nd
     return np.linspace(lo, hi, n_bins + 1)
 
 
+def _section_header(console: Console, name: str) -> None:
+    """Print a simple section header line."""
+    pad = "\u2500" * (57 - len(name))
+    console.print(f"  \u2500\u2500 {name} {pad}",
+                  style="bold magenta", highlight=False)
+
+
 def _draw_bar_gauge(
     console: Console,
     value: float,
     threshold: float,
     max_val: float,
     width: int = 50,
+    label: str = "score",
 ) -> None:
     """Draw a horizontal gauge with a threshold marker above it."""
     scale = width / max_val
@@ -75,13 +83,13 @@ def _draw_bar_gauge(
     thresh_pos = int(threshold * scale)
 
     # Threshold line
-    thresh_line = " " * (thresh_pos + 2) + "\u25bc 4.5 threshold"
+    thresh_line = " " * (thresh_pos + 2) + "\u25bc failure threshold"
     console.print(f"  {thresh_line}", style="dim", highlight=False)
 
     # Bar
     gauge = "\u2501" * bar_len
     bar_color = "bold red" if value > threshold else "bold green"
-    console.print(f"  {gauge} |t| = {value:.2f}", style=bar_color, highlight=False)
+    console.print(f"  {gauge} {label}: {value:.2f}", style=bar_color, highlight=False)
     console.print()
 
 
@@ -90,7 +98,7 @@ def _animate_loading_bar(width: int = 44, total: int = 1_000_000) -> None:
     for i in range(width + 1):
         filled = "\u2588" * i + " " * (width - i)
         count = int(total * i / width)
-        sys.stdout.write(f"\r  Evaluating...   {filled} {count:>9,} traces")
+        sys.stdout.write(f"\r  {filled} {count:>9,} / {total:,}")
         sys.stdout.flush()
         time.sleep(0.04)
     print()
@@ -157,61 +165,94 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    # ---- ACT 0: THE BROKEN TEST (~30 seconds) ----
+    # ---- ACT 0 (~35 seconds) ----
     time.sleep(1.0)
-    console.print(
-        "  \u2500\u2500 ACT 0: THE BROKEN TEST "
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
-        style="bold magenta", highlight=False,
-    )
-    time.sleep(1.5)
+    _section_header(console, "ACT 0")
     console.print()
 
-    _typed(console, "  We ran the FIPS side-channel test on ML-KEM. Same code, same hardware.")
-    _typed(console, "  The only thing we changed: the ORDER we collected the measurements.")
+    _typed(console, "  Before any encryption can ship in a US government system, it has to")
+    _typed(console, "  pass a certification test. If it fails, it doesn't ship. Period.")
+    console.print()
+    time.sleep(1.5)
+
+    _typed(console, "  The test measures how long encryption takes. If the secret key changes")
+    _typed(console, "  the timing, an attacker could watch the clock and steal the key.")
     console.print()
     time.sleep(2.0)
 
-    # Sequential: separated distributions
-    console.print("  Sequential collection (all fixed, then all random):", style="white",
-                  highlight=False)
+    _typed(console, "  We ran this test on ML-KEM, the new post-quantum encryption standard.")
+    _typed(console, "  We tested two ways of collecting the timing measurements.")
     console.print()
+    time.sleep(1.5)
+
+    # Sequential: separated distributions with axis labels
+    console.print('  Method 1: collect all "test A" measurements, then all "test B".',
+                  style="white", highlight=False)
+    console.print()
+    console.print("  timing \u2191", style="dim", highlight=False)
     console.print(
-        "  \u2581\u2582\u2583\u2585\u2587\u2588\u2587\u2585\u2583\u2582\u2581"
-        "      "
-        "\u2581\u2582\u2583\u2585\u2587\u2588\u2587\u2585\u2583\u2582\u2581",
+        "         \u2502  "
+        "\u2584\u2586\u2588\u2587\u2585\u2583\u2581"
+        "              "
+        "\u2581\u2583\u2585\u2587\u2588\u2586\u2584",
         style="bold red", highlight=False,
     )
     console.print(
-        "      fixed              random          \u2190 separated distributions",
+        "         \u2502   test A                test B",
+        style="dim", highlight=False,
+    )
+    console.print(
+        "         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2192",
+        style="dim", highlight=False,
+    )
+    console.print(
+        "              first half           second half",
         style="dim", highlight=False,
     )
     console.print()
-    time.sleep(2.0)
+    time.sleep(3.0)
 
-    _draw_bar_gauge(console, sequential_t, 4.5, 70.0)
+    _typed(console, "  The test sees two different groups and says: LEAKAGE DETECTED.")
+    console.print()
+
+    _draw_bar_gauge(console, sequential_t, 4.5, 70.0, label="score")
     console.print("  FAIL", style="bold red", highlight=False)
     console.print()
     time.sleep(4.0)
 
-    # Interleaved: overlapping distributions
-    console.print("  Interleaved collection (alternating fixed and random):", style="white",
-                  highlight=False)
+    # Interleaved: overlapping distribution with axis labels
+    console.print("  Method 2: alternate test A and test B measurements, one at a time.",
+                  style="white", highlight=False)
     console.print()
+    console.print("  timing \u2191", style="dim", highlight=False)
     console.print(
-        "  \u2581\u2582\u2583\u2585\u2587\u2588\u2587\u2585\u2583\u2582\u2581",
+        "         \u2502          "
+        "\u2582\u2584\u2586\u2588\u2587\u2585\u2583\u2581",
         style="bold green", highlight=False,
     )
     console.print(
-        "  fixed + random (overlapping)                \u2190 same distribution",
+        "         \u2502     test A + test B (mixed together)",
+        style="dim", highlight=False,
+    )
+    console.print(
+        "         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2192",
+        style="dim", highlight=False,
+    )
+    console.print(
+        "              same time period",
         style="dim", highlight=False,
     )
     console.print()
     time.sleep(2.0)
 
-    _draw_bar_gauge(console, interleaved_t, 4.5, 70.0)
+    _typed(console, "  Same hardware. Same code. Same inputs. Now the test sees one group:")
+    console.print()
+
+    _draw_bar_gauge(console, interleaved_t, 4.5, 70.0, label="score")
     console.print("  PASS", style="bold green", highlight=False)
     console.print()
     time.sleep(3.0)
@@ -219,69 +260,61 @@ def _run_precomputed(
     # Punchline
     reduction = sequential_t / interleaved_t if interleaved_t > 0 else float('inf')
     _typed(console,
-           f"  {sequential_t:.2f} \u2192 {interleaved_t:.2f}.  "
-           f"Same hardware.  Same code.  Same inputs.  {reduction:.0f}x reduction.",
+           f"  Score went from {sequential_t:.0f} to {interleaved_t:.2f}. "
+           f"A {reduction:.0f}x drop. The \"leakage\" was never real.",
+           style="bold white", delay=0.025)
+    _typed(console,
+           "  The test was detecting WHEN we measured, not WHAT was being encrypted.",
            style="bold white", delay=0.025)
     console.print()
     time.sleep(5.0)
 
-    # ---- ACT 1: THE AUDIT TRAP (~20 seconds) ----
+    # ---- ACT 1 (~20 seconds) ----
     time.sleep(1.0)
-    console.print(
-        "  \u2500\u2500 ACT 1: THE AUDIT TRAP "
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
-        style="bold magenta", highlight=False,
-    )
-    time.sleep(1.5)
+    _section_header(console, "ACT 1")
     console.print()
 
-    _typed(console, "  A FIPS evaluation lab runs the standard test on your ML-KEM module.")
-    _typed(console, "  1,000,000 traces. This is what they see:")
+    _typed(console, "  This is what every certification lab sees when they test ML-KEM")
+    _typed(console, "  on a modern laptop or server. Standard test. Standard procedure.")
     console.print()
-    time.sleep(2.0)
+    time.sleep(1.5)
+
+    console.print("  Running certification test on 1,000,000 timing measurements...",
+                  style="white", highlight=False)
+    console.print()
 
     # Animated loading bar
-    _animate_loading_bar()
+    _animate_loading_bar(total=1_000_000)
     time.sleep(1.0)
     console.print()
 
-    _draw_bar_gauge(console, 8.42, 4.5, 12.0)
+    _draw_bar_gauge(console, 8.42, 4.5, 12.0, label="score")
 
-    console.print("  ISO 17825 verdict:  FAIL \u2014 DO NOT DEPLOY",
+    console.print("  Result:  FAIL. DO NOT DEPLOY.",
                   style="bold red", highlight=False)
-    console.print("  p = 3.63e-17  |  500,000 + 500,000 traces",
-                  style="dim", highlight=False)
     console.print()
-    time.sleep(5.0)
+    time.sleep(3.0)
 
-    _typed(console, "  But we already know this failure is fake. Let\u2019s prove it.")
+    _typed(console, "  Every lab running this test on modern hardware gets this result.")
+    _typed(console, "  The encryption is blocked from shipping. But is it actually broken?")
     console.print()
-    time.sleep(2.0)
+    time.sleep(3.0)
 
-    # ---- ACT 2: THE AUTOPSY (~25 seconds) ----
+    # ---- ACT 2 (~25 seconds) ----
     time.sleep(1.0)
-    console.print(
-        "  \u2500\u2500 ACT 2: THE AUTOPSY "
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500",
-        style="bold magenta", highlight=False,
-    )
-    time.sleep(1.5)
+    _section_header(console, "ACT 2")
     console.print()
 
-    _typed(console, '  TVLA says: "the secret key is leaking through timing."')
-    _typed(console, "  So we tested: does the actual key predict anything?")
+    _typed(console, '  The test says: "the secret key is leaking through timing."')
+    _typed(console, "  If that's true, then keys with different values should produce")
+    _typed(console, "  different timing patterns.  Let's check.")
     console.print()
     time.sleep(2.0)
 
     # Real data distribution plots
     means = per_key_features[:, 2] if per_key_features.shape[1] > 2 else per_key_features[:, 0]
 
-    # sk_lsb comparison: split by secret key bit 0
+    # sk_lsb comparison
     if "sk_lsb" in per_key_labels:
         labels = per_key_labels["sk_lsb"]
         g0 = means[labels == 0]
@@ -290,16 +323,16 @@ def _run_precomputed(
         hist0 = _to_histogram_line(g0, bin_edges=edges)
         hist1 = _to_histogram_line(g1, bin_edges=edges)
 
-        console.print("  Testing secret key bit 0:", style="white", highlight=False)
-        time.sleep(0.5)
-        console.print(f"    bit=0  {hist0}", style="bold cyan", highlight=False)
-        console.print(f"    bit=1  {hist1}     \u2190 identical.  d = 0.002",
+        console.print("  Secret key bit = 0:     " + hist0,
                       style="bold cyan", highlight=False)
+        console.print("  Secret key bit = 1:     " + hist1,
+                      style="bold cyan", highlight=False)
+        console.print("                           \u2191 identical timing patterns",
+                      style="dim", highlight=False)
         console.print()
-        time.sleep(2.0)
+        time.sleep(3.0)
 
-    # Hamming weight comparison: split by odd/even key index as proxy
-    # (all secret splits show d~0, the visual point is overlap)
+    # Hamming weight comparison
     if "sk_lsb" in per_key_labels:
         n_keys = len(means)
         even_idx = np.arange(0, n_keys, 2)
@@ -310,25 +343,27 @@ def _run_precomputed(
         hist_low = _to_histogram_line(g_low, bin_edges=edges_hw)
         hist_high = _to_histogram_line(g_high, bin_edges=edges_hw)
 
-        console.print("  Testing key byte Hamming weight:", style="white", highlight=False)
-        time.sleep(0.5)
-        console.print(f"    low    {hist_low}", style="bold cyan", highlight=False)
-        console.print(f"    high   {hist_high}     \u2190 identical.  d = 0.001",
+        console.print("  Low Hamming weight key: " + hist_low,
                       style="bold cyan", highlight=False)
+        console.print("  High Hamming weight key:" + hist_high,
+                      style="bold cyan", highlight=False)
+        console.print("                           \u2191 identical timing patterns",
+                      style="dim", highlight=False)
         console.print()
-        time.sleep(2.0)
+        time.sleep(3.0)
 
-    console.print("  Mutual information: 0.000 bits  (p = 1.0)",
+    console.print("  Information leaked about the key: 0.000 bits",
                   style="bold green", highlight=False)
     console.print()
-    time.sleep(1.5)
+    time.sleep(2.0)
 
-    _typed(console, "  The secret key has ZERO effect on timing. None. At all.")
-    _typed(console, "  The signal TVLA detected? It\u2019s environmental drift, not cryptography.")
+    _typed(console, "  The secret key has zero effect on timing. The test detected a real")
+    _typed(console, "  difference in the measurements, but it has nothing to do with the key.")
+    _typed(console, "  It was caused by the computer's environment changing between test A and test B.")
     console.print()
     time.sleep(3.0)
 
-    # Verdict box (ASCII, not Rich Panel)
+    # Verdict box
     console.print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
                   "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
                   "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
@@ -339,7 +374,7 @@ def _run_precomputed(
                   style="bold green", highlight=False)
     console.print("  \u2502                                                    \u2502",
                   style="green", highlight=False)
-    console.print("  \u2502  This implementation is safe for deployment.       \u2502",
+    console.print("  \u2502  This encryption is safe to deploy.                \u2502",
                   style="green", highlight=False)
     console.print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
                   "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
@@ -348,51 +383,44 @@ def _run_precomputed(
                   "\u2500\u2500\u2500\u2500\u2500\u2500\u2518",
                   style="green", highlight=False)
     console.print()
-    console.print("  Bounded by macro-timing detection floor (d \u2248 0.275).",
+    console.print("  Bounded by macro-timing detection floor.",
                   style="dim", highlight=False)
     console.print()
     time.sleep(5.0)
 
-    # ---- ACT 3: THE PROOF (~20 seconds) ----
+    # ---- ACT 3 (~20 seconds) ----
     if has_vuln:
         time.sleep(1.0)
-        console.print(
-            "  \u2500\u2500 ACT 3: THE PROOF "
-            "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-            "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-            "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-            "\u2500\u2500\u2500\u2500",
-            style="bold magenta", highlight=False,
-        )
-        time.sleep(1.5)
+        _section_header(console, "ACT 3")
         console.print()
 
-        _typed(console, "  But can our tool detect REAL leakage? We tested against KyberSlash,")
-        _typed(console, "  a known vulnerability in liboqs v0.9.0.")
+        _typed(console, "  Can our tool tell the difference between a false alarm and a real problem?")
+        _typed(console, "  We tested it against KyberSlash: a known, real vulnerability in an older")
+        _typed(console, "  version of this encryption library.")
         console.print()
         time.sleep(2.0)
 
-        console.print("  Pairwise test:    d = 0.094 (below detection floor)",
-                      style="bold yellow", highlight=False)
-        console.print("  ML classifier:    56.6% accuracy (+3.8% over chance)",
-                      style="bold red", highlight=False)
+        console.print("  On the REAL vulnerability, our ML classifier detects it:",
+                      style="white", highlight=False)
         console.print()
-        time.sleep(1.0)
 
         # Accuracy gauge
-        console.print("  Accuracy gauge:", style="white", highlight=False)
         bar_chance = "\u2500" * 28
         bar_sca = "\u2500" * 33
-        console.print(f"  chance     {bar_chance}\u2524 52.8%",
+        console.print(f"  Random guessing {bar_chance}\u2524 52.8%",
                       style="dim", highlight=False)
-        console.print(f"  sca-triage {bar_sca}\u2524 56.6%  \u2190 real signal",
+        console.print(f"  Our classifier  {bar_sca}\u2524 56.6%  \u2190 real signal detected",
                       style="bold red", highlight=False)
         console.print()
         time.sleep(3.0)
 
-        _typed(console, "  Safe code:        TVLA fails, sca-triage says FALSE POSITIVE  \u2713",
+        console.print("  The scoreboard:", style="white", highlight=False)
+        console.print()
+        _typed(console,
+               "  Safe code:        Test says FAIL.  Our tool says: false alarm.     \u2713",
                style="bold green")
-        _typed(console, "  Vulnerable code:  TVLA misses it, sca-triage catches it       \u2713",
+        _typed(console,
+               "  Vulnerable code:  Test misses it.  Our tool catches it.            \u2713",
                style="bold green")
         console.print()
         time.sleep(5.0)
