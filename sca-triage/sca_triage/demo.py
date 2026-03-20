@@ -221,7 +221,7 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    console.print("  The test sees a gap.            score: 62.49            FAIL",
+    console.print("  The test sees a gap.   score: 62.49  (>4.5 = FAIL)     FAIL",
                   style="bold red", highlight=False)
     console.print()
     time.sleep(3.0)
@@ -250,7 +250,7 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    console.print("  The test sees no gap.           score: 0.58             PASS",
+    console.print("  The test sees no gap.  score: 0.58   (<4.5 = PASS)     PASS",
                   style="bold green", highlight=False)
     console.print()
     time.sleep(3.0)
@@ -270,14 +270,8 @@ def _run_precomputed(
     console.print()
     time.sleep(0.5)
 
-    console.print(
-        "  That was our experiment. Now let's see what happens in the real world.",
-        style="dim", highlight=False)
-    console.print()
-    time.sleep(1.0)
-
     _typed(console,
-           "  This is what certification labs see today. Standard test, modern hardware.")
+           "  Real-world result: a certification lab runs the standard test.")
     console.print()
     time.sleep(1.0)
 
@@ -287,7 +281,7 @@ def _run_precomputed(
     console.print()
     time.sleep(0.5)
 
-    console.print("  score: 8.42                     FAIL \u2014 DO NOT DEPLOY",
+    console.print("  score: 8.42  (>4.5 = FAIL)         FAIL \u2014 DO NOT DEPLOY",
                   style="bold red", highlight=False)
     console.print()
     time.sleep(3.0)
@@ -322,9 +316,18 @@ def _run_precomputed(
         bar0_len = int(avg0 / max_avg * 38)
         bar1_len = int(avg1 / max_avg * 38)
 
+        approx = "\u2248"
+        eq_len = min(bar0_len, bar1_len)
+        # Compute padding to align ≈ under the bars
+        label0 = f"  bit 0 = 0:  avg {avg0:.1f}    "
+        pad = " " * len(label0)
+
         console.print(
-            f"  bit 0 = 0:  avg {avg0:.1f}    {block * bar0_len}",
+            f"{label0}{block * bar0_len}",
             style="bold cyan", highlight=False)
+        console.print(
+            f"{pad}{approx * eq_len}",
+            style="bold green", highlight=False)
         console.print(
             f"  bit 0 = 1:  avg {avg1:.1f}    {block * bar1_len}",
             style="bold cyan", highlight=False)
@@ -363,13 +366,15 @@ def _run_precomputed(
         console.print()
         time.sleep(2.0)
 
-        console.print("  Our classifier accuracy:  56.6%",
-                      style="white", highlight=False)
-        console.print("  Random guessing:          52.8%",
+        guess_bar = block * int(52.8 / 100 * 60)
+        tool_bar = block * int(56.6 / 100 * 60)
+        console.print(f"  Random guess:  {guess_bar} 52.8%",
                       style="dim", highlight=False)
+        console.print(f"  Our tool:      {tool_bar} 56.6%",
+                      style="bold red", highlight=False)
         console.print(
-            "                                   "
-            "\u2191 real signal \u2014 vulnerability detected",
+            "                                                         "
+            " \u2191 real signal",
             style="bold red", highlight=False)
         console.print()
         time.sleep(3.0)
@@ -380,40 +385,51 @@ def _run_precomputed(
     console.print()
     time.sleep(1.0)
 
-    # Animate the "wrong" bar growing
-    console.print("  The certification test:", style="dim", highlight=False)
+    console.print("  So what did we find?", style="white", highlight=False)
+    console.print()
+    time.sleep(1.0)
+
+    # Animate the "FAIL" bar growing
+    console.print("  The mandatory test, run the standard way:",
+                  style="dim", highlight=False)
     time.sleep(0.5)
-    _animate_score_bar(62.49, max_width=45, label="WRONG", style="bold red",
+    _animate_score_bar(62.49, max_width=45, label="FAIL", style="bold red",
                        step_delay=0.04)
-    # Print colored version over the raw output
     sys.stdout.write("\033[1A\033[2K")  # move up, clear line
-    bar_wrong = "\u2501" * 45
-    console.print(f"  {bar_wrong}  62.49  WRONG",
+    bar_fail = "\u2501" * 45
+    console.print(f"  {bar_fail}  62.49  FAIL",
                   style="bold red", highlight=False)
     time.sleep(2.0)
 
     # The fix
     console.print()
-    console.print("  One-line fix (interleave the measurements):",
+    console.print("  The same test, measurements collected in alternating order:",
                   style="dim", highlight=False)
     time.sleep(0.5)
     small_width = max(1, int(0.58 / 62.49 * 45))
-    _animate_score_bar(0.58, max_width=45, label="RIGHT", style="bold green",
+    _animate_score_bar(0.58, max_width=45, label="PASS", style="bold green",
                        step_delay=0.1)
     sys.stdout.write("\033[1A\033[2K")  # move up, clear line
-    bar_right = "\u2501" * small_width
+    bar_pass = "\u2501" * small_width
     padding = " " * (45 - small_width)
-    console.print(f"  {bar_right}{padding}   0.58  RIGHT",
+    console.print(f"  {bar_pass}{padding}   0.58  PASS",
                   style="bold green", highlight=False)
     console.print()
     time.sleep(3.0)
+
+    console.print("  Same encryption. Same hardware. Same test.",
+                  style="bold white", highlight=False)
+    console.print("  The only thing we changed: the order of the measurements.",
+                  style="bold white", highlight=False)
+    console.print()
+    time.sleep(4.0)
 
     # Repo link + closing one-liner
     console.print("  github.com/asdfghjkltygh/m-series-pqc-timing-leak",
                   style="bold cyan", highlight=False)
     console.print()
     time.sleep(1.0)
-    console.print("  The standard lied. Now you know.",
+    console.print("  The test lied. The encryption was safe all along.",
                   style="bold magenta", highlight=False)
     console.print()
     time.sleep(3.0)
