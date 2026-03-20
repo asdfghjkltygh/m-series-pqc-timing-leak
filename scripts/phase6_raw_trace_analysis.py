@@ -268,9 +268,10 @@ def main():
     print("  AGGREGATION MASKING ANALYSIS: RAW vs AGGREGATED TRACES")
     print("=" * 70)
 
+    xgb_placeholder = {"acc": 0.0, "baseline": 0.0, "lift": 0.0}
     for t in targets:
         agg = AGGREGATED_RESULTS[t]
-        xgb = xgb_results[t]
+        xgb = xgb_results.get(t, xgb_placeholder)
         rf = rf_results[t]
         tt = ttest_results[t]
         ks = ks_results[t]
@@ -293,7 +294,10 @@ def main():
             verdict = "EXPECTED SIGNAL PRESENT (positive control)" if signal else "NO SIGNAL (unexpected)"
 
         print(f"\n  Target: {t}")
-        print(f"    Raw XGBoost:        {xgb['acc']:5.1f}% (baseline {xgb['baseline']:5.1f}%, lift {xgb['lift']:+5.1f}%)")
+        if HAS_XGBOOST:
+            print(f"    Raw XGBoost:        {xgb['acc']:5.1f}% (baseline {xgb['baseline']:5.1f}%, lift {xgb['lift']:+5.1f}%)")
+        else:
+            print(f"    Raw XGBoost:        (skipped — xgboost not installed)")
         print(f"    Aggregated XGBoost: {agg['xgb_acc']:5.1f}% (baseline {agg['baseline']:5.1f}%, lift {agg['lift']:+5.1f}%)")
         print(f"    Raw RF:             {rf['acc']:5.1f}% (baseline {rf['baseline']:5.1f}%, lift {rf['lift']:+5.1f}%)")
         print(f"    Raw Welch's t:      t={tt['t_stat']:+8.4f}, p={tt['p_value']:.4e}, d={tt['cohens_d']:+.6f}")
@@ -311,7 +315,7 @@ def main():
     }
     for t in targets:
         all_results["targets"][t] = {
-            "xgboost_raw": xgb_results[t],
+            "xgboost_raw": xgb_results.get(t, xgb_placeholder),
             "random_forest_raw": rf_results[t],
             "welch_ttest": ttest_results[t],
             "ks_test": ks_results[t],
