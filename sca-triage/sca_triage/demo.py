@@ -133,9 +133,10 @@ def _run_precomputed(
     target_names: list[str],
     has_vuln: bool,
 ) -> None:
-    """Full precomputed presentation. ~80 seconds, visual CLI storytelling."""
+    """Full precomputed presentation. ~90 seconds, visual CLI storytelling."""
 
     block = "\u2588"
+    approx = "\u2248"
 
     # ---- Title (2 seconds) ----
     time.sleep(0.5)
@@ -145,98 +146,113 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    # ---- ACT 0 (~40 seconds) ----
+    # ==================================================================
+    # ACT 0 — Setup + The Broken Test (~40 seconds)
+    # ==================================================================
     _section_header(console, "ACT 0")
     console.print()
     time.sleep(1.0)
 
-    # Context: what encryption timing looks like
-    console.print(
-        "  Every time your computer encrypts something, "
-        "it takes a measurable amount of time:",
-        style="white", highlight=False)
-    console.print()
+    # --- What encryption timing is ---
     for cycles in [594, 601, 588]:
         console.print(f"  encrypt(key, msg) \u2192 {cycles} cycles",
                       style="bold cyan", highlight=False)
         time.sleep(0.3)
     console.print()
-    time.sleep(2.0)
+    time.sleep(1.5)
 
-    # Why it matters: attacker inference
+    _typed(console,
+           "  Every encryption operation takes a measurable amount of time.")
+    _typed(console,
+           "  If an attacker can figure out the key from the timing, "
+           "the encryption is broken.")
+    console.print()
+    time.sleep(2.5)
+
+    # --- What's at stake ---
     console.print(
-        "  If the timing depends on the secret key, "
-        "an attacker can steal it:",
+        "  A mandatory government test checks for this before any encryption ships.",
+        style="white", highlight=False)
+    console.print(
+        "  If it fails: blocked. No waivers. Months of delay.",
         style="white", highlight=False)
     console.print()
-    console.print("  encrypt(???, msg) \u2192 594 \u2190\u2510",
-                  style="bold yellow", highlight=False)
-    console.print('  encrypt(???, msg) \u2192 601  \u251c\u2500\u2500 '
-                  '"Looks like Key A"',
-                  style="bold yellow", highlight=False)
-    console.print("  encrypt(???, msg) \u2192 588 \u2190\u2518",
-                  style="bold yellow", highlight=False)
-    console.print()
-    time.sleep(3.0)
+    time.sleep(2.5)
 
-    # The test explanation + timeline
-    console.print(
-        "  A mandatory test checks for this. "
-        "It collects timing in two groups:",
-        style="white", highlight=False)
+    # --- How the test works ---
+    console.print("  Here's how the test works:", style="white", highlight=False)
     console.print()
+    time.sleep(1.0)
+
     console.print(
-        "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Group A "
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Group B "
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  It encrypts with ONE secret key, over and over"
+        "          \u2192 Group A",
         style="bold cyan", highlight=False)
     console.print(
-        "  time \u2192                        \u2502",
-        style="dim", highlight=False)
-    console.print()
-    console.print(
-        "  Then asks: are the groups different?",
-        style="white", highlight=False)
+        "  Then encrypts with MANY different keys"
+        "                   \u2192 Group B",
+        style="bold yellow", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    # Method 1: Sequential
-    console.print("  Method 1: all of group A first, then all of group B.",
-                  style="white", highlight=False)
+    console.print(
+        "  Then it runs a statistical comparison (Welch's t-test)",
+        style="white", highlight=False)
+    console.print(
+        "  to measure how different the two groups are.",
+        style="white", highlight=False)
+    console.print(
+        "  If the score exceeds 4.5, the encryption fails the test.",
+        style="white", highlight=False)
     console.print()
-    console.print("  Group A (measured first):   594  601  588  597  605  591  ...",
-                  style="bold red", highlight=False)
-    console.print("  Group B (measured second):  532  528  535  530  527  534  ...",
-                  style="bold cyan", highlight=False)
+    time.sleep(2.5)
+
+    # --- Method 1: Sequential ---
+    console.print(
+        "  We ran this test on ML-KEM, the new post-quantum standard.",
+        style="white", highlight=False)
     console.print()
-    time.sleep(2.0)
+
+    console.print(
+        "  \u2500\u2500\u2500\u2500 Group A (one key) "
+        "\u2500\u2500\u2500\u2500\u2502"
+        "\u2500\u2500\u2500\u2500 Group B (many keys) "
+        "\u2500\u2500\u2500\u2500",
+        style="bold cyan", highlight=False)
+    console.print(
+        "  time \u2192                      \u2502",
+        style="dim", highlight=False)
+    console.print()
+    time.sleep(1.5)
 
     console.print(f"  Group A average: 594 cycles  {block * 42}",
                   style="bold red", highlight=False)
     console.print(f"  Group B average: 532 cycles  {block * 36}",
                   style="bold cyan", highlight=False)
-    console.print(f"                               {' ' * 36} \u2190 gap!",
+    console.print(f"                               {' ' * 36} \u2190 gap",
                   style="bold yellow", highlight=False)
     console.print()
-    time.sleep(2.0)
+    time.sleep(2.5)
 
-    console.print("  The test sees a gap.   score: 62.49  (>4.5 = FAIL)     FAIL",
+    console.print("  score: 62.49   (>4.5 = FAIL)                           FAIL",
                   style="bold red", highlight=False)
     console.print()
     time.sleep(3.0)
 
-    # Method 2: Interleaved (with timeline visual)
-    console.print("  Method 2: alternate A and B, one at a time.",
-                  style="white", highlight=False)
+    # --- Method 2: Interleaved ---
+    console.print(
+        "  But what if we collect A and B at the SAME time "
+        "instead of one after the other?",
+        style="white", highlight=False)
     console.print()
+
     console.print(
         "  \u2500\u2500 A \u2500\u2500 B \u2500\u2500 A \u2500\u2500 B "
         "\u2500\u2500 A \u2500\u2500 B \u2500\u2500 A \u2500\u2500 B "
         "\u2500\u2500 A \u2500\u2500 B \u2500\u2500",
         style="bold green", highlight=False)
     console.print(
-        "  time \u2192  (mixed together, no pause between groups)",
+        "  time \u2192",
         style="dim", highlight=False)
     console.print()
     time.sleep(2.0)
@@ -250,28 +266,31 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    console.print("  The test sees no gap.  score: 0.58   (<4.5 = PASS)     PASS",
+    console.print("  score: 0.58    (<4.5 = PASS)                           PASS",
                   style="bold green", highlight=False)
     console.print()
     time.sleep(3.0)
 
-    # Punchline
+    # --- Punchline ---
     _typed(console,
-           "  Same hardware. Same code. Same inputs. The gap was the",
+           "  Same encryption. Same hardware. 62 \u2192 0.58.",
            style="bold white", delay=0.025)
     _typed(console,
-           "  ENVIRONMENT drifting between measurements, not the encryption.",
+           "  The gap was the computer's environment drifting, not the key.",
            style="bold white", delay=0.025)
     console.print()
     time.sleep(5.0)
 
-    # ---- ACT 1 (~15 seconds) ----
+    # ==================================================================
+    # ACT 1 — Real World (12 seconds)
+    # ==================================================================
     _section_header(console, "ACT 1")
     console.print()
     time.sleep(0.5)
 
-    _typed(console,
-           "  Real-world result: a certification lab runs the standard test.")
+    console.print(
+        "  A certification lab tests ML-KEM. Standard procedure.",
+        style="white", highlight=False)
     console.print()
     time.sleep(1.0)
 
@@ -281,25 +300,38 @@ def _run_precomputed(
     console.print()
     time.sleep(0.5)
 
-    console.print("  score: 8.42  (>4.5 = FAIL)         FAIL \u2014 DO NOT DEPLOY",
-                  style="bold red", highlight=False)
+    console.print(
+        "  score: 8.42   (>4.5 = FAIL)        FAIL \u2014 BLOCKED FROM SHIPPING",
+        style="bold red", highlight=False)
     console.print()
     time.sleep(3.0)
 
-    console.print("  Every lab. Every chip. Same result. ML-KEM is blocked from shipping.",
+    console.print("  Every lab. Every modern chip. Same result.",
                   style="dim", highlight=False)
     console.print()
     time.sleep(3.0)
 
-    # ---- ACT 2 (~20 seconds) ----
+    # ==================================================================
+    # ACT 2 — The Proof (20 seconds)
+    # ==================================================================
     _section_header(console, "ACT 2")
     console.print()
     time.sleep(0.5)
 
+    # Bridge from Act 0/1
+    console.print(
+        "  The test found Group A and Group B have different timing.",
+        style="white", highlight=False)
+    console.print(
+        "  But is that because of the KEY, or because of something else?",
+        style="white", highlight=False)
+    console.print()
+    time.sleep(2.0)
+
     _typed(console,
-           "  If the key is really leaking, different keys = different timing.")
+           "  We sorted all our measurements by which secret key was used")
     _typed(console,
-           "  Let's check.")
+           "  and compared the timing directly:")
     console.print()
     time.sleep(1.5)
 
@@ -315,11 +347,9 @@ def _run_precomputed(
         max_avg = max(avg0, avg1)
         bar0_len = int(avg0 / max_avg * 38)
         bar1_len = int(avg1 / max_avg * 38)
-
-        approx = "\u2248"
         eq_len = min(bar0_len, bar1_len)
-        # Compute padding to align ≈ under the bars
-        label0 = f"  bit 0 = 0:  avg {avg0:.1f}    "
+
+        label0 = f"  Keys where bit 0 = 0:  avg {avg0:.0f} cycles  "
         pad = " " * len(label0)
 
         console.print(
@@ -329,57 +359,87 @@ def _run_precomputed(
             f"{pad}{approx * eq_len}",
             style="bold green", highlight=False)
         console.print(
-            f"  bit 0 = 1:  avg {avg1:.1f}    {block * bar1_len}",
+            f"  Keys where bit 0 = 1:  avg {avg1:.0f} cycles  "
+            f"{block * bar1_len}",
             style="bold cyan", highlight=False)
         console.print()
         time.sleep(2.0)
         console.print(
-            "                          \u2191 statistically indistinguishable",
+            f"{pad}\u2191 statistically indistinguishable",
             style="bold green", highlight=False)
         console.print()
-        time.sleep(2.0)
+        time.sleep(3.0)
 
-    console.print("  Information leaked: 0.000 bits",
-                  style="bold green", highlight=False)
+    console.print(
+        "  The key does not affect the timing. The test failure is a false alarm.",
+        style="bold green", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    # Verdict box (using helper)
+    # Verdict box
     _draw_box(console, [
         "",
         "VERDICT: FALSE POSITIVE",
         "",
-        "This encryption is safe.",
+        "This encryption is safe to ship.",
         "",
     ], style="bold green", width=50)
     console.print()
-    time.sleep(4.0)
+    time.sleep(5.0)
 
-    # ---- ACT 3 (~20 seconds, with animated ending) ----
+    # ==================================================================
+    # ACT 3 — Validation + Closing (25 seconds)
+    # ==================================================================
     if has_vuln:
         _section_header(console, "ACT 3")
         console.print()
         time.sleep(0.5)
 
+        console.print(
+            '  Our tool said "false alarm" on safe code. '
+            "But can it catch a real vulnerability?",
+            style="white", highlight=False)
+        console.print()
+        time.sleep(1.5)
+
+        console.print(
+            "  We tested against KyberSlash, a known bug in an older "
+            "version of this library.",
+            style="white", highlight=False)
+        console.print()
+        time.sleep(1.5)
+
         _typed(console,
-               "  Can we catch a REAL vulnerability? We tested against KyberSlash.")
+               "  We trained a classifier to guess which key was used, "
+               "based only on timing.")
+        _typed(console,
+               "  If it guesses better than random chance, the key is leaking.")
         console.print()
         time.sleep(2.0)
 
-        guess_bar = block * int(52.8 / 100 * 60)
-        tool_bar = block * int(56.6 / 100 * 60)
-        console.print(f"  Random guess:  {guess_bar} 52.8%",
+        console.print("  Random chance:    264 / 500 correct",
                       style="dim", highlight=False)
-        console.print(f"  Our tool:      {tool_bar} 56.6%",
-                      style="bold red", highlight=False)
         console.print(
-            "                                                         "
-            " \u2191 real signal",
+            "  Our classifier:   283 / 500 correct"
+            "        \u2190 timing leaks the key",
             style="bold red", highlight=False)
         console.print()
         time.sleep(3.0)
 
-    # ---- Animated ending (the visual punchline) ----
+        console.print(
+            "  Safe code:        the key does NOT affect timing"
+            "   \u2192 false alarm  \u2713",
+            style="bold green", highlight=False)
+        console.print(
+            "  Vulnerable code:  the key DOES affect timing"
+            "       \u2192 caught       \u2713",
+            style="bold green", highlight=False)
+        console.print()
+        time.sleep(4.0)
+
+    # ==================================================================
+    # Animated ending — the visual punchline
+    # ==================================================================
     divider = "\u2500" * 60
     console.print(f"  {divider}", style="dim", highlight=False)
     console.print()
@@ -387,7 +447,7 @@ def _run_precomputed(
 
     console.print("  So what did we find?", style="white", highlight=False)
     console.print()
-    time.sleep(1.0)
+    time.sleep(1.5)
 
     # Animate the "FAIL" bar growing
     console.print("  The mandatory test, run the standard way:",
@@ -403,8 +463,9 @@ def _run_precomputed(
 
     # The fix
     console.print()
-    console.print("  The same test, measurements collected in alternating order:",
-                  style="dim", highlight=False)
+    console.print(
+        "  The same test, measurements collected in alternating order:",
+        style="dim", highlight=False)
     time.sleep(0.5)
     small_width = max(1, int(0.58 / 62.49 * 45))
     _animate_score_bar(0.58, max_width=45, label="PASS", style="bold green",
@@ -422,9 +483,9 @@ def _run_precomputed(
     console.print("  The only thing we changed: the order of the measurements.",
                   style="bold white", highlight=False)
     console.print()
-    time.sleep(4.0)
+    time.sleep(3.0)
 
-    # Repo link + closing one-liner
+    # Repo link + closing
     console.print("  github.com/asdfghjkltygh/m-series-pqc-timing-leak",
                   style="bold cyan", highlight=False)
     console.print()
