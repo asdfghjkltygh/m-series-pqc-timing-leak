@@ -44,7 +44,7 @@ If you prefer not to install Python, Docker runs everything in an isolated conta
 docker-compose up --build run-all-experiments
 ```
 
-Runs all experiments (~5 minutes), validates all claims, outputs results to `data/` and `figures/`. Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Runs all experiments (~7 minutes), validates all claims, outputs results to `data/` and `figures/`. Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ## Key Results
 

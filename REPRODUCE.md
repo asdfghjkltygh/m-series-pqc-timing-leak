@@ -8,7 +8,7 @@ No host dependencies required. Docker builds liboqs, compiles harnesses, install
 docker-compose up --build run-all-experiments
 ```
 
-Results are written to `data/` and `figures/` via volume mount. Total runtime: ~5 minutes.
+Results are written to `data/` and `figures/` via volume mount. Total runtime: ~7 minutes.
 
 To run a single experiment interactively:
 
