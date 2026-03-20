@@ -71,6 +71,18 @@ def _animate_score_bar(value: float, max_width: int = 45, label: str = "",
     sys.stdout.flush()
 
 
+def _draw_box(console: Console, lines: list[str],
+              style: str = "green", width: int = 50) -> None:
+    """Draw a fixed-width box with perfectly aligned text."""
+    inner = width - 4  # account for "  │ " and " │"
+    horiz = "\u2500" * (width - 2)
+    console.print(f"  \u250c{horiz}\u2510", style=style, highlight=False)
+    for line in lines:
+        padded = line.center(inner)
+        console.print(f"  \u2502 {padded} \u2502", style=style, highlight=False)
+    console.print(f"  \u2514{horiz}\u2518", style=style, highlight=False)
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -123,6 +135,8 @@ def _run_precomputed(
 ) -> None:
     """Full precomputed presentation. ~80 seconds, visual CLI storytelling."""
 
+    block = "\u2588"
+
     # ---- Title (2 seconds) ----
     time.sleep(0.5)
     console.print()
@@ -131,18 +145,64 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    # ---- ACT 0 (~35 seconds) ----
+    # ---- ACT 0 (~40 seconds) ----
     _section_header(console, "ACT 0")
     console.print()
     time.sleep(1.0)
 
-    _typed(console, "  Every encryption module needs to pass a timing test before the")
-    _typed(console, "  government will use it. We ran that test two ways.")
+    # Context: what encryption timing looks like
+    console.print(
+        "  Every time your computer encrypts something, "
+        "it takes a measurable amount of time:",
+        style="white", highlight=False)
+    console.print()
+    for cycles in [594, 601, 588]:
+        console.print(f"  encrypt(key, msg) \u2192 {cycles} cycles",
+                      style="bold cyan", highlight=False)
+        time.sleep(0.3)
+    console.print()
+    time.sleep(2.0)
+
+    # Why it matters: attacker inference
+    console.print(
+        "  If the timing depends on the secret key, "
+        "an attacker can steal it:",
+        style="white", highlight=False)
+    console.print()
+    console.print("  encrypt(???, msg) \u2192 594 \u2190\u2510",
+                  style="bold yellow", highlight=False)
+    console.print('  encrypt(???, msg) \u2192 601  \u251c\u2500\u2500 '
+                  '"Looks like Key A"',
+                  style="bold yellow", highlight=False)
+    console.print("  encrypt(???, msg) \u2192 588 \u2190\u2518",
+                  style="bold yellow", highlight=False)
+    console.print()
+    time.sleep(3.0)
+
+    # The test explanation + timeline
+    console.print(
+        "  A mandatory test checks for this. "
+        "It collects timing in two groups:",
+        style="white", highlight=False)
+    console.print()
+    console.print(
+        "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Group A "
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Group B "
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        style="bold cyan", highlight=False)
+    console.print(
+        "  time \u2192                        \u2502",
+        style="dim", highlight=False)
+    console.print()
+    console.print(
+        "  Then asks: are the groups different?",
+        style="white", highlight=False)
     console.print()
     time.sleep(2.0)
 
     # Method 1: Sequential
-    console.print("  Method 1: measure all of group A, then all of group B.",
+    console.print("  Method 1: all of group A first, then all of group B.",
                   style="white", highlight=False)
     console.print()
     console.print("  Group A (measured first):   594  601  588  597  605  591  ...",
@@ -152,11 +212,9 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    bar_a = "\u2588" * 42
-    bar_b = "\u2588" * 36
-    console.print(f"  Group A average: 594 cycles  {bar_a}",
+    console.print(f"  Group A average: 594 cycles  {block * 42}",
                   style="bold red", highlight=False)
-    console.print(f"  Group B average: 532 cycles  {bar_b}",
+    console.print(f"  Group B average: 532 cycles  {block * 36}",
                   style="bold cyan", highlight=False)
     console.print(f"                               {' ' * 36} \u2190 gap!",
                   style="bold yellow", highlight=False)
@@ -168,22 +226,24 @@ def _run_precomputed(
     console.print()
     time.sleep(3.0)
 
-    # Method 2: Interleaved
-    console.print("  Method 2: alternate group A and group B measurements.",
+    # Method 2: Interleaved (with timeline visual)
+    console.print("  Method 2: alternate A and B, one at a time.",
                   style="white", highlight=False)
     console.print()
-    console.print("  Group A (mixed):  553  551  555  552  554  550  ...",
-                  style="bold green", highlight=False)
-    console.print("  Group B (mixed):  554  552  551  555  553  551  ...",
-                  style="bold green", highlight=False)
+    console.print(
+        "  \u2500\u2500 A \u2500\u2500 B \u2500\u2500 A \u2500\u2500 B "
+        "\u2500\u2500 A \u2500\u2500 B \u2500\u2500 A \u2500\u2500 B "
+        "\u2500\u2500 A \u2500\u2500 B \u2500\u2500",
+        style="bold green", highlight=False)
+    console.print(
+        "  time \u2192  (mixed together, no pause between groups)",
+        style="dim", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    bar_a2 = "\u2588" * 38
-    bar_b2 = "\u2588" * 38
-    console.print(f"  Group A average: 553 cycles  {bar_a2}",
+    console.print(f"  Group A average: 553 cycles  {block * 38}",
                   style="bold green", highlight=False)
-    console.print(f"  Group B average: 552 cycles  {bar_b2}",
+    console.print(f"  Group B average: 552 cycles  {block * 38}",
                   style="bold green", highlight=False)
     console.print(f"                               {' ' * 38} \u2190 no gap",
                   style="bold green", highlight=False)
@@ -209,6 +269,12 @@ def _run_precomputed(
     _section_header(console, "ACT 1")
     console.print()
     time.sleep(0.5)
+
+    console.print(
+        "  That was our experiment. Now let's see what happens in the real world.",
+        style="dim", highlight=False)
+    console.print()
+    time.sleep(1.0)
 
     _typed(console,
            "  This is what certification labs see today. Standard test, modern hardware.")
@@ -237,9 +303,9 @@ def _run_precomputed(
     time.sleep(0.5)
 
     _typed(console,
-           "  The test claims the secret key leaks. If true, different keys")
+           "  If the key is really leaking, different keys = different timing.")
     _typed(console,
-           "  should produce different timing. Let's look.")
+           "  Let's check.")
     console.print()
     time.sleep(1.5)
 
@@ -255,7 +321,6 @@ def _run_precomputed(
         max_avg = max(avg0, avg1)
         bar0_len = int(avg0 / max_avg * 38)
         bar1_len = int(avg1 / max_avg * 38)
-        block = "\u2588"
 
         console.print(
             f"  bit 0 = 0:  avg {avg0:.1f}    {block * bar0_len}",
@@ -266,7 +331,7 @@ def _run_precomputed(
         console.print()
         time.sleep(2.0)
         console.print(
-            f"              {'':30s}\u2191 identical",
+            "                          \u2191 statistically indistinguishable",
             style="bold green", highlight=False)
         console.print()
         time.sleep(2.0)
@@ -276,25 +341,14 @@ def _run_precomputed(
     console.print()
     time.sleep(2.0)
 
-    # Verdict box
-    console.print(
-        "  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510",
-        style="green", highlight=False)
-    console.print(
-        "  \u2502         VERDICT: FALSE POSITIVE              \u2502",
-        style="bold green", highlight=False)
-    console.print(
-        "  \u2502         This encryption is safe.              \u2502",
-        style="green", highlight=False)
-    console.print(
-        "  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518",
-        style="green", highlight=False)
+    # Verdict box (using helper)
+    _draw_box(console, [
+        "",
+        "VERDICT: FALSE POSITIVE",
+        "",
+        "This encryption is safe.",
+        "",
+    ], style="bold green", width=50)
     console.print()
     time.sleep(4.0)
 
@@ -321,13 +375,8 @@ def _run_precomputed(
         time.sleep(3.0)
 
     # ---- Animated ending (the visual punchline) ----
-    console.print(
-        "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
-        style="dim", highlight=False)
+    divider = "\u2500" * 60
+    console.print(f"  {divider}", style="dim", highlight=False)
     console.print()
     time.sleep(1.0)
 
@@ -359,9 +408,13 @@ def _run_precomputed(
     console.print()
     time.sleep(3.0)
 
-    # Repo link
+    # Repo link + closing one-liner
     console.print("  github.com/asdfghjkltygh/m-series-pqc-timing-leak",
                   style="bold cyan", highlight=False)
+    console.print()
+    time.sleep(1.0)
+    console.print("  The standard lied. Now you know.",
+                  style="bold magenta", highlight=False)
     console.print()
     time.sleep(3.0)
 
