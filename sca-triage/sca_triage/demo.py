@@ -539,7 +539,7 @@ def _run_precomputed(
                   style="bold cyan", highlight=False)
     console.print()
     time.sleep(1.0)
-    console.print("  The test lied. The encryption was safe all along.",
+    console.print("  The failure was never real.",
                   style="bold magenta", highlight=False)
     console.print()
     time.sleep(3.0)
