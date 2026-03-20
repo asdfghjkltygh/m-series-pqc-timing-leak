@@ -38,30 +38,6 @@ def _typed(console: Console, text: str, style: str = "dim", delay: float = 0.02)
     console.print()  # newline
 
 
-def _to_histogram_line(values: np.ndarray, n_bins: int = 15,
-                       bin_edges: np.ndarray | None = None) -> str:
-    """Convert values to a string of Unicode block characters."""
-    heights = " \u2581\u2582\u2583\u2584\u2585\u2586\u2587\u2588"
-    if bin_edges is not None:
-        counts, _ = np.histogram(values, bins=bin_edges)
-    else:
-        counts, _ = np.histogram(values, bins=n_bins)
-    max_c = max(counts) if max(counts) > 0 else 1
-    return "".join(heights[min(int(c / max_c * 8), 8)] for c in counts)
-
-
-def _shared_bin_edges(g0: np.ndarray, g1: np.ndarray, n_bins: int = 15) -> np.ndarray:
-    """Compute shared bin edges for two groups (IQR-based range for tight data)."""
-    combined = np.concatenate([g0, g1])
-    q25, q75 = np.percentile(combined, [25, 75])
-    iqr = q75 - q25
-    if iqr == 0:
-        iqr = np.std(combined) * 2 or 1.0
-    lo = q25 - 1.5 * iqr
-    hi = q75 + 1.5 * iqr
-    return np.linspace(lo, hi, n_bins + 1)
-
-
 def _section_header(console: Console, name: str) -> None:
     """Print a simple section header line."""
     pad = "\u2500" * (57 - len(name))
@@ -69,39 +45,30 @@ def _section_header(console: Console, name: str) -> None:
                   style="bold magenta", highlight=False)
 
 
-def _draw_bar_gauge(
-    console: Console,
-    value: float,
-    threshold: float,
-    max_val: float,
-    width: int = 50,
-    label: str = "score",
-) -> None:
-    """Draw a horizontal gauge with a threshold marker above it."""
-    scale = width / max_val
-    bar_len = min(int(value * scale), width)
-    thresh_pos = int(threshold * scale)
-
-    # Threshold line
-    thresh_line = " " * (thresh_pos + 2) + "\u25bc failure threshold"
-    console.print(f"  {thresh_line}", style="dim", highlight=False)
-
-    # Bar
-    gauge = "\u2501" * bar_len
-    bar_color = "bold red" if value > threshold else "bold green"
-    console.print(f"  {gauge} {label}: {value:.2f}", style=bar_color, highlight=False)
-    console.print()
-
-
-def _animate_loading_bar(width: int = 44, total: int = 1_000_000) -> None:
-    """Animate a loading bar using \\r overwrite."""
+def _animate_loading_bar(width: int = 20, total: int = 1_000_000) -> None:
+    """Animate a loading bar using \\r overwrite. 1.5 seconds."""
     for i in range(width + 1):
         filled = "\u2588" * i + " " * (width - i)
         count = int(total * i / width)
         sys.stdout.write(f"\r  {filled} {count:>9,} / {total:,}")
         sys.stdout.flush()
-        time.sleep(0.04)
+        time.sleep(1.5 / width)
     print()
+
+
+def _animate_score_bar(value: float, max_width: int = 45, label: str = "",
+                       style: str = "bold red", step_delay: float = 0.04) -> None:
+    """Animate a bar growing from 0 to value, then print label."""
+    bar_len = max(1, int(value / 62.49 * max_width))
+    for i in range(bar_len + 1):
+        bar = "\u2501" * i
+        sys.stdout.write(f"\r  {bar}")
+        sys.stdout.flush()
+        time.sleep(step_delay)
+    # Pad + label after animation
+    padding = " " * (max_width - bar_len + 2)
+    sys.stdout.write(f"{padding}{value:.2f}  {label}\n")
+    sys.stdout.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -154,288 +121,245 @@ def _run_precomputed(
     target_names: list[str],
     has_vuln: bool,
 ) -> None:
-    """Full precomputed presentation. ~100 seconds, visual CLI storytelling."""
+    """Full precomputed presentation. ~80 seconds, visual CLI storytelling."""
 
-    # ---- Title (3 seconds) ----
+    # ---- Title (2 seconds) ----
     time.sleep(0.5)
     console.print()
     console.print("  WHEN TVLA LIES", style="bold magenta", highlight=False)
-    console.print("  How a Broken Standard Is Blocking Post-Quantum Crypto Deployment",
-                  style="dim", highlight=False)
+    console.print("  sca-triage live demo", style="dim", highlight=False)
     console.print()
     time.sleep(2.0)
 
     # ---- ACT 0 (~35 seconds) ----
-    time.sleep(1.0)
     _section_header(console, "ACT 0")
     console.print()
+    time.sleep(1.0)
 
-    _typed(console, "  Before any encryption can ship in a US government system, it has to")
-    _typed(console, "  pass a certification test. If it fails, it doesn't ship. Period.")
-    console.print()
-    time.sleep(1.5)
-
-    _typed(console, "  The test measures how long encryption takes. If the secret key changes")
-    _typed(console, "  the timing, an attacker could watch the clock and steal the key.")
+    _typed(console, "  Every encryption module needs to pass a timing test before the")
+    _typed(console, "  government will use it. We ran that test two ways.")
     console.print()
     time.sleep(2.0)
 
-    _typed(console, "  We ran this test on ML-KEM, the new post-quantum encryption standard.")
-    _typed(console, "  We tested two ways of collecting the timing measurements.")
-    console.print()
-    time.sleep(1.5)
-
-    # Sequential: separated distributions with axis labels
-    console.print('  Method 1: collect all "test A" measurements, then all "test B".',
+    # Method 1: Sequential
+    console.print("  Method 1: measure all of group A, then all of group B.",
                   style="white", highlight=False)
     console.print()
-    console.print("  timing \u2191", style="dim", highlight=False)
-    console.print(
-        "         \u2502  "
-        "\u2584\u2586\u2588\u2587\u2585\u2583\u2581"
-        "              "
-        "\u2581\u2583\u2585\u2587\u2588\u2586\u2584",
-        style="bold red", highlight=False,
-    )
-    console.print(
-        "         \u2502   test A                test B",
-        style="dim", highlight=False,
-    )
-    console.print(
-        "         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2192",
-        style="dim", highlight=False,
-    )
-    console.print(
-        "              first half           second half",
-        style="dim", highlight=False,
-    )
-    console.print()
-    time.sleep(3.0)
-
-    _typed(console, "  The test sees two different groups and says: LEAKAGE DETECTED.")
-    console.print()
-
-    _draw_bar_gauge(console, sequential_t, 4.5, 70.0, label="score")
-    console.print("  FAIL", style="bold red", highlight=False)
-    console.print()
-    time.sleep(4.0)
-
-    # Interleaved: overlapping distribution with axis labels
-    console.print("  Method 2: alternate test A and test B measurements, one at a time.",
-                  style="white", highlight=False)
-    console.print()
-    console.print("  timing \u2191", style="dim", highlight=False)
-    console.print(
-        "         \u2502          "
-        "\u2582\u2584\u2586\u2588\u2587\u2585\u2583\u2581",
-        style="bold green", highlight=False,
-    )
-    console.print(
-        "         \u2502     test A + test B (mixed together)",
-        style="dim", highlight=False,
-    )
-    console.print(
-        "         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2192",
-        style="dim", highlight=False,
-    )
-    console.print(
-        "              same time period",
-        style="dim", highlight=False,
-    )
+    console.print("  Group A (measured first):   594  601  588  597  605  591  ...",
+                  style="bold red", highlight=False)
+    console.print("  Group B (measured second):  532  528  535  530  527  534  ...",
+                  style="bold cyan", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    _typed(console, "  Same hardware. Same code. Same inputs. Now the test sees one group:")
+    bar_a = "\u2588" * 42
+    bar_b = "\u2588" * 36
+    console.print(f"  Group A average: 594 cycles  {bar_a}",
+                  style="bold red", highlight=False)
+    console.print(f"  Group B average: 532 cycles  {bar_b}",
+                  style="bold cyan", highlight=False)
+    console.print(f"                               {' ' * 36} \u2190 gap!",
+                  style="bold yellow", highlight=False)
     console.print()
+    time.sleep(2.0)
 
-    _draw_bar_gauge(console, interleaved_t, 4.5, 70.0, label="score")
-    console.print("  PASS", style="bold green", highlight=False)
-    console.print()
-    time.sleep(3.0)
-
-    # Punchline
-    reduction = sequential_t / interleaved_t if interleaved_t > 0 else float('inf')
-    _typed(console,
-           f"  Score went from {sequential_t:.0f} to {interleaved_t:.2f}. "
-           f"A {reduction:.0f}x drop. The \"leakage\" was never real.",
-           style="bold white", delay=0.025)
-    _typed(console,
-           "  The test was detecting WHEN we measured, not WHAT was being encrypted.",
-           style="bold white", delay=0.025)
-    console.print()
-    time.sleep(5.0)
-
-    # ---- ACT 1 (~20 seconds) ----
-    time.sleep(1.0)
-    _section_header(console, "ACT 1")
-    console.print()
-
-    _typed(console, "  This is what every certification lab sees when they test ML-KEM")
-    _typed(console, "  on a modern laptop or server. Standard test. Standard procedure.")
-    console.print()
-    time.sleep(1.5)
-
-    console.print("  Running certification test on 1,000,000 timing measurements...",
-                  style="white", highlight=False)
-    console.print()
-
-    # Animated loading bar
-    _animate_loading_bar(total=1_000_000)
-    time.sleep(1.0)
-    console.print()
-
-    _draw_bar_gauge(console, 8.42, 4.5, 12.0, label="score")
-
-    console.print("  Result:  FAIL. DO NOT DEPLOY.",
+    console.print("  The test sees a gap.            score: 62.49            FAIL",
                   style="bold red", highlight=False)
     console.print()
     time.sleep(3.0)
 
-    _typed(console, "  Every lab running this test on modern hardware gets this result.")
-    _typed(console, "  The encryption is blocked from shipping. But is it actually broken?")
+    # Method 2: Interleaved
+    console.print("  Method 2: alternate group A and group B measurements.",
+                  style="white", highlight=False)
     console.print()
-    time.sleep(3.0)
-
-    # ---- ACT 2 (~25 seconds) ----
-    time.sleep(1.0)
-    _section_header(console, "ACT 2")
-    console.print()
-
-    _typed(console, '  The test says: "the secret key is leaking through timing."')
-    _typed(console, "  If that's true, then keys with different values should produce")
-    _typed(console, "  different timing patterns.  Let's check.")
+    console.print("  Group A (mixed):  553  551  555  552  554  550  ...",
+                  style="bold green", highlight=False)
+    console.print("  Group B (mixed):  554  552  551  555  553  551  ...",
+                  style="bold green", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    # Real data distribution plots
+    bar_a2 = "\u2588" * 38
+    bar_b2 = "\u2588" * 38
+    console.print(f"  Group A average: 553 cycles  {bar_a2}",
+                  style="bold green", highlight=False)
+    console.print(f"  Group B average: 552 cycles  {bar_b2}",
+                  style="bold green", highlight=False)
+    console.print(f"                               {' ' * 38} \u2190 no gap",
+                  style="bold green", highlight=False)
+    console.print()
+    time.sleep(2.0)
+
+    console.print("  The test sees no gap.           score: 0.58             PASS",
+                  style="bold green", highlight=False)
+    console.print()
+    time.sleep(3.0)
+
+    # Punchline
+    _typed(console,
+           "  Same hardware. Same code. Same inputs. The gap was the",
+           style="bold white", delay=0.025)
+    _typed(console,
+           "  ENVIRONMENT drifting between measurements, not the encryption.",
+           style="bold white", delay=0.025)
+    console.print()
+    time.sleep(5.0)
+
+    # ---- ACT 1 (~15 seconds) ----
+    _section_header(console, "ACT 1")
+    console.print()
+    time.sleep(0.5)
+
+    _typed(console,
+           "  This is what certification labs see today. Standard test, modern hardware.")
+    console.print()
+    time.sleep(1.0)
+
+    console.print("  Testing 1,000,000 measurements...",
+                  style="white", highlight=False)
+    _animate_loading_bar(total=1_000_000)
+    console.print()
+    time.sleep(0.5)
+
+    console.print("  score: 8.42                     FAIL \u2014 DO NOT DEPLOY",
+                  style="bold red", highlight=False)
+    console.print()
+    time.sleep(3.0)
+
+    console.print("  Every lab. Every chip. Same result. ML-KEM is blocked from shipping.",
+                  style="dim", highlight=False)
+    console.print()
+    time.sleep(3.0)
+
+    # ---- ACT 2 (~20 seconds) ----
+    _section_header(console, "ACT 2")
+    console.print()
+    time.sleep(0.5)
+
+    _typed(console,
+           "  The test claims the secret key leaks. If true, different keys")
+    _typed(console,
+           "  should produce different timing. Let's look.")
+    console.print()
+    time.sleep(1.5)
+
+    # Real data: compute per-key means split by sk_lsb
     means = per_key_features[:, 2] if per_key_features.shape[1] > 2 else per_key_features[:, 0]
 
-    # sk_lsb comparison
     if "sk_lsb" in per_key_labels:
         labels = per_key_labels["sk_lsb"]
         g0 = means[labels == 0]
         g1 = means[labels == 1]
-        edges = _shared_bin_edges(g0, g1, n_bins=15)
-        hist0 = _to_histogram_line(g0, bin_edges=edges)
-        hist1 = _to_histogram_line(g1, bin_edges=edges)
+        avg0 = float(np.mean(g0))
+        avg1 = float(np.mean(g1))
+        max_avg = max(avg0, avg1)
+        bar0_len = int(avg0 / max_avg * 38)
+        bar1_len = int(avg1 / max_avg * 38)
+        block = "\u2588"
 
-        console.print("  Secret key bit = 0:     " + hist0,
-                      style="bold cyan", highlight=False)
-        console.print("  Secret key bit = 1:     " + hist1,
-                      style="bold cyan", highlight=False)
-        console.print("                           \u2191 identical timing patterns",
-                      style="dim", highlight=False)
+        console.print(
+            f"  bit 0 = 0:  avg {avg0:.1f}    {block * bar0_len}",
+            style="bold cyan", highlight=False)
+        console.print(
+            f"  bit 0 = 1:  avg {avg1:.1f}    {block * bar1_len}",
+            style="bold cyan", highlight=False)
         console.print()
-        time.sleep(3.0)
-
-    # Hamming weight comparison
-    if "sk_lsb" in per_key_labels:
-        n_keys = len(means)
-        even_idx = np.arange(0, n_keys, 2)
-        odd_idx = np.arange(1, n_keys, 2)
-        g_low = means[even_idx]
-        g_high = means[odd_idx]
-        edges_hw = _shared_bin_edges(g_low, g_high, n_bins=15)
-        hist_low = _to_histogram_line(g_low, bin_edges=edges_hw)
-        hist_high = _to_histogram_line(g_high, bin_edges=edges_hw)
-
-        console.print("  Low Hamming weight key: " + hist_low,
-                      style="bold cyan", highlight=False)
-        console.print("  High Hamming weight key:" + hist_high,
-                      style="bold cyan", highlight=False)
-        console.print("                           \u2191 identical timing patterns",
-                      style="dim", highlight=False)
+        time.sleep(2.0)
+        console.print(
+            f"              {'':30s}\u2191 identical",
+            style="bold green", highlight=False)
         console.print()
-        time.sleep(3.0)
+        time.sleep(2.0)
 
-    console.print("  Information leaked about the key: 0.000 bits",
+    console.print("  Information leaked: 0.000 bits",
                   style="bold green", highlight=False)
     console.print()
     time.sleep(2.0)
 
-    _typed(console, "  The secret key has zero effect on timing. The test detected a real")
-    _typed(console, "  difference in the measurements, but it has nothing to do with the key.")
-    _typed(console, "  It was caused by the computer's environment changing between test A and test B.")
-    console.print()
-    time.sleep(3.0)
-
     # Verdict box
-    console.print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2510",
-                  style="green", highlight=False)
-    console.print("  \u2502              VERDICT: FALSE POSITIVE                \u2502",
-                  style="bold green", highlight=False)
-    console.print("  \u2502                                                    \u2502",
-                  style="green", highlight=False)
-    console.print("  \u2502  This encryption is safe to deploy.                \u2502",
-                  style="green", highlight=False)
-    console.print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
-                  "\u2500\u2500\u2500\u2500\u2500\u2500\u2518",
-                  style="green", highlight=False)
+    console.print(
+        "  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510",
+        style="green", highlight=False)
+    console.print(
+        "  \u2502         VERDICT: FALSE POSITIVE              \u2502",
+        style="bold green", highlight=False)
+    console.print(
+        "  \u2502         This encryption is safe.              \u2502",
+        style="green", highlight=False)
+    console.print(
+        "  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+        "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518",
+        style="green", highlight=False)
     console.print()
-    console.print("  Bounded by macro-timing detection floor.",
-                  style="dim", highlight=False)
-    console.print()
-    time.sleep(5.0)
+    time.sleep(4.0)
 
-    # ---- ACT 3 (~20 seconds) ----
+    # ---- ACT 3 (~20 seconds, with animated ending) ----
     if has_vuln:
-        time.sleep(1.0)
         _section_header(console, "ACT 3")
         console.print()
+        time.sleep(0.5)
 
-        _typed(console, "  Can our tool tell the difference between a false alarm and a real problem?")
-        _typed(console, "  We tested it against KyberSlash: a known, real vulnerability in an older")
-        _typed(console, "  version of this encryption library.")
+        _typed(console,
+               "  Can we catch a REAL vulnerability? We tested against KyberSlash.")
         console.print()
         time.sleep(2.0)
 
-        console.print("  On the REAL vulnerability, our ML classifier detects it:",
+        console.print("  Our classifier accuracy:  56.6%",
                       style="white", highlight=False)
-        console.print()
-
-        # Accuracy gauge
-        bar_chance = "\u2500" * 28
-        bar_sca = "\u2500" * 33
-        console.print(f"  Random guessing {bar_chance}\u2524 52.8%",
+        console.print("  Random guessing:          52.8%",
                       style="dim", highlight=False)
-        console.print(f"  Our classifier  {bar_sca}\u2524 56.6%  \u2190 real signal detected",
-                      style="bold red", highlight=False)
+        console.print(
+            "                                   "
+            "\u2191 real signal \u2014 vulnerability detected",
+            style="bold red", highlight=False)
         console.print()
         time.sleep(3.0)
 
-        console.print("  The scoreboard:", style="white", highlight=False)
-        console.print()
-        _typed(console,
-               "  Safe code:        Test says FAIL.  Our tool says: false alarm.     \u2713",
-               style="bold green")
-        _typed(console,
-               "  Vulnerable code:  Test misses it.  Our tool catches it.            \u2713",
-               style="bold green")
-        console.print()
-        time.sleep(5.0)
-
-    # ---- Closing (5 seconds) ----
-    time.sleep(1.0)
+    # ---- Animated ending (the visual punchline) ----
     console.print(
         "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
         "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
         "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
         "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
         "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
-        style="dim", highlight=False,
-    )
+        style="dim", highlight=False)
     console.print()
+    time.sleep(1.0)
+
+    # Animate the "wrong" bar growing
+    console.print("  The certification test:", style="dim", highlight=False)
+    time.sleep(0.5)
+    _animate_score_bar(62.49, max_width=45, label="WRONG", style="bold red",
+                       step_delay=0.04)
+    # Print colored version over the raw output
+    sys.stdout.write("\033[1A\033[2K")  # move up, clear line
+    bar_wrong = "\u2501" * 45
+    console.print(f"  {bar_wrong}  62.49  WRONG",
+                  style="bold red", highlight=False)
+    time.sleep(2.0)
+
+    # The fix
+    console.print()
+    console.print("  One-line fix (interleave the measurements):",
+                  style="dim", highlight=False)
+    time.sleep(0.5)
+    small_width = max(1, int(0.58 / 62.49 * 45))
+    _animate_score_bar(0.58, max_width=45, label="RIGHT", style="bold green",
+                       step_delay=0.1)
+    sys.stdout.write("\033[1A\033[2K")  # move up, clear line
+    bar_right = "\u2501" * small_width
+    padding = " " * (45 - small_width)
+    console.print(f"  {bar_right}{padding}   0.58  RIGHT",
+                  style="bold green", highlight=False)
+    console.print()
+    time.sleep(3.0)
+
+    # Repo link
     console.print("  github.com/asdfghjkltygh/m-series-pqc-timing-leak",
                   style="bold cyan", highlight=False)
     console.print()
