@@ -157,7 +157,7 @@ def run_pairwise(
     try:
         import warnings
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, module="scipy")
+            warnings.filterwarnings("ignore", category=UserWarning)
             ad_result = stats.anderson_ksamp([g0, g1])
         ad_stat = float(ad_result.statistic)
         ad_p = float(ad_result.pvalue)
