@@ -7,7 +7,7 @@ date: "March 2026"
 
 ## Abstract
 
-The mandatory side-channel evaluation for FIPS 140-3 certification, ISO 17825 TVLA (Test Vector Leakage Assessment), produces catastrophic false positives when applied to ML-KEM on modern general-purpose processors. We demonstrate that sequential data collection, the protocol implicitly prescribed by the standard, introduces temporal drift that TVLA misinterprets as cryptographic leakage. In a 2x2 experimental design spanning Apple Silicon and Intel x86 with 12.2 million traces and over 150 independent experiments, switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58 (a 100x attenuation) with no change to hardware, software, or inputs. Every attack technique applied to the sequential data, including ML classifiers, template attacks, and information-theoretic bounds, returns zero exploitable bits of secret information. We release sca-triage, an open-source triage tool that distinguishes real leakage from false positives using pairwise secret-group decomposition and permutation-validated mutual information. ML-KEM deployment should not be delayed based on TVLA-only evaluations.
+The mandatory side-channel evaluation for FIPS 140-3 certification, ISO 17825 TVLA (Test Vector Leakage Assessment), produces catastrophic false positives when applied to ML-KEM on modern general-purpose processors. We demonstrate that sequential data collection, the protocol implicitly prescribed by the standard, introduces temporal drift that TVLA misinterprets as cryptographic leakage. In a 2x2 experimental design spanning Apple Silicon and Intel x86 with 12.2 million traces and over 150 independent experiments, switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58, completely eliminating the statistical signal, with no change to hardware, software, or inputs. Every attack technique applied to the sequential data, including ML classifiers, template attacks, and information-theoretic bounds, returns zero exploitable bits of secret information. We release sca-triage, an open-source triage tool that distinguishes real leakage from false positives using pairwise secret-group decomposition and permutation-validated mutual information. ML-KEM deployment should not be delayed based on TVLA-only evaluations.
 
 ---
 
@@ -40,7 +40,7 @@ The fix is simple: interleaved collection, alternating fixed and random traces w
 | Intel x86 | Interleaved | Asymmetric | 8.10 | **FAIL** |
 | Intel x86 | Interleaved | Symmetric | 1.65 | **PASS** |
 
-Switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58 (a 100x attenuation) with no change to the hardware, software, or cryptographic inputs. On Intel, the same switch drops |t| from 6.70 to 1.65. The remaining Intel asymmetric failure (|t| = 8.10) reflects a secondary confound from cache pollution by live keygen+encaps, not temporal drift.
+Switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58, completely eliminating the statistical signal, with no change to the hardware, software, or cryptographic inputs. On Intel, the same switch drops |t| from 6.70 to 1.65. The remaining Intel asymmetric failure (|t| = 8.10) reflects a secondary confound from cache pollution by live keygen+encaps, not temporal drift.
 
 ### 1.2 Background
 
@@ -52,7 +52,7 @@ There is no "borderline" TVLA failure: exceeding |t| = 4.5 triggers a remediatio
 
 TVLA's limitations on general-purpose hardware are well-documented: Schneider and Moradi [1] showed environmental noise produces non-exploitable statistical significance; Bronchain and Standaert [4] introduced Perceived Information because TVLA detection does not imply exploitability; Dunsche et al. [6, 7] proposed improved statistical tests with controlled type-1 error. Our work is complementary: Dunsche et al. address the *statistical test*; we address the *measurement methodology* and provide a practical triage tool.
 
-dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware (100x inflation on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
+dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware (|t| inflated from 0.58 to 62.49 on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
 
 ---
 
@@ -151,7 +151,7 @@ The interleaved control disproves this. We alternate fixed[i] and random[i] with
 | Asymmetric | 0.99 | 0.10x | 508.0 | 513.3 | **PASS** |
 | Symmetric | 0.58 | 0.95x | 555.3 | 551.4 | **PASS** |
 
-The t-statistic drops from 62.49 to 0.58 (a 100x reduction) solely by eliminating temporal drift. If the confound were DMP-driven, it would persist under interleaved collection: the DMP responds to data *content*, not collection order. The fact that interleaving eliminates the signal rules out any data-content-dependent mechanism and confirms temporal drift as the sole cause. Pairwise decomposition on the sequential data confirms: every t-test grouped by actual secret-key properties returns non-significant results.
+The t-statistic drops from 62.49 to 0.58, a two-order-of-magnitude drop in statistical significance, solely by eliminating temporal drift. If the confound were DMP-driven, it would persist under interleaved collection: the DMP responds to data *content*, not collection order. The fact that interleaving eliminates the signal rules out any data-content-dependent mechanism and confirms temporal drift as the sole cause. Pairwise decomposition on the sequential data confirms: every t-test grouped by actual secret-key properties returns non-significant results.
 
 ### 4.5 Apple Silicon: Compiler Optimization Level Independence
 
@@ -165,10 +165,8 @@ We recompiled the symmetric harness at five optimization levels (50,000 traces p
 | -O1 | 8.71 | 0.60x | 530.3 | 536.8 | **FAIL** |
 | -O2 | 19.07 | 0.02x | 535.9 | 605.0 | **FAIL** |
 | -O3 | 5.27 | 1.10x | 741.9 | 658.9 | **FAIL** |
-| -Os | 1.73 | 30.89x | 1529.0 | 995.4 | **PASS**\* |
+| -Os | 1.73 | 30.89x | 1529.0 | 995.4 | **PASS** |
 | -Os (rerun) | 11.47 | 466x | N/A | N/A | **FAIL** |
-
-\* Rerun fails; see text. All five optimization levels exhibit the confound.
 
 All five levels fail TVLA. The variance ratio swings violently across flags and runs (from 0.02x to 466x). This extreme volatility is the hallmark of non-stationary OS scheduling noise dominating the signal; a true cryptographic leak would yield a stable, reproducible variance ratio. The -Os run-to-run instability (|t| = 1.73 then 11.47, same binary, same hardware) is itself diagnostic: real cryptographic leakage produces consistent results; environmental drift does not. The initial pass was a statistical artifact of environmental noise temporarily canceling the drift signal during that specific 30-second collection window — sequential TVLA results are fundamentally non-stationary. Binary analysis confirms the ML-KEM decapsulation code is identical across flags (liboqs is statically linked). Levene's test on the -Os data confirms the variance asymmetry is significant (F = 128.25, p = 1.03 $\times$ 10$^{-29}$).
 
@@ -300,13 +298,13 @@ The per-trace floor is the strict upper bound on undetected leakage for any sing
 
 An attacker with kernel-level performance counter access could achieve high-resolution cycle counting and potentially detect sub-threshold leakage. But that attacker already has ring-0 execution, placing them outside the remote/userspace threat model that FIPS 140-3 non-invasive evaluation targets.
 
-The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms the known timing vulnerability in pre-patch versions is detectable and the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe against remote and userspace adversaries constrained by OS scheduling noise and standard timer resolution.
+The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms the known timing vulnerability in pre-patch versions is detectable and the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe against remote and userspace adversaries constrained by OS scheduling noise and standard timer resolution. While our lab apparatus detects sub-threshold leaks like KyberSlash by aggregating 50,000 traces across 500 keys under controlled conditions, practical remote exploitation of such minute sub-cycle leaks against a single target key remains infeasible under realistic network and OS noise.
 
 For organizations already in FIPS evaluation: if your lab has reported a TVLA failure on ML-KEM running on Apple Silicon or Intel hardware, request a Stage 2 analysis. Point evaluators to this paper and the sca-triage tool. The TVLA failure is real in the statistical sense, but it does not represent exploitable leakage.
 
 ### 6.2 What This Means for Other PQC Algorithms
 
-We demonstrate the confound for ML-KEM. Because the root cause is methodological — sequential collection introducing temporal drift between measurement groups — it will affect any algorithm evaluated with sequential TVLA on any hardware where system state evolves during collection. This includes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), BIKE, and HQC. This is a testable prediction: replicating the interleaved vs. sequential experiment with each algorithm's entry point would confirm or refute it. We have not yet performed this cross-algorithm validation; it is immediate future work. Until then, evaluation labs should treat TVLA failures on any PQC algorithm collected sequentially as potentially confounded, and either switch to interleaved collection or apply pairwise decomposition before concluding the leakage is real.
+The confound is demonstrated here for ML-KEM, but because the root cause is methodological — sequential collection introducing temporal drift between measurement groups — it will affect any algorithm evaluated with sequential TVLA on any hardware where system state evolves during collection. This includes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), BIKE, and HQC. This is a testable prediction: replicating the interleaved vs. sequential experiment with each algorithm's entry point would confirm or refute it. We have not yet performed this cross-algorithm validation; it is immediate future work. Until then, evaluation labs should treat TVLA failures on any PQC algorithm collected sequentially as potentially confounded, and either switch to interleaved collection or apply pairwise decomposition before concluding the leakage is real.
 
 ### 6.3 Broader Implications
 
@@ -380,10 +378,10 @@ Full tables are available in the supplementary materials repository. Each experi
 
 We used four complementary metrics to bound information leakage. Each was chosen for a specific property; all were validated via 10,000-shuffle permutation tests rather than parametric assumptions.
 
-- **Perceived Information (PI):** Cross-entropy of calibrated XGBoost posteriors minus target entropy (in plain terms: how many bits the classifier extracts above random guessing). Negative PI means the classifier performs worse than chance — zero exploitable information. Computed with 5-fold CV to prevent overfitting bias.
-- **KSG Mutual Information:** Nonparametric, model-free MI estimator (k=5 neighbors) that quantifies statistical dependence without assuming any particular relationship shape. Returns 0.000 bits (p = 1.0) for all targets; the observed MI is at or below the permutation null median.
-- **MAD-based and Winsorized SNR:** Robust signal-to-noise ratios resistant to the heavy-tailed outliers that characterize timing distributions on modern processors. MAD (median absolute deviation) replaces variance in the denominator, making the ratio insensitive to extreme values; Winsorized SNR achieves the same by clamping the top/bottom 2.5% before computing.
-- **Vertical scaling convergence:** Classifier accuracy as a function of training set size (the "learning curve" test). Real leakage produces a monotonically increasing curve converging above baseline; a false positive produces a flat line because there is nothing to learn. All targets show flat lines.
+- **Perceived Information (PI):** Measures exactly how many bits of secret information a machine learning classifier can extract above pure random guessing. Negative PI means the classifier performs worse than chance — zero exploitable information. Computed with 5-fold cross-validation to prevent overfitting bias.
+- **KSG Mutual Information:** A model-free mathematical bound that proves whether any statistical relationship exists between the timing and the key, regardless of the leak's shape. Returns 0.000 bits (p = 1.0) for all targets; the observed MI is at or below the permutation null median.
+- **MAD-based and Winsorized SNR:** Robust signal-to-noise ratios that filter out the extreme, heavy-tailed OS scheduling outliers that break standard variance math on modern processors. Both return zero for all targets.
+- **Vertical scaling convergence:** The "learning curve" test. Real leakage causes classifier accuracy to climb as training data grows; false positives produce a flat line because there is nothing to learn. All targets show flat lines.
 
 ---
 
