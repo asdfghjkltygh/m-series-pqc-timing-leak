@@ -239,12 +239,16 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 
 **Table 7:** Welch's t-test vs. sca-triage three-stage pipeline.
 
+\renewcommand{\arraystretch}{1.6}
+
 | Analysis | Patched v0.15.0 (no real leak) | Vulnerable v0.9.0 (KyberSlash) |
 |------|------|------|
 | **Welch's t-test (sequential data)** | $\tval$ = 8.42, FAIL | $\tval$ = 1.04, Underpowered |
 | **dudect (interleaved collection)** | PASS (solves temporal drift) | FALSE NEGATIVE (underpowered at 25K traces) |
 | **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel ($\tval$ = 8.10, cache pollution);<br>PASS on Apple ($\tval$ = 0.99) | N/A |
 | **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise $d=0.0003$, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
+
+\renewcommand{\arraystretch}{1.0}
 
 The Welch's t-test alone cannot distinguish temporal drift, cache pollution, or real leakage. sca-triage's three-stage pipeline correctly triages all three cases, including the platform-dependent cache-pollution false positive on Intel that dudect's interleaved collection cannot resolve.
 
