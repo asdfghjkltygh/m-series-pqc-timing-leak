@@ -31,10 +31,10 @@ We isolated two confound sources in a 2x2 experimental design across two platfor
 
 **Table 1:** 2x2 experimental design isolating temporal drift and harness asymmetry. Each cell shows the Welch $\tval$ statistic.
 
-|  | Sequential Asymmetric | Sequential Symmetric | Interleaved Asymmetric | Interleaved Symmetric |
+|  | Seq. Asym. | Seq. Sym. | Int. Asym. | Int. Sym. |
 |--|---|---|---|---|
-| **Apple Silicon** | 3.00 (PASS) | 62.49 (FAIL) | 0.99 (PASS) | 0.58 (PASS) |
-| **Intel x86** | 5.35 (FAIL) | 6.70 (FAIL) | 8.10 (FAIL) | 1.65 (PASS) |
+| **Apple** | 3.00 (PASS) | 62.49 (FAIL) | 0.99 (PASS) | 0.58 (PASS) |
+| **Intel** | 5.35 (FAIL) | 6.70 (FAIL) | 8.10 (FAIL) | 1.65 (PASS) |
 
 Reading across columns isolates the effect of each fix:
 
@@ -128,35 +128,35 @@ On our Apple Silicon test platform, a 50K-trace collection block runs for approx
 
 **Table 2:** Apple Silicon sequential collection results.
 
-| Harness (Sequential) | $\tval$ | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
-|---------|-----|----------------|--------------------|--------------------|-------------|
-| Asymmetric | 3.00 | 0.16x | 523.0 | 525.4 | **PASS** |
-| Symmetric | 62.49 | 7.71x | 594.5 | 532.6 | **FAIL** |
+| Harness (Sequential) | $\tval$ | Variance Ratio | TVLA Verdict |
+|---------|-----|------|-------------|
+| Asymmetric | 3.00 | 0.16x | **PASS** |
+| Symmetric | 62.49 | 7.71x | **FAIL** |
 
 **Table 3:** Apple Silicon interleaved collection results.
 
-| Harness (Interleaved) | $\tval$ | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
-|---------|-----|----------------|--------------------|--------------------|-------------|
-| Asymmetric | 0.99 | 0.10x | 508.0 | 513.3 | **PASS** |
-| Symmetric | 0.58 | 0.95x | 555.3 | 551.4 | **PASS** |
+| Harness (Interleaved) | $\tval$ | Variance Ratio | TVLA Verdict |
+|---------|-----|------|-------------|
+| Asymmetric | 0.99 | 0.10x | **PASS** |
+| Symmetric | 0.58 | 0.95x | **PASS** |
 
-The t-statistic drops from 62.49 to 0.58 solely by eliminating temporal drift. If the confound were driven by Apple's Data Memory-Dependent Prefetcher (DMP [9]), it would persist under interleaved collection. The fact that interleaving eliminates the signal confirms temporal drift as the sole cause.
+Sequential symmetric means (594.5 vs 532.6 cycles) show a 62-cycle gap that vanishes under interleaving (555.3 vs 551.4 cycles). The t-statistic drops from 62.49 to 0.58 solely by eliminating temporal drift. If the confound were driven by Apple's Data Memory-Dependent Prefetcher (DMP [9]), it would persist under interleaved collection. The fact that interleaving eliminates the signal confirms temporal drift as the sole cause.
 
 **Intel x86.** Intel Xeon shows the same confound:
 
 **Table 4:** Intel x86 sequential collection results.
 
-| Harness (Sequential) | $\tval$ | TVLA Verdict |
-|---------|-----|-------------|
-| Asymmetric | 5.35 | **FAIL** |
-| Symmetric | 6.70 | **FAIL** |
+| Harness (Sequential) | $\tval$ | Variance Ratio | TVLA Verdict |
+|---------|-----|------|-------------|
+| Asymmetric | 5.35 | 1.84x | **FAIL** |
+| Symmetric | 6.70 | 0.43x | **FAIL** |
 
 **Table 5:** Intel x86 interleaved collection results.
 
-| Harness (Interleaved) | $\tval$ | TVLA Verdict |
-|---------|-----|-------------|
-| Asymmetric | 8.10 | **FAIL** |
-| Symmetric | 1.65 | **PASS** |
+| Harness (Interleaved) | $\tval$ | Variance Ratio | TVLA Verdict |
+|---------|-----|------|-------------|
+| Asymmetric | 8.10 | 0.98x | **FAIL** |
+| Symmetric | 1.65 | 0.86x | **PASS** |
 
 The symmetric harness's higher absolute cycle counts (183K vs 58K in the interleaved data) reflect the cost of indexing into a pre-generated array of 50,000 (ciphertext, key) pairs; this memory footprint introduces uniform cache pressure that inflates both groups equally without affecting the t-test comparison. The asymmetric interleaved failure ($\tval$ = 8.10) confirms cache pollution from live keygen+encaps is a real secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99), likely because its large shared L2/SLC cache absorbs the pollution (see Limitations).
 
