@@ -7,7 +7,7 @@ date: "March 2026"
 
 ## Abstract
 
-The mandatory side-channel evaluation for FIPS 140-3 certification, ISO 17825 TVLA (Test Vector Leakage Assessment), produces catastrophic false positives when applied to ML-KEM on modern general-purpose processors. We demonstrate that sequential data collection, the protocol implicitly prescribed by the standard, introduces temporal drift that TVLA misinterprets as cryptographic leakage. In a 2x2 experimental design spanning Apple Silicon and Intel x86 with 12.2 million traces and over 150 independent experiments, switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58, completely eliminating the statistical signal, with no change to hardware, software, or inputs. Every attack technique applied to the sequential data, including ML classifiers, template attacks, and information-theoretic bounds, returns zero exploitable bits of secret information. We release sca-triage, an open-source triage tool that distinguishes real leakage from false positives using pairwise secret-group decomposition and permutation-validated mutual information. ML-KEM deployment should not be delayed based on TVLA-only evaluations.
+The mandatory side-channel evaluation for FIPS 140-3 certification, ISO 17825 TVLA (Test Vector Leakage Assessment), produces catastrophic false positives when applied to ML-KEM on modern general-purpose processors. We demonstrate that sequential data collection, the protocol implicitly prescribed by the standard, introduces temporal drift that TVLA misinterprets as cryptographic leakage. In a 2x2 experimental design spanning Apple Silicon and Intel x86 with 12.2 million traces and over 150 independent experiments, switching from sequential to interleaved collection reduces Apple Silicon's $|t|$ from 62.49 to 0.58, completely eliminating the statistical signal, with no change to hardware, software, or inputs. Every attack technique applied to the sequential data, including ML classifiers, template attacks, and information-theoretic bounds, returns zero exploitable bits of secret information. We release sca-triage, an open-source triage tool that distinguishes real leakage from false positives using pairwise secret-group decomposition and permutation-validated mutual information. ML-KEM deployment should not be delayed based on TVLA-only evaluations.
 
 ---
 
@@ -15,21 +15,21 @@ The mandatory side-channel evaluation for FIPS 140-3 certification, ISO 17825 TV
 
 The mandatory government test for certifying cryptographic implementations, FIPS 140-3 (the US government's cryptographic module certification standard), includes a timing side-channel evaluation called TVLA (Test Vector Leakage Assessment). When we run this test on the new post-quantum encryption standard, ML-KEM, it produces catastrophic false positives.
 
-Sequential collection: |t| = 62.49 (FAIL). Interleaved collection: |t| = 0.58 (PASS). Same hardware, same code, same inputs. The FIPS side-channel test for post-quantum cryptography (PQC) is broken.
+Sequential collection: $|t|$ = 62.49 (FAIL). Interleaved collection: $|t|$ = 0.58 (PASS). Same hardware, same code, same inputs. The FIPS side-channel test for post-quantum cryptography (PQC) is broken.
 
-TVLA is the mandatory side-channel evaluation for ISO 17825 / FIPS 140-3 certification. It collects two groups of timing measurements, "fixed" (one repeated input) and "random" (different inputs each time), then runs Welch's t-test to check whether the groups differ. If the test statistic |t| exceeds 4.5, the implementation fails.
+TVLA is the mandatory side-channel evaluation for ISO 17825 / FIPS 140-3 certification. It collects two groups of timing measurements, "fixed" (one repeated input) and "random" (different inputs each time), then runs Welch's t-test to check whether the groups differ. If the test statistic $|t|$ exceeds 4.5, the implementation fails.
 
-When we run TVLA on liboqs ML-KEM-768, the most widely integrated open-source implementation of the NIST post-quantum key exchange standard, it reports catastrophic leakage: |t| = 62.49 on Apple Silicon and |t| = 6.70 on Intel x86, both far above the 4.5 failure threshold. Taken at face value, these results block ML-KEM deployment across the US federal government and any organization requiring FIPS compliance.
+When we run TVLA on liboqs ML-KEM-768, the most widely integrated open-source implementation of the NIST post-quantum key exchange standard, it reports catastrophic leakage: $|t|$ = 62.49 on Apple Silicon and $|t|$ = 6.70 on Intel x86, both far above the 4.5 failure threshold. Taken at face value, these results block ML-KEM deployment across the US federal government and any organization requiring FIPS compliance.
 
 The leakage is not real. The signal comes from temporal drift in the measurement process: the standard protocol collects all fixed-input measurements in one block, then all random-input measurements in another. During these multi-minute collection runs, system state evolves (thermal throttling, OS scheduling, power management) and these environmental changes correlate perfectly with group assignment. TVLA interprets the resulting distributional shift as cryptographic leakage.
 
-The fix is simple: interleaved collection, alternating fixed and random traces within a single run, eliminates the drift entirely. TVLA passes on both platforms (|t| = 0.58 on Apple Silicon, |t| = 1.65 on Intel x86). We prove non-exploitability through 150+ converging experiments across our full dataset and release sca-triage, a practical triage tool for evaluation labs.
+The fix is simple: interleaved collection, alternating fixed and random traces within a single run, eliminates the drift entirely. TVLA passes on both platforms ($|t|$ = 0.58 on Apple Silicon, $|t|$ = 1.65 on Intel x86). We prove non-exploitability through 150+ converging experiments across our full dataset and release sca-triage, a practical triage tool for evaluation labs.
 
 ### 1.1 Key Result: Sequential vs. Interleaved Collection
 
 **Table 1:** Sequential vs. interleaved TVLA results across platforms and harness designs.
 
-| Platform | Collection | Harness | |t| | TVLA Verdict |
+| Platform | Collection | Harness | $|t|$ | TVLA Verdict |
 |----------|-----------|---------|-----|-------------|
 | Apple Silicon | Sequential | Asymmetric | 3.00 | **PASS** |
 | Apple Silicon | Sequential | Symmetric | 62.49 | **FAIL** |
@@ -40,11 +40,11 @@ The fix is simple: interleaved collection, alternating fixed and random traces w
 | Intel x86 | Interleaved | Asymmetric | 8.10 | **FAIL** |
 | Intel x86 | Interleaved | Symmetric | 1.65 | **PASS** |
 
-Switching from sequential to interleaved collection reduces Apple Silicon's |t| from 62.49 to 0.58, completely eliminating the statistical signal, with no change to the hardware, software, or cryptographic inputs. On Intel, the same switch drops |t| from 6.70 to 1.65. The remaining Intel asymmetric failure (|t| = 8.10) reflects a secondary confound from cache pollution by live keygen+encaps, not temporal drift.
+Switching from sequential to interleaved collection reduces Apple Silicon's $|t|$ from 62.49 to 0.58, completely eliminating the statistical signal, with no change to the hardware, software, or cryptographic inputs. On Intel, the same switch drops $|t|$ from 6.70 to 1.65. The remaining Intel asymmetric failure ($|t|$ = 8.10) reflects a secondary confound from cache pollution by live keygen+encaps, not temporal drift.
 
 ### 1.2 Background
 
-There is no "borderline" TVLA failure: exceeding |t| = 4.5 triggers a remediation cycle costing months of engineering time and $50,000 to $150,000 in lab fees. With NIST finalizing ML-KEM in August 2024 and CNSA 2.0 (NSA's Commercial National Security Algorithm Suite timeline) mandating quantum-resistant cryptography for national security systems by 2033, false TVLA failures directly impede PQC migration across government and regulated industries. Evaluation labs are running these tests on modern hardware today, and failures are being reported today.
+There is no "borderline" TVLA failure: exceeding $|t|$ = 4.5 triggers a remediation cycle costing months of engineering time and $50,000 to $150,000 in lab fees. With NIST finalizing ML-KEM in August 2024 and CNSA 2.0 (NSA's Commercial National Security Algorithm Suite timeline) mandating quantum-resistant cryptography for national security systems by 2033, false TVLA failures directly impede PQC migration across government and regulated industries. Evaluation labs are running these tests on modern hardware today, and failures are being reported today.
 
 ---
 
@@ -52,7 +52,7 @@ There is no "borderline" TVLA failure: exceeding |t| = 4.5 triggers a remediatio
 
 TVLA's limitations on general-purpose hardware are well-documented: Schneider and Moradi [1] showed environmental noise produces non-exploitable statistical significance; Bronchain and Standaert [4] introduced Perceived Information because TVLA detection does not imply exploitability; Dunsche et al. [6, 7] proposed improved statistical tests with controlled type-1 error. Our work is complementary: Dunsche et al. address the *statistical test*; we address the *measurement methodology* and provide a practical triage tool.
 
-dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware (|t| inflated from 0.58 to 62.49 on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
+dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware ($|t|$ inflated from 0.58 to 62.49 on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
 
 ---
 
@@ -82,7 +82,7 @@ The results are unambiguous. On vulnerable code, our XGBoost classifier achieves
 
 Our apparatus detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure — it is a measurement. Our pipeline's detection floor is d approximately 0.275; effects below d approximately 0.1 are below all detection mechanisms and unexploitable via userspace timing (full sensitivity characterization in Section 5).
 
-**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, p = 1.0), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix B. The TVLA result of |t| = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes (|t| = 0.58) when collection is interleaved.
+**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, p = 1.0), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix B. The TVLA result of $|t|$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($|t|$ = 0.58) when collection is interleaved.
 
 ---
 
@@ -92,7 +92,7 @@ If TVLA reports significant leakage and no attack can exploit it, the question i
 
 ### 4.1 The Complete Picture
 
-We isolated two independent confound sources by varying two experimental dimensions, collection order (sequential vs. interleaved) and harness design (asymmetric vs. symmetric), across both platforms. Each cell in the following table shows the Welch |t| statistic:
+We isolated two independent confound sources by varying two experimental dimensions, collection order (sequential vs. interleaved) and harness design (asymmetric vs. symmetric), across both platforms. Each cell in the following table shows the Welch $|t|$ statistic:
 
 **Table 2:** 2x2 experimental design isolating temporal drift and harness asymmetry.
 
@@ -103,9 +103,9 @@ We isolated two independent confound sources by varying two experimental dimensi
 
 Reading across columns isolates the effect of each fix:
 
-- **Symmetric harness** (columns 1 to 2): Eliminates cache pollution but reveals temporal drift. On Apple, |t| *increases* from 3.00 to 62.49 because cache pollution was masking drift.
-- **Interleaved collection** (columns 2 to 4): Eliminates temporal drift. On both platforms, |t| drops to non-significant (0.58 and 1.65).
-- **Intel asymmetric interleaved** (column 3): Still fails (|t| = 8.10), confirming that live keygen+encaps cache pollution is a real secondary confound on Intel, independent of temporal drift.
+- **Symmetric harness** (columns 1 to 2): Eliminates cache pollution but reveals temporal drift. On Apple, $|t|$ *increases* from 3.00 to 62.49 because cache pollution was masking drift.
+- **Interleaved collection** (columns 2 to 4): Eliminates temporal drift. On both platforms, $|t|$ drops to non-significant (0.58 and 1.65).
+- **Intel asymmetric interleaved** (column 3): Still fails ($|t|$ = 8.10), confirming that live keygen+encaps cache pollution is a real secondary confound on Intel, independent of temporal drift.
 - **Both fixes combined** (column 4): Symmetric + interleaved passes on both platforms. This is the definitive result.
 
 Two confound sources produce this pattern. Here is how we isolated each one.
@@ -135,7 +135,7 @@ The symmetric harness pre-generates all inputs so both modes execute identical c
 
 **Table 3:** Apple Silicon sequential collection results.
 
-| Harness (Sequential) | |t| | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
+| Harness (Sequential) | $|t|$ | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
 |---------|-----|----------------|--------------------|--------------------|-------------|
 | Asymmetric | 3.00 | 0.16x | 523.0 | 525.4 | **PASS** |
 | Symmetric | 62.49 | 7.71x | 594.5 | 532.6 | **FAIL** |
@@ -146,7 +146,7 @@ The interleaved control disproves this. We alternate fixed[i] and random[i] with
 
 **Table 4:** Apple Silicon interleaved collection results.
 
-| Harness (Interleaved) | |t| | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
+| Harness (Interleaved) | $|t|$ | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
 |---------|-----|----------------|--------------------|--------------------|-------------|
 | Asymmetric | 0.99 | 0.10x | 508.0 | 513.3 | **PASS** |
 | Symmetric | 0.58 | 0.95x | 555.3 | 551.4 | **PASS** |
@@ -159,7 +159,7 @@ We recompiled the symmetric harness at five optimization levels (50,000 traces p
 
 **Table 5:** Compiler optimization sweep (Apple Silicon, symmetric harness, 50K traces).
 
-| Flag | |t| | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
+| Flag | $|t|$ | Variance Ratio | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
 |------|-----|----------------|--------------------|--------------------|-------------|
 | -O0 | 10.40 | 0.07x | 559.9 | 544.4 | **FAIL** |
 | -O1 | 8.71 | 0.60x | 530.3 | 536.8 | **FAIL** |
@@ -168,7 +168,7 @@ We recompiled the symmetric harness at five optimization levels (50,000 traces p
 | -Os | 1.73 | 30.89x | 1529.0 | 995.4 | **PASS** |
 | -Os (rerun) | 11.47 | 466x | N/A | N/A | **FAIL** |
 
-All five levels fail TVLA. The variance ratio swings violently across flags and runs (from 0.02x to 466x). This extreme volatility is the hallmark of non-stationary OS scheduling noise dominating the signal; a true cryptographic leak would yield a stable, reproducible variance ratio. The -Os run-to-run instability (|t| = 1.73 then 11.47, same binary, same hardware) is itself diagnostic: real cryptographic leakage produces consistent results; environmental drift does not. The initial pass was a statistical artifact of environmental noise temporarily canceling the drift signal during that specific 30-second collection window — sequential TVLA results are fundamentally non-stationary. Binary analysis confirms the ML-KEM decapsulation code is identical across flags (liboqs is statically linked). Levene's test on the -Os data confirms the variance asymmetry is significant (F = 128.25, p = 1.03 $\times$ 10$^{-29}$).
+All five levels fail TVLA. The variance ratio swings violently across flags and runs (from 0.02x to 466x). This extreme volatility is the hallmark of non-stationary OS scheduling noise dominating the signal; a true cryptographic leak would yield a stable, reproducible variance ratio. The -Os run-to-run instability ($|t|$ = 1.73 then 11.47, same binary, same hardware) is itself diagnostic: real cryptographic leakage produces consistent results; environmental drift does not. The initial pass was a statistical artifact of environmental noise temporarily canceling the drift signal during that specific 30-second collection window — sequential TVLA results are fundamentally non-stationary. Binary analysis confirms the ML-KEM decapsulation code is identical across flags (liboqs is statically linked). Levene's test on the -Os data confirms the variance asymmetry is significant ($F = 128.25$, $p = 1.03 \times 10^{-29}$).
 
 ### 4.6 Intel x86: Same Pattern, Same Fix
 
@@ -176,19 +176,19 @@ Intel Xeon shows the same confound:
 
 **Table 6:** Intel x86 sequential collection results.
 
-| Harness (Sequential) | |t| | Variance Ratio | TVLA Verdict |
+| Harness (Sequential) | $|t|$ | Variance Ratio | TVLA Verdict |
 |---------|-----|----------------|-------------|
 | Asymmetric | 5.35 | 1.84x | **FAIL** |
 | Symmetric | 6.70 | 0.43x | **FAIL** |
 
 **Table 7:** Intel x86 interleaved collection results.
 
-| Harness (Interleaved) | |t| | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
+| Harness (Interleaved) | $|t|$ | Fixed Mean (cycles) | Random Mean (cycles) | TVLA Verdict |
 |---------|-----|-------|-------|-------------|
 | Asymmetric | 8.10 | 58,172 | 58,430 | **FAIL** |
 | Symmetric | 1.65 | 183,685 | 204,168 | **PASS** |
 
-Symmetric interleaved passes (|t| = 1.65). The asymmetric interleaved failure (|t| = 8.10) confirms harness asymmetry (live keygen+encaps polluting cache state) is a real but secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes (|t| = 0.99); our hypothesis is that its large shared L2/System Level Cache (SLC) and high memory bandwidth absorb the keygen+encaps pollution without displacing the state required for the timed decapsulation. Confirming this requires future performance monitoring counter (PMC) instrumentation (see Limitations). When both confounds are eliminated, TVLA passes. The cross-platform replication rules out any platform-specific architectural explanation.
+Symmetric interleaved passes ($|t|$ = 1.65). The asymmetric interleaved failure ($|t|$ = 8.10) confirms harness asymmetry (live keygen+encaps polluting cache state) is a real but secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes ($|t|$ = 0.99); our hypothesis is that its large shared L2/System Level Cache (SLC) and high memory bandwidth absorb the keygen+encaps pollution without displacing the state required for the timed decapsulation. Confirming this requires future performance monitoring counter (PMC) instrumentation (see Limitations). When both confounds are eliminated, TVLA passes. The cross-platform replication rules out any platform-specific architectural explanation.
 
 ### 4.7 The Proof: Pairwise Decomposition
 
@@ -208,9 +208,9 @@ The finding does not mean TVLA is useless. It means TVLA is incomplete. A TVLA p
 
 We propose a two-stage protocol for non-invasive side-channel evaluation of cryptographic implementations on general-purpose processors:
 
-**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If |t| <= 4.5, the implementation passes FIPS 140-3 macro-timing requirements. Evaluators requiring higher assurance against sub-threshold vulnerabilities (like KyberSlash at d = 0.094) must proceed to ML-based population aggregation or hardware EM probing. If |t| > 4.5, proceed to Stage 2.
+**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If $|t|$ <= 4.5, the implementation passes FIPS 140-3 macro-timing requirements. Evaluators requiring higher assurance against sub-threshold vulnerabilities (like KyberSlash at d = 0.094) must proceed to ML-based population aggregation or hardware EM probing. If $|t|$ > 4.5, proceed to Stage 2.
 
-**Stage 2: Confound Triage.** If |t| > 4.5, run pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight — the number of 1-bits in the key) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material. sca-triage automates this and generates a formal justification artifact for CMVP (Cryptographic Module Validation Program) non-conformance review.
+**Stage 2: Confound Triage.** If $|t|$ > 4.5, run pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight — the number of 1-bits in the key) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material. sca-triage automates this and generates a formal justification artifact for CMVP (Cryptographic Module Validation Program) non-conformance review.
 
 The decision logic is clear:
 
@@ -228,9 +228,9 @@ sca-triage analyze --timing-data traces.npz --secret-labels keys.csv \
     --targets sk_lsb,sk_byte_0,sk_hw --permutation-shuffles 10000
 ```
 
-The tool runs three stages: (1) standard TVLA (Welch's t-test, pass/fail at |t| = 4.5), (2) pairwise secret-group decomposition (regroups traces by key bits, byte values, Hamming weight; runs t-tests within each partition), and (3) KSG mutual information validated by permutation test. If TVLA fails but all pairwise tests are non-significant *and* MI is zero within the permutation confidence interval, the verdict is FALSE_POSITIVE. Output is JSON with full statistics, suitable for CMVP submission.
+The tool runs three stages: (1) standard TVLA (Welch's t-test, pass/fail at $|t|$ = 4.5), (2) pairwise secret-group decomposition (regroups traces by key bits, byte values, Hamming weight; runs t-tests within each partition), and (3) KSG mutual information validated by permutation test. If TVLA fails but all pairwise tests are non-significant *and* MI is zero within the permutation confidence interval, the verdict is FALSE_POSITIVE. Output is JSON with full statistics, suitable for CMVP submission.
 
-**Worked example.** On our Apple Silicon asymmetric harness data (50,000 traces, |t| = 8.42, representative of what evaluation labs encounter; symmetric data produces the same verdict at |t| = 62.49), the full pipeline (`python scripts/dudect_comparison.py`) produces:
+**Worked example.** On our Apple Silicon asymmetric harness data (50,000 traces, $|t|$ = 8.42, representative of what evaluation labs encounter; symmetric data produces the same verdict at $|t|$ = 62.49), the full pipeline (`python scripts/dudect_comparison.py`) produces:
 
 ```
 [Stage 1] Running Fixed-vs-Random TVLA...
@@ -252,7 +252,7 @@ Warning: Verdict bounded by macro-timing detection floor (d ~ 0.275).
 
 Pairwise decomposition tests 13 secret-key properties; all return non-significant after Holm-Bonferroni correction. KSG MI provides a model-free backstop capturing nonlinear dependencies that pairwise tests might miss. A FALSE_POSITIVE verdict guarantees no secret-dependent leakage above the d approximately 0.275 macro-timing noise floor, the limit of userspace exploitability. Below this threshold, hardware EM probing is required.
 
-**Sensitivity and detection floors.** We validated detection capability by injecting synthetic timing leaks at Cohen's d = {0.005 to 1.0} across 20 trials per effect size: 90% detection at d = 0.3, 100% at d = 0.5. The per-experiment pipeline floor is d approximately 0.275 (80% detection). The pairwise t-test floor alone is d = 0.398 (454 Intel cycles at 80% power); the ML classification floor is d approximately 0.85. The multi-method pipeline is more sensitive than any single test. KyberSlash (d = 0.094) falls below all per-experiment floors but was detected through a different mechanism: population-level aggregation across 500 keys, where XGBoost learns weak but consistent cross-key patterns (+3.8% lift). The per-experiment floor (d approximately 0.275) and population-level detection (d = 0.094) characterize complementary mechanisms, not the same pathway. Effects below d approximately 0.1 are below both and unexploitable via userspace macro-timing. Full triage completes in under 30 seconds on 50K traces.
+**Sensitivity and detection floors.** We validated detection capability by injecting synthetic timing leaks at Cohen's $d \in [0.005, 1.0]$ across 20 trials per effect size: 90% detection at d = 0.3, 100% at d = 0.5. The per-experiment pipeline floor is d approximately 0.275 (80% detection). The pairwise t-test floor alone is d = 0.398 (454 Intel cycles at 80% power); the ML classification floor is d approximately 0.85. The multi-method pipeline is more sensitive than any single test. KyberSlash (d = 0.094) falls below all per-experiment floors but was detected through a different mechanism: population-level aggregation across 500 keys, where XGBoost learns weak but consistent cross-key patterns (+3.8% lift). The per-experiment floor (d approximately 0.275) and population-level detection (d = 0.094) characterize complementary mechanisms, not the same pathway. Effects below d approximately 0.1 are below both and unexploitable via userspace macro-timing. Full triage completes in under 30 seconds on 50K traces.
 
 ### 5.3 Why the Welch's t-Test Alone Is Insufficient
 
@@ -264,12 +264,12 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 
 | Analysis | Patched v0.15.0 (no real leak) | Vulnerable v0.9.0 (KyberSlash) |
 |------|------|------|
-| **Welch's t-test (sequential data)** | |t| = 8.42, FAIL | |t| = 1.04, Underpowered |
+| **Welch's t-test (sequential data)** | $|t|$ = 8.42, FAIL | $|t|$ = 1.04, Underpowered |
 | **dudect (interleaved collection)** | PASS (solves temporal drift) | FALSE NEGATIVE (underpowered at 25K traces) |
-| **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel (|t| = 8.10, cache pollution); PASS on Apple (|t| = 0.99) | N/A |
+| **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel ($|t|$ = 8.10, cache pollution); PASS on Apple ($|t|$ = 0.99) | N/A |
 | **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise d=0.0003, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
 
-On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves temporal drift and correctly passes. But dudect still produces a false positive on the Intel interleaved asymmetric dataset (|t| = 8.10) because it cannot distinguish cache pollution from real leakage; on Apple Silicon the same test passes (|t| = 0.99), likely due to cache absorption. That platform dependence is exactly why sca-triage is necessary as a universal backstop. On the vulnerable version, both the sequential t-test and dudect produce false negatives: they are underpowered at 25K traces and the KyberSlash signal (d = 0.094) is too small for Welch's t-test to reach significance against the OS scheduling noise floor. sca-triage correctly triages all three cases — identifying the temporal-drift false positive, the cache-pollution false positive, and detecting the real vulnerability via cross-key ML classification that aggregates weak signals across 500 keys.
+On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves temporal drift and correctly passes. But dudect still produces a false positive on the Intel interleaved asymmetric dataset ($|t|$ = 8.10) because it cannot distinguish cache pollution from real leakage; on Apple Silicon the same test passes ($|t|$ = 0.99), likely due to cache absorption. That platform dependence is exactly why sca-triage is necessary as a universal backstop. On the vulnerable version, both the sequential t-test and dudect produce false negatives: they are underpowered at 25K traces and the KyberSlash signal (d = 0.094) is too small for Welch's t-test to reach significance against the OS scheduling noise floor. sca-triage correctly triages all three cases — identifying the temporal-drift false positive, the cache-pollution false positive, and detecting the real vulnerability via cross-key ML classification that aggregates weak signals across 500 keys.
 
 **Repository:** [https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage](https://github.com/asdfghjkltygh/m-series-pqc-timing-leak/tree/main/sca-triage)
 
@@ -310,21 +310,21 @@ The confound is demonstrated here for ML-KEM, but because the root cause is meth
 
 TVLA was designed for embedded hardware (smartcards, FPGAs, dedicated coprocessors) where timing is largely deterministic and trace collection completes before environmental drift matters. On general-purpose processors, collection runs take minutes to hours. System state evolves continuously, and sequential collection creates a perfect confound: fixed measurements occupy one time window, random measurements occupy another, and any drift between them becomes a systematic group difference that TVLA reads as leakage.
 
-The gap between "TVLA-detectable" and "exploitable" is wider on modern processors than FIPS evaluation practice assumes. A |t| of 62.49 on Apple Silicon contains zero bits of secret information and vanishes (|t| = 0.58) when collection is interleaved. TVLA assumes temporal stationarity between measurement groups — an assumption that fails on any system where environmental conditions evolve during collection. Side-channel evaluation standards must evolve alongside the hardware they evaluate.
+The gap between "TVLA-detectable" and "exploitable" is wider on modern processors than FIPS evaluation practice assumes. A $|t|$ of 62.49 on Apple Silicon contains zero bits of secret information and vanishes ($|t|$ = 0.58) when collection is interleaved. TVLA assumes temporal stationarity between measurement groups — an assumption that fails on any system where environmental conditions evolve during collection. Side-channel evaluation standards must evolve alongside the hardware they evaluate.
 
 ### 6.4 Limitations and Roadmap
 
 Each limitation below includes what it would take to close the gap and why it does not undermine the current findings.
 
-**Cross-platform interleaved control.** The interleaved harness experiment confirms the confound is temporal drift from sequential collection on both Apple Silicon (sequential |t| = 62.49 to interleaved |t| = 0.58) and Intel x86 (sequential |t| = 6.70 to interleaved |t| = 1.65). The cross-platform replication eliminates platform-specific explanations. See Section 4.
+**Cross-platform interleaved control.** The interleaved harness experiment confirms the confound is temporal drift from sequential collection on both Apple Silicon (sequential $|t|$ = 62.49 to interleaved $|t|$ = 0.58) and Intel x86 (sequential $|t|$ = 6.70 to interleaved $|t|$ = 1.65). The cross-platform replication eliminates platform-specific explanations. See Section 4.
 
 **Temporal drift mechanism is uncharacterized.** We show that sequential collection introduces temporal drift sufficient to produce catastrophic TVLA failures, but we have not isolated the specific physical mechanism (thermal drift, OS scheduling, power state transitions, etc.). *To close:* instrument collection runs with per-block thermal readings, CPU frequency logs, and OS scheduling counters to identify the dominant drift source. *Why the current findings stand:* the interleaved control proves temporal drift is the cause regardless of which physical mechanism drives it; the fix (interleaved collection or pairwise decomposition) is mechanism-agnostic.
 
-**Compiler optimization levels.** The sequential symmetric harness fails TVLA at all five tested optimization levels (-O0 through -O3 and -Os). Initial -Os results showed run-to-run variability (|t| ranging from 1.73 to 11.47); Levene's test confirms the variance confound is present even when Welch's t happens to fall below threshold. Binary analysis confirms identical instruction counts across flags. The confound is not compiler-dependent. See Section 4.
+**Compiler optimization levels.** The sequential symmetric harness fails TVLA at all five tested optimization levels (-O0 through -O3 and -Os). Initial -Os results showed run-to-run variability ($|t|$ ranging from 1.73 to 11.47); Levene's test confirms the variance confound is present even when Welch's $|t|$ happens to fall below threshold. Binary analysis confirms identical instruction counts across flags. The confound is not compiler-dependent. See Section 4.
 
 **ML-KEM only.** We have not yet run cross-algorithm validation (ML-DSA, SLH-DSA, BIKE, HQC). *To close:* replicate the symmetric harness experiment with each algorithm's decapsulation/signing entry point. *Why the current findings stand:* the confound is methodological, not algorithm-specific, but empirical confirmation across algorithms would strengthen the generalization claim.
 
-**Apple Silicon cache absorption hypothesis unverified.** We hypothesize that Apple Silicon's interleaved asymmetric harness passes (|t| = 0.99) while Intel fails (|t| = 8.10) because Apple's large shared L2/SLC cache absorbs keygen+encaps pollution. *To close:* instrument both platforms with PMC data (cache miss rates, L2/LLC eviction counts) during asymmetric harness runs. *Why the current findings stand:* the mechanism is irrelevant to the temporal-drift diagnosis; the symmetric interleaved result (|t| = 0.58) is the definitive measurement.
+**Apple Silicon cache absorption hypothesis unverified.** We hypothesize that Apple Silicon's interleaved asymmetric harness passes ($|t|$ = 0.99) while Intel fails ($|t|$ = 8.10) because Apple's large shared L2/SLC cache absorbs keygen+encaps pollution. *To close:* instrument both platforms with PMC data (cache miss rates, L2/LLC eviction counts) during asymmetric harness runs. *Why the current findings stand:* the mechanism is irrelevant to the temporal-drift diagnosis; the symmetric interleaved result ($|t|$ = 0.58) is the definitive measurement.
 
 **No Number Theoretic Transform (NTT)-internal intermediate targets.** We tested key-level and message-level properties but not butterfly outputs, Montgomery reduction intermediates, or Centered Binomial Distribution (CBD) sampling. *To close:* instrument liboqs NTT internals and collect per-operation traces. *Why the current findings stand:* our raw-trace analysis bounds any per-execution timing signal at d < 0.001, constraining intermediate-value leakage; any NTT-internal dependency would need to propagate through hundreds of operations to affect macro-timing.
 
