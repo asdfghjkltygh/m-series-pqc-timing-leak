@@ -4,7 +4,7 @@ subtitle: "Black Hat Briefings: Technical White Paper"
 author: "Saahil Shenoy | Founding AI Scientist, Bedrock Data | saahil@bedrockdata.ai"
 date: "March 2026"
 geometry: margin=1in
-fontsize: 11pt
+fontsize: 10pt
 colorlinks: true
 header-includes:
   - \usepackage{booktabs}
@@ -17,9 +17,9 @@ header-includes:
   - \fancyhead[C]{}
   - \fancyhead[R]{}
   - \fancyfoot[C]{\thepage}
-  - \setlength{\parskip}{6pt}
+  - \setlength{\parskip}{4pt}
   - \setlength{\parindent}{0pt}
-  - \renewcommand{\arraystretch}{1.3}
+  - \renewcommand{\arraystretch}{1.2}
   - \newcommand{\tval}{\lvert t \rvert}
 ---
 
@@ -85,13 +85,13 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 **Intel Xeon x86.** Timing source: RDTSC with CPUID serialization for high-resolution cycle counting (~1,778 cycles overhead per read). While the serialization overhead introduces a variable noise source (pipeline state affects retirement latency), our 50-repetition per-key aggregation suppresses this variance by a factor of sqrt(50), approximately 7x (standard error of the mean), pushing the detection floor down to 454 Intel cycles (approximately 189 ns at 2.4 GHz), the minimum detectable *difference* in decapsulation time, accounting for both the attenuated timer overhead and residual OS scheduling noise. Performance governor pinned; hyperthreading accounted for.
 
-**Data collection.** 500 distinct keys x 50 repetitions per key per condition = 12.2 million measurements across both platforms. Collection automated and SHA-256 checksummed. Full details in Appendix C.
+**Data collection.** 500 distinct keys x 50 repetitions per key per condition = 12.2 million measurements across both platforms. Collection automated and SHA-256 checksummed. Full details in Appendix B.
 
 ### 3.2 Bounding Exploitability
 
 We threw every attack in the side-channel toolkit at this data: gradient-boosted classifiers, neural networks, template attacks, information-theoretic bounds. Over 150 experiments across both platforms and multiple configurations. Every one came back empty.
 
-**Zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's~$d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix B for metric definitions and methodology.
+**Zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's~$d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix A for metric definitions and methodology.
 
 ### 3.3 The Positive Control
 
@@ -101,7 +101,7 @@ The results are unambiguous. On vulnerable code, our XGBoost classifier achieves
 
 Our apparatus detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure; it is a measurement. Our pipeline's detection floor is $d \approx 0.275$; effects below $d \approx 0.1$ are below all detection mechanisms and unexploitable via userspace timing (full sensitivity characterization in Section 5).
 
-**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix B. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
+**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix A. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
 
 ---
 
@@ -253,7 +253,7 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 
 **Table 7:** Welch's t-test vs. sca-triage three-stage pipeline.
 
-\renewcommand{\arraystretch}{1.5}
+\renewcommand{\arraystretch}{1.4}
 
 | Analysis | Patched v0.15.0 (no real leak) | Vulnerable v0.9.0 (KyberSlash) |
 |------|------|------|
@@ -262,7 +262,7 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 | **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel ($\tval$ = 8.10, cache pollution);PASS on Apple ($\tval$ = 0.99) | N/A |
 | **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise $d=0.0003$, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
 
-\renewcommand{\arraystretch}{1.3}
+\renewcommand{\arraystretch}{1.2}
 
 The Welch's t-test alone cannot distinguish temporal drift, cache pollution, or real leakage. sca-triage's three-stage pipeline correctly triages all three cases, including the platform-dependent cache-pollution false positive on Intel that dudect's interleaved collection cannot resolve.
 
@@ -345,25 +345,7 @@ The gap between "TVLA-detectable" and "exploitable" is wider on modern processor
 
 ---
 
-## Appendix A: Full Experiment Results
-
-The complete experiment matrix is organized into five categories:
-
-**Classification experiments:** binary and multi-class classification of secret key material from timing traces. Columns: experiment ID, model (XGBoost, Random Forest, CNN, Logistic Regression), feature set, target variable (key bit, key byte, Hamming weight), accuracy, p-value vs. majority baseline, majority baseline, verdict (PASS/FAIL/INCONCLUSIVE).
-
-**Regression experiments:** continuous prediction of secret key bytes and derived quantities. Columns: experiment ID, model, feature set, target, MSE, R-squared, baseline MSE (mean predictor), verdict.
-
-**Template attack experiments:** Gaussian profiling attacks with maximum-likelihood classification. Columns: experiment ID, profiling traces, attack traces, number of classes, success rate, guessing entropy, random baseline, verdict.
-
-**Unsupervised experiments:** PCA, t-SNE, and clustering analysis for latent structure discovery. Columns: experiment ID, method, number of components/clusters, explained variance, silhouette score, visual separation (Y/N), verdict.
-
-**Information-theoretic experiments:** Perceived Information, KSG MI, MAD-SNR, Winsorized SNR, vertical scaling analysis. Columns: experiment ID, metric, value, permutation p-value, confidence interval, verdict.
-
-Full tables are available in the supplementary materials repository. Each experiment includes reproducibility metadata: random seed, train/test split, hyperparameter configuration, and runtime.
-
----
-
-## Appendix B: Information-Theoretic Methodology
+## Appendix A: Information-Theoretic Methodology
 
 We used four complementary metrics to bound information leakage. Each was chosen for a specific property; all were validated via 10,000-shuffle permutation tests rather than parametric assumptions.
 
@@ -374,7 +356,7 @@ We used four complementary metrics to bound information leakage. Each was chosen
 
 ---
 
-## Appendix C: Measurement Apparatus
+## Appendix B: Measurement Apparatus
 
 **Timer characterization.**
 
