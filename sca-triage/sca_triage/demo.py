@@ -8,6 +8,7 @@ Two modes:
 from __future__ import annotations
 
 import platform
+import shutil
 import sys
 import time
 from typing import Optional
@@ -29,8 +30,12 @@ from .permutation_mi import run_all_mi, MIResult
 # Visual helpers for precomputed path
 # ---------------------------------------------------------------------------
 
-def _typed(console: Console, text: str, style: str = "dim", delay: float = 0.02) -> None:
+def _typed(console: Console, text: str, style: str = "dim", delay: float = 0.02,
+           fast: bool = False) -> None:
     """Print text character by character for dramatic effect."""
+    if fast:
+        console.print(text, style=style, highlight=False)
+        return
     for char in text:
         console.print(char, end="", style=style, highlight=False)
         sys.stdout.flush()
@@ -45,8 +50,14 @@ def _section_header(console: Console, name: str) -> None:
                   style="bold magenta", highlight=False)
 
 
-def _animate_loading_bar(width: int = 20, total: int = 1_000_000) -> None:
+def _animate_loading_bar(width: int = 20, total: int = 1_000_000,
+                         fast: bool = False) -> None:
     """Animate a loading bar using \\r overwrite. 1.5 seconds."""
+    if fast:
+        filled = "\u2588" * width
+        sys.stdout.write(f"\r  {filled} {total:>9,} / {total:,}\n")
+        sys.stdout.flush()
+        return
     for i in range(width + 1):
         filled = "\u2588" * i + " " * (width - i)
         count = int(total * i / width)
@@ -56,18 +67,22 @@ def _animate_loading_bar(width: int = 20, total: int = 1_000_000) -> None:
     print()
 
 
-def _animate_score_bar(value: float, max_width: int = 45, label: str = "",
-                       style: str = "bold red", step_delay: float = 0.04) -> None:
+def _animate_score_bar(value: float, max_val: float = 62.49,
+                       max_width: int = 45, label: str = "",
+                       style: str = "bold red", step_delay: float = 0.04,
+                       fast: bool = False) -> None:
     """Animate a bar growing from 0 to value, then print label."""
-    bar_len = max(1, int(value / 62.49 * max_width))
-    for i in range(bar_len + 1):
-        bar = "\u2501" * i
-        sys.stdout.write(f"\r  {bar}")
-        sys.stdout.flush()
-        time.sleep(step_delay)
+    bar_len = max(1, int(value / max_val * max_width))
+    if not fast:
+        for i in range(bar_len + 1):
+            bar = "\u2501" * i
+            sys.stdout.write(f"\r  {bar}")
+            sys.stdout.flush()
+            time.sleep(step_delay)
     # Pad + label after animation
+    bar = "\u2501" * bar_len
     padding = " " * (max_width - bar_len + 2)
-    sys.stdout.write(f"{padding}{value:.2f}  {label}\n")
+    sys.stdout.write(f"\r  {bar}{padding}{value:.2f}  {label}\n")
     sys.stdout.flush()
 
 
@@ -97,9 +112,11 @@ def run_demo(
     vuln_labels: dict[str, np.ndarray] | None = None,
     sequential_t: float = 62.49,
     interleaved_t: float = 0.58,
+    asymmetric_t: float = 8.10,
     n_shuffles: int = 100,
     precomputed: bool = False,
     dark: bool = False,
+    fast: bool = False,
 ) -> None:
     """Execute the four-act demo presentation."""
     if dark:
@@ -109,9 +126,10 @@ def run_demo(
 
     if precomputed:
         _run_precomputed(
-            console, sequential_t, interleaved_t,
+            console, sequential_t, interleaved_t, asymmetric_t,
             per_key_features, per_key_labels, target_names,
             has_vuln=vuln_features is not None and vuln_labels is not None,
+            fast=fast,
         )
     else:
         _run_live(console, fixed_timings, random_timings,
@@ -128,46 +146,60 @@ def _run_precomputed(
     console: Console,
     sequential_t: float,
     interleaved_t: float,
+    asymmetric_t: float,
     per_key_features: np.ndarray,
     per_key_labels: dict[str, np.ndarray],
     target_names: list[str],
     has_vuln: bool,
+    fast: bool = False,
 ) -> None:
     """Full precomputed presentation. ~90 seconds, visual CLI storytelling."""
 
     block = "\u2588"
     approx = "\u2248"
+    pause = lambda s: time.sleep(s * (0.15 if fast else 1.0))
+
+    # Terminal width check
+    term_width = shutil.get_terminal_size().columns
+    if term_width < 100:
+        console.print(
+            f"  [!] Terminal is {term_width} columns wide. "
+            "Resize to 100+ for best results.",
+            style="bold yellow", highlight=False)
+        console.print()
 
     # ---- Title (2 seconds) ----
-    time.sleep(0.5)
+    pause(0.5)
     console.print()
     console.print("  WHEN TVLA LIES", style="bold magenta", highlight=False)
     console.print("  sca-triage live demo", style="dim", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     # ==================================================================
     # ACT 0 — Setup + The Broken Test (~40 seconds)
     # ==================================================================
     _section_header(console, "ACT 0")
     console.print()
-    time.sleep(1.0)
+    pause(1.0)
 
     # --- What encryption timing is ---
     for cycles in [594, 601, 588]:
         console.print(f"  encrypt(key, msg) \u2192 {cycles} cycles",
                       style="bold cyan", highlight=False)
-        time.sleep(0.3)
+        pause(0.3)
     console.print()
-    time.sleep(1.5)
+    pause(1.5)
 
     _typed(console,
-           "  Every encryption operation takes a measurable amount of time.")
+           "  Every encryption operation takes a measurable amount of time.",
+           fast=fast)
     _typed(console,
            "  If an attacker can figure out the key from the timing, "
-           "the encryption is broken.")
+           "the encryption is broken.",
+           fast=fast)
     console.print()
-    time.sleep(2.5)
+    pause(2.5)
 
     # --- What's at stake ---
     console.print(
@@ -177,12 +209,12 @@ def _run_precomputed(
         "  If it fails: blocked. No waivers. Months of delay.",
         style="white", highlight=False)
     console.print()
-    time.sleep(2.5)
+    pause(2.5)
 
     # --- How the test works ---
     console.print("  Here's how the test works:", style="white", highlight=False)
     console.print()
-    time.sleep(1.0)
+    pause(1.0)
 
     console.print(
         "  It encrypts with ONE secret key, over and over"
@@ -193,7 +225,7 @@ def _run_precomputed(
         "                   \u2192 Group B",
         style="bold yellow", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     console.print(
         "  Then it runs a statistical comparison (Welch's t-test)",
@@ -205,7 +237,7 @@ def _run_precomputed(
         "  If the score exceeds 4.5, the encryption fails the test.",
         style="white", highlight=False)
     console.print()
-    time.sleep(2.5)
+    pause(2.5)
 
     # --- Method 1: Sequential ---
     console.print(
@@ -223,7 +255,7 @@ def _run_precomputed(
         "  time \u2192                      \u2502",
         style="dim", highlight=False)
     console.print()
-    time.sleep(1.5)
+    pause(1.5)
 
     console.print(f"  Group A average: 594 cycles  {block * 42}",
                   style="bold red", highlight=False)
@@ -232,19 +264,20 @@ def _run_precomputed(
     console.print(f"                               {' ' * 36} \u2190 gap",
                   style="bold yellow", highlight=False)
     console.print()
-    time.sleep(2.5)
+    pause(2.5)
 
-    console.print("  score: 62.49   (>4.5 = FAIL)                           FAIL",
+    console.print(f"  score: {sequential_t:.2f}   (>4.5 = FAIL)"
+                  "                           FAIL",
                   style="bold red", highlight=False)
     console.print()
-    time.sleep(3.0)
+    pause(3.0)
 
     # --- Why sequential collection is the problem ---
     console.print(
         "  But here's the problem with collecting one group after the other:",
         style="white", highlight=False)
     console.print()
-    time.sleep(1.5)
+    pause(1.5)
 
     console.print(
         "  \u2500\u2500\u2500 Group A (one key) "
@@ -271,7 +304,7 @@ def _run_precomputed(
         "  The test blames the KEY. But it's actually the ENVIRONMENT.",
         style="bold white", highlight=False)
     console.print()
-    time.sleep(3.5)
+    pause(3.5)
 
     # --- Method 2: Interleaved ---
     console.print(
@@ -291,7 +324,7 @@ def _run_precomputed(
         "  time \u2192  (both groups see the same temperature, same CPU state)",
         style="dim", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     console.print(f"  Group A average: 553 cycles  {block * 38}",
                   style="bold green", highlight=False)
@@ -300,12 +333,13 @@ def _run_precomputed(
     console.print(f"                               {' ' * 38} \u2190 no gap",
                   style="bold green", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
-    console.print("  score: 0.58    (<4.5 = PASS)                           PASS",
+    console.print(f"  score: {interleaved_t:.2f}    (<4.5 = PASS)"
+                  "                           PASS",
                   style="bold green", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     # Credibility footnote
     console.print()
@@ -318,54 +352,55 @@ def _run_precomputed(
     console.print("   Every FIPS lab in the country runs the test the broken way.)",
                   style="dim")
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     # --- Punchline ---
     _typed(console,
-           "  Same encryption. Same hardware. 62 \u2192 0.58.",
-           style="bold white", delay=0.025)
+           f"  Same encryption. Same hardware. {sequential_t:.0f} \u2192 {interleaved_t:.2f}.",
+           style="bold white", delay=0.025, fast=fast)
     _typed(console,
            "  The gap was the computer's environment drifting, not the key.",
-           style="bold white", delay=0.025)
+           style="bold white", delay=0.025, fast=fast)
     console.print()
-    time.sleep(5.0)
+    pause(5.0)
 
     # ==================================================================
     # ACT 1 — Real World (12 seconds)
     # ==================================================================
     _section_header(console, "ACT 1")
     console.print()
-    time.sleep(0.5)
+    pause(0.5)
 
     console.print(
         "  A certification lab tests ML-KEM. Standard procedure.",
         style="white", highlight=False)
     console.print()
-    time.sleep(1.0)
+    pause(1.0)
 
     console.print("  Testing 1,000,000 measurements...",
                   style="white", highlight=False)
-    _animate_loading_bar(total=1_000_000)
+    _animate_loading_bar(total=1_000_000, fast=fast)
     console.print()
-    time.sleep(0.5)
+    pause(0.5)
 
     console.print(
-        "  score: 8.42   (>4.5 = FAIL)        FAIL \u2014 BLOCKED FROM SHIPPING",
+        f"  score: {sequential_t:.2f}   (>4.5 = FAIL)"
+        "        FAIL \u2014 BLOCKED FROM SHIPPING",
         style="bold red", highlight=False)
     console.print()
-    time.sleep(3.0)
+    pause(3.0)
 
     console.print("  Every lab. Every modern chip. Same result.",
                   style="dim", highlight=False)
     console.print()
-    time.sleep(3.0)
+    pause(3.0)
 
     # ==================================================================
     # ACT 2 — The Proof (20 seconds)
     # ==================================================================
     _section_header(console, "ACT 2")
     console.print()
-    time.sleep(0.5)
+    pause(0.5)
 
     # Bridge from Act 0/1
     console.print(
@@ -375,14 +410,16 @@ def _run_precomputed(
         "  But is that because of the KEY, or because of something else?",
         style="white", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     _typed(console,
-           "  We sorted all our measurements by which secret key was used")
+           "  We sorted all our measurements by which secret key was used",
+           fast=fast)
     _typed(console,
-           "  and compared the timing directly:")
+           "  and compared the timing directly:",
+           fast=fast)
     console.print()
-    time.sleep(1.5)
+    pause(1.5)
 
     # Real data: compute per-key means split by sk_lsb
     means = per_key_features[:, 2] if per_key_features.shape[1] > 2 else per_key_features[:, 0]
@@ -412,29 +449,39 @@ def _run_precomputed(
             f"{block * bar1_len}",
             style="bold cyan", highlight=False)
         console.print()
-        time.sleep(2.0)
+        pause(2.0)
         console.print(
             f"{pad}\u2191 statistically indistinguishable",
             style="bold green", highlight=False)
         console.print()
-        time.sleep(3.0)
+        pause(3.0)
 
     console.print(
         "  The key does not affect the timing. The test failure is a false alarm.",
         style="bold green", highlight=False)
     console.print()
-    time.sleep(2.0)
+    pause(2.0)
 
     # Verdict box
     _draw_box(console, [
         "",
         "VERDICT: FALSE POSITIVE",
         "",
-        "This encryption is safe to ship.",
+        "No secret-dependent signal detected.",
         "",
     ], style="bold green", width=50)
     console.print()
-    time.sleep(5.0)
+
+    # Detection floor caveat
+    console.print(
+        "  [!] Bounded by macro-timing detection floor "
+        "(d \u2248 0.275, 454 cycles).",
+        style="dim", highlight=False)
+    console.print(
+        "      Does not rule out sub-threshold or hardware/EM leakage.",
+        style="dim", highlight=False)
+    console.print()
+    pause(5.0)
 
     # ==================================================================
     # ACT 3 — Validation + Closing (25 seconds)
@@ -442,38 +489,46 @@ def _run_precomputed(
     if has_vuln:
         _section_header(console, "ACT 3")
         console.print()
-        time.sleep(0.5)
+        pause(0.5)
 
         console.print(
             '  Our tool said "false alarm" on safe code. '
             "But can it catch a real vulnerability?",
             style="white", highlight=False)
         console.print()
-        time.sleep(1.5)
+        pause(1.5)
 
         console.print(
             "  We tested against KyberSlash, a known bug in an older "
             "version of this library.",
             style="white", highlight=False)
         console.print()
-        time.sleep(1.5)
+        pause(1.5)
 
         _typed(console,
                "  We trained a classifier to guess which key was used, "
-               "based only on timing.")
+               "based only on timing.",
+               fast=fast)
         _typed(console,
-               "  If it guesses better than random chance, the key is leaking.")
+               "  If it guesses better than random chance, the key is leaking.",
+               fast=fast)
         console.print()
-        time.sleep(2.0)
+        pause(2.0)
 
         console.print("  Random chance:    264 / 500 correct",
                       style="dim", highlight=False)
         console.print(
             "  Our classifier:   283 / 500 correct"
-            "        \u2190 timing leaks the key",
+            "  (+3.8% lift, p < 0.01)",
             style="bold red", highlight=False)
         console.print()
-        time.sleep(3.0)
+        pause(2.0)
+
+        console.print(
+            "  VERDICT: REAL LEAKAGE DETECTED",
+            style="bold red", highlight=False)
+        console.print()
+        pause(2.0)
 
         console.print(
             "  Safe code:        the key does NOT affect timing"
@@ -484,7 +539,7 @@ def _run_precomputed(
             "       \u2192 caught       \u2713",
             style="bold green", highlight=False)
         console.print()
-        time.sleep(4.0)
+        pause(4.0)
 
     # ==================================================================
     # Animated ending — the visual punchline
@@ -492,57 +547,89 @@ def _run_precomputed(
     divider = "\u2500" * 60
     console.print(f"  {divider}", style="dim", highlight=False)
     console.print()
-    time.sleep(1.0)
+    pause(1.0)
 
     console.print("  So what did we find?", style="white", highlight=False)
     console.print()
-    time.sleep(1.5)
+    pause(1.5)
 
-    # Animate the "FAIL" bar growing
+    max_val = sequential_t  # scale all bars relative to worst case
+
+    # Bar 1: Sequential — FAIL
     console.print("  The mandatory test, run the standard way:",
                   style="dim", highlight=False)
-    time.sleep(0.5)
-    _animate_score_bar(62.49, max_width=45, label="FAIL", style="bold red",
-                       step_delay=0.04)
-    sys.stdout.write("\033[1A\033[2K")  # move up, clear line
-    bar_fail = "\u2501" * 45
-    console.print(f"  {bar_fail}  62.49  FAIL",
-                  style="bold red", highlight=False)
-    time.sleep(2.0)
+    pause(0.5)
+    _animate_score_bar(sequential_t, max_val=max_val, max_width=45,
+                       label="FAIL", style="bold red", step_delay=0.04,
+                       fast=fast)
+    if not fast:
+        sys.stdout.write("\033[1A\033[2K")  # move up, clear line
+        bar_fail = "\u2501" * 45
+        console.print(f"  {bar_fail}  {sequential_t:.2f}  FAIL",
+                      style="bold red", highlight=False)
+    pause(2.0)
 
-    # The fix
+    # Bar 2: Alternating but asymmetric harness — still FAIL
     console.print()
     console.print(
-        "  The same test, measurements collected in alternating order:",
+        "  Alternating collection, but with an asymmetric test harness:",
         style="dim", highlight=False)
-    time.sleep(0.5)
-    small_width = max(1, int(0.58 / 62.49 * 45))
-    _animate_score_bar(0.58, max_width=45, label="PASS", style="bold green",
-                       step_delay=0.1)
-    sys.stdout.write("\033[1A\033[2K")  # move up, clear line
-    bar_pass = "\u2501" * small_width
-    padding = " " * (45 - small_width)
-    console.print(f"  {bar_pass}{padding}   0.58  PASS",
-                  style="bold green", highlight=False)
-    console.print()
-    time.sleep(3.0)
+    pause(0.5)
+    asym_width = max(1, int(asymmetric_t / max_val * 45))
+    _animate_score_bar(asymmetric_t, max_val=max_val, max_width=45,
+                       label="FAIL", style="bold yellow", step_delay=0.06,
+                       fast=fast)
+    if not fast:
+        sys.stdout.write("\033[1A\033[2K")
+        bar_asym = "\u2501" * asym_width
+        asym_pad = " " * (45 - asym_width + 2)
+        console.print(f"  {bar_asym}{asym_pad}{asymmetric_t:.2f}  FAIL",
+                      style="bold yellow", highlight=False)
+    pause(1.5)
 
-    console.print("  Same encryption. Same hardware. Same test.",
-                  style="bold white", highlight=False)
-    console.print("  The only thing we changed: the order of the measurements.",
-                  style="bold white", highlight=False)
+    console.print(
+        "  (Cache pollution from the harness itself — "
+        "alternating can't fix this.)",
+        style="dim", highlight=False)
+    pause(2.0)
+
+    # Bar 3: sca-triage pairwise decomposition — PASS
     console.print()
-    time.sleep(3.0)
+    console.print(
+        "  sca-triage pairwise decomposition on the same data:",
+        style="dim", highlight=False)
+    pause(0.5)
+    interl_width = max(1, int(interleaved_t / max_val * 45))
+    _animate_score_bar(interleaved_t, max_val=max_val, max_width=45,
+                       label="PASS", style="bold green", step_delay=0.1,
+                       fast=fast)
+    if not fast:
+        sys.stdout.write("\033[1A\033[2K")
+        bar_pass = "\u2501" * interl_width
+        pass_pad = " " * (45 - interl_width + 2)
+        console.print(f"  {bar_pass}{pass_pad}{interleaved_t:.2f}  PASS",
+                      style="bold green", highlight=False)
+    console.print()
+    pause(3.0)
+
+    console.print(
+        "  Alternating fixes the environment, but not the harness.",
+        style="bold white", highlight=False)
+    console.print(
+        "  sca-triage works on existing sequential data. No re-collection.",
+        style="bold white", highlight=False)
+    console.print()
+    pause(3.0)
 
     # Repo link + closing
     console.print("  github.com/asdfghjkltygh/m-series-pqc-timing-leak",
                   style="bold cyan", highlight=False)
     console.print()
-    time.sleep(1.0)
+    pause(1.0)
     console.print("  The failure was never real.",
                   style="bold magenta", highlight=False)
     console.print()
-    time.sleep(3.0)
+    pause(3.0)
 
 
 # ===================================================================

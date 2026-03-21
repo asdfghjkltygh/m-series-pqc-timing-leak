@@ -250,6 +250,10 @@ def analyze(
     "--dark", is_flag=True, default=False,
     help="Use dark theme for stage presentation.",
 )
+@click.option(
+    "--fast", is_flag=True, default=False,
+    help="Skip typing animations and reduce pauses.",
+)
 def demo(
     timing_data: str,
     vuln_data: Optional[str],
@@ -257,6 +261,7 @@ def demo(
     targets: str,
     precomputed: bool,
     dark: bool,
+    fast: bool,
 ) -> None:
     """Run the dramatic four-act demo presentation."""
     try:
@@ -287,4 +292,5 @@ def demo(
         vuln_labels=vuln_bundle.per_key_labels if vuln_bundle else None,
         precomputed=precomputed,
         dark=dark,
+        fast=fast,
     )
