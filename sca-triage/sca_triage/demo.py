@@ -113,6 +113,7 @@ def run_demo(
     sequential_t: float = 62.49,
     interleaved_t: float = 0.58,
     asymmetric_t: float = 8.10,
+    pairwise_t: float = 0.59,
     n_shuffles: int = 100,
     precomputed: bool = False,
     dark: bool = False,
@@ -126,7 +127,7 @@ def run_demo(
 
     if precomputed:
         _run_precomputed(
-            console, sequential_t, interleaved_t, asymmetric_t,
+            console, sequential_t, interleaved_t, asymmetric_t, pairwise_t,
             per_key_features, per_key_labels, target_names,
             has_vuln=vuln_features is not None and vuln_labels is not None,
             fast=fast,
@@ -147,6 +148,7 @@ def _run_precomputed(
     sequential_t: float,
     interleaved_t: float,
     asymmetric_t: float,
+    pairwise_t: float,
     per_key_features: np.ndarray,
     per_key_labels: dict[str, np.ndarray],
     target_names: list[str],
@@ -326,9 +328,9 @@ def _run_precomputed(
     console.print()
     pause(2.0)
 
-    console.print(f"  Group A average: 553 cycles  {block * 38}",
+    console.print(f"  Group A average: 555 cycles  {block * 38}",
                   style="bold green", highlight=False)
-    console.print(f"  Group B average: 552 cycles  {block * 38}",
+    console.print(f"  Group B average: 551 cycles  {block * 38}",
                   style="bold green", highlight=False)
     console.print(f"                               {' ' * 38} \u2190 no gap",
                   style="bold green", highlight=False)
@@ -474,8 +476,7 @@ def _run_precomputed(
 
     # Detection floor caveat
     console.print(
-        "  [!] Bounded by macro-timing detection floor "
-        "(d \u2248 0.275, 454 cycles).",
+        "  [!] Bounded by macro-timing detection floor (d \u2248 0.275).",
         style="dim", highlight=False)
     console.print(
         "      Does not rule out sub-threshold or hardware/EM leakage.",
@@ -510,12 +511,12 @@ def _run_precomputed(
                "based only on timing.",
                fast=fast)
         _typed(console,
-               "  If it guesses better than random chance, the key is leaking.",
+               "  If it guesses better than the majority baseline, the key is leaking.",
                fast=fast)
         console.print()
         pause(2.0)
 
-        console.print("  Random chance:    264 / 500 correct",
+        console.print("  Majority baseline:  264 / 500 correct",
                       style="dim", highlight=False)
         console.print(
             "  Our classifier:   283 / 500 correct"
@@ -555,7 +556,7 @@ def _run_precomputed(
 
     max_val = sequential_t  # scale all bars relative to worst case
 
-    # Bar 1: Sequential — FAIL
+    # Bar 1: Sequential — FAIL (Apple Silicon)
     console.print("  The mandatory test, run the standard way:",
                   style="dim", highlight=False)
     pause(0.5)
@@ -569,10 +570,10 @@ def _run_precomputed(
                       style="bold red", highlight=False)
     pause(2.0)
 
-    # Bar 2: Alternating but asymmetric harness — still FAIL
+    # Bar 2: Alternating but asymmetric harness — still FAIL (Intel x86)
     console.print()
     console.print(
-        "  Alternating collection, but with an asymmetric test harness:",
+        "  Alternating collection, but with an asymmetric test harness (Intel x86):",
         style="dim", highlight=False)
     pause(0.5)
     asym_width = max(1, int(asymmetric_t / max_val * 45))
@@ -596,18 +597,18 @@ def _run_precomputed(
     # Bar 3: sca-triage pairwise decomposition — PASS
     console.print()
     console.print(
-        "  sca-triage pairwise decomposition on the same data:",
+        "  sca-triage pairwise decomposition on the same sequential data:",
         style="dim", highlight=False)
     pause(0.5)
-    interl_width = max(1, int(interleaved_t / max_val * 45))
-    _animate_score_bar(interleaved_t, max_val=max_val, max_width=45,
+    pw_width = max(1, int(pairwise_t / max_val * 45))
+    _animate_score_bar(pairwise_t, max_val=max_val, max_width=45,
                        label="PASS", style="bold green", step_delay=0.1,
                        fast=fast)
     if not fast:
         sys.stdout.write("\033[1A\033[2K")
-        bar_pass = "\u2501" * interl_width
-        pass_pad = " " * (45 - interl_width + 2)
-        console.print(f"  {bar_pass}{pass_pad}{interleaved_t:.2f}  PASS",
+        bar_pass = "\u2501" * pw_width
+        pass_pad = " " * (45 - pw_width + 2)
+        console.print(f"  {bar_pass}{pass_pad}{pairwise_t:.2f}  PASS",
                       style="bold green", highlight=False)
     console.print()
     pause(3.0)
