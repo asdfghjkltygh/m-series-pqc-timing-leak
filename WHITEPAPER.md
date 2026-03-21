@@ -87,11 +87,11 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 **Data collection.** 500 distinct keys x 50 repetitions per key per condition = 12.2 million measurements across both platforms. Collection automated and SHA-256 checksummed. Full details in Appendix B.
 
-### 3.2 Bounding Exploitability
+### 3.2 Bounding Exploitability on Patched ML-KEM
 
 We threw every attack in the side-channel toolkit at this data: gradient-boosted classifiers, neural networks, template attacks, information-theoretic bounds. Over 150 experiments across both platforms and multiple configurations. Every one came back empty.
 
-**Zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's~$d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix A for metric definitions and methodology.
+**Against the patched implementation, there is zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG (Kraskov-Stögbauer-Grassberger) mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's~$d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix A for metric definitions and methodology.
 
 ### 3.3 The Positive Control
 
@@ -101,7 +101,7 @@ The results are unambiguous. On vulnerable code, our XGBoost classifier achieves
 
 Our apparatus detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure; it is a measurement. Our pipeline's detection floor is $d \approx 0.275$; effects below $d \approx 0.1$ are below all detection mechanisms and unexploitable via userspace timing (full sensitivity characterization in Section 5).
 
-**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix A. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
+**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based (Median Absolute Deviation) SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix A. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
 
 ---
 
@@ -130,7 +130,7 @@ Even with a perfectly symmetric harness, TVLA fails catastrophically when fixed 
 In sequential collection, the fixed block runs first (e.g., 50,000 consecutive decapsulations on the same input), then the random block runs (50,000 decapsulations on distinct inputs). Between these blocks, and during each block, system state evolves through multiple mechanisms:
 
 - **Thermal throttling:** the CPU die heats during sustained computation, causing the clock frequency to drop mid-run.
-- **OS scheduler jitter:** CFS (Linux) or Grand Central Dispatch (macOS) quantum boundaries redistribute background work unevenly across the two collection windows.
+- **OS scheduler jitter:** CFS (Completely Fair Scheduler on Linux) or Grand Central Dispatch (macOS) quantum boundaries redistribute background work unevenly across the two collection windows.
 - **DVFS (Dynamic Voltage and Frequency Scaling):** the hardware shifts CPU clock speed and voltage based on workload, introducing measurement drift that tracks load history, not secret data.
 - **Memory controller scheduling:** DRAM temperature rises over a long run, changing row-access latencies for later measurements.
 
@@ -201,7 +201,7 @@ The finding does not mean TVLA is useless. It means TVLA is incomplete. A TVLA p
 
 We propose a two-stage protocol for non-invasive side-channel evaluation of cryptographic implementations on general-purpose processors:
 
-**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If $\tval$ <= 4.5, the implementation passes FIPS 140-3 macro-timing requirements. Evaluators requiring higher assurance against sub-threshold vulnerabilities (like KyberSlash at $d = 0.094$) must proceed to ML-based population aggregation or hardware EM probing. If $\tval$ > 4.5, proceed to Stage 2.
+**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If $\tval$ <= 4.5, the implementation passes FIPS 140-3 macro-timing requirements. Evaluators requiring higher assurance against sub-threshold vulnerabilities (like KyberSlash at $d = 0.094$) must proceed to ML-based population aggregation or hardware EM (Electromagnetic) probing. If $\tval$ > 4.5, proceed to Stage 2.
 
 **Stage 2: Confound Triage.** If $\tval$ > 4.5, run pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight, the number of 1-bits in the key) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material. sca-triage automates this and generates a formal justification artifact for CMVP (Cryptographic Module Validation Program) non-conformance review.
 
@@ -243,7 +243,7 @@ VERDICT: FALSE_POSITIVE
 
 Pairwise decomposition tests 13 secret-key properties; all return non-significant. KSG MI provides a model-free backstop capturing nonlinear dependencies that pairwise tests might miss. A FALSE_POSITIVE verdict guarantees no secret-dependent leakage above the $d \approx 0.275$ macro-timing noise floor, the limit of userspace exploitability. Below this threshold, hardware EM probing is required.
 
-**Sensitivity and detection floors.** We validated detection capability by injecting synthetic timing leaks at Cohen's~$d \in [0.005, 1.0]$ across 20 trials per effect size: 90% detection at $d = 0.3$, 100% at $d = 0.5$. The per-experiment pipeline floor is $d \approx 0.275$ (80% detection). The pairwise t-test floor alone is $d = 0.398$ (454 Intel cycles at 80% power); the ML classification floor is $d \approx 0.85$. The multi-method pipeline is more sensitive than any single test. KyberSlash ($d = 0.094$) falls below all per-experiment floors but was detected through a different mechanism: population-level aggregation across 500 keys, where XGBoost learns weak but consistent cross-key patterns (+3.8% lift). The per-experiment floor ($d \approx 0.275$) and population-level detection ($d = 0.094$) characterize complementary mechanisms, not the same pathway. Effects below $d \approx 0.1$ are below both and unexploitable via userspace macro-timing. Full triage completes in under 30 seconds on 50K traces.
+**Sensitivity and detection floors.** We validated detection capability by injecting synthetic timing leaks at Cohen's~$d \in [0.005, 1.0]$ across 20 trials per effect size: 90% detection at $d = 0.3$, 100% at $d = 0.5$. The per-experiment pipeline achieves a combined detection floor of $d \approx 0.275$ (80% detection) by integrating distributional tests, MI estimation, and ML classification: each method catches different leak signatures, so their union detects effects that no single method reaches alone. By comparison, the isolated pairwise t-test floor is $d = 0.398$ (454 Intel cycles at 80% power) and the standalone ML classification floor is $d \approx 0.85$. KyberSlash ($d = 0.094$) falls below all per-experiment floors but was detected through a different mechanism: population-level aggregation across 500 keys, where XGBoost learns weak but consistent cross-key patterns (+3.8% lift). The per-experiment floor ($d \approx 0.275$) and population-level detection ($d = 0.094$) characterize complementary mechanisms, not the same pathway. Effects below $d \approx 0.1$ are below both and unexploitable via userspace macro-timing. Full triage completes in under 30 seconds on 50K traces using a standard M-series CPU (the 10,000-shuffle MI permutation is heavily vectorized to achieve this throughput).
 
 ### 5.3 Why the Welch's t-Test Alone Is Insufficient
 
@@ -260,7 +260,7 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 | **Welch's t-test (sequential data)** | $\tval$ = 8.42, FAIL | $\tval$ = 1.04, Underpowered |
 | **dudect (interleaved collection)** | PASS (solves temporal drift) | FALSE NEGATIVE (underpowered at 25K traces) |
 | **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel ($\tval$ = 8.10, cache pollution);PASS on Apple ($\tval$ = 0.99) | N/A |
-| **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise $d=0.0003$, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
+| **sca-triage (three-stage)** | FALSE_POSITIVE (correctly flags both temporal drift and Intel cache pollution; pairwise $d=0.0003$, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
 
 \renewcommand{\arraystretch}{1.2}
 
@@ -315,7 +315,7 @@ The gap between "TVLA-detectable" and "exploitable" is wider on modern processor
 
 **Apple Silicon cache absorption hypothesis unverified.** We hypothesize that Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99) while Intel fails ($\tval$ = 8.10) because Apple's large shared L2/SLC cache absorbs keygen+encaps pollution. The symmetric interleaved result ($\tval$ = 0.58) is the definitive measurement regardless of mechanism.
 
-**No NTT-internal intermediate targets.** We tested key-level and message-level properties but not butterfly outputs, Montgomery reduction intermediates, or CBD sampling. Our raw-trace analysis bounds any per-execution timing signal at $d < 0.001$, constraining intermediate-value leakage.
+**No NTT-internal (Number Theoretic Transform) intermediate targets.** We tested key-level and message-level properties but not butterfly outputs, Montgomery reduction intermediates, or CBD (Centered Binomial Distribution) sampling. Our raw-trace analysis bounds any per-execution timing signal at $d < 0.001$, constraining intermediate-value leakage.
 
 **ISO 17825:2024 untested.** We tested against the Goodwill (2011) methodology as widely implemented by CMVP labs. The 2024 revision introduced percentile-based timing analysis and updated sample size requirements; replicating against it is immediate future work.
 
