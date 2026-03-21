@@ -70,7 +70,7 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 ### 3.2 Bounding Exploitability
 
-We applied the full side-channel analysis toolkit to 12.2 million traces: machine learning classifiers (XGBoost, random forests, CNNs, template attacks), statistical tests (Kolmogorov-Smirnov, Anderson-Darling, PCA/t-SNE), and information-theoretic bounds (Perceived Information, KSG mutual information (a nonparametric information measure; see Appendix B), Median Absolute Deviation (MAD)-based signal-to-noise ratio (SNR)). In total, over 150 individual analyses across 2 platforms, 2 harness types, 5 compiler levels, 2 library versions, raw and aggregated granularities, and 9 synthetic effect sizes (full matrix in supplementary materials).
+We applied 150+ nonlinear classifiers, distributional tests, and non-parametric information-theoretic bounds to 12.2 million traces across 2 platforms, 2 harness types, 5 compiler levels, 2 library versions, raw and aggregated granularities, and 9 synthetic effect sizes (full matrix in supplementary materials). All performed at or below random guessing.
 
 **Zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG mutual information returns 0.000 bits (p = 1.0). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's d = 0.0003 for sk_lsb (Cohen's d measures effect size as the difference in means divided by pooled standard deviation; d < 0.2 is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine).
 
@@ -203,7 +203,7 @@ The finding does not mean TVLA is useless. It means TVLA is incomplete. A TVLA p
 
 We propose a two-stage protocol for non-invasive side-channel evaluation of cryptographic implementations on general-purpose processors:
 
-**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If |t| <= 4.5, the implementation passes for macro-timing evaluation, though this does not preclude sub-threshold vulnerabilities (like KyberSlash at d = 0.094) that require ML-based population aggregation or higher-resolution EM probing to detect. If |t| > 4.5, proceed to Stage 2.
+**Stage 1: Standard TVLA.** Run the fixed-vs-random Welch's t-test exactly as specified in ISO 17825. If |t| <= 4.5, the implementation passes FIPS 140-3 macro-timing requirements. Evaluators requiring higher assurance against sub-threshold vulnerabilities (like KyberSlash at d = 0.094) must proceed to ML-based population aggregation or hardware EM probing. If |t| > 4.5, proceed to Stage 2.
 
 **Stage 2: Confound Triage.** If |t| > 4.5, labs can use sca-triage to generate a formal justification artifact supporting a vendor's non-conformance rationale for CMVP (Cryptographic Module Validation Program) review, by running pairwise secret-group decomposition: split the collected traces by actual secret key properties (individual bits, byte values, Hamming weight, i.e., the number of 1-bits in the key) and recompute the t-test for each pairwise comparison. Compute permutation-validated mutual information between timing measurements and secret key material.
 
@@ -262,7 +262,7 @@ The question sca-triage answers is different from what dudect or TVLA answer. Th
 | **Welch's t-test (sequential data)** | |t| = 8.42, FAIL | |t| = 1.04, Underpowered |
 | **dudect (interleaved collection)** | PASS (solves temporal drift) | FALSE NEGATIVE (underpowered at 25K traces) |
 | **dudect (interleaved asymmetric)** | FALSE POSITIVE on Intel (|t| = 8.10, cache pollution); PASS on Apple (|t| = 0.99) | N/A |
-| **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise d=0.0003, MI=0.0 bits) | REAL_LEAKAGE (XGBoost 56.6% vs 52.8% chance) |
+| **sca-triage (three-stage)** | FALSE_POSITIVE (pairwise d=0.0003, MI=0.0 bits) | REAL_LEAKAGE (Stage 3 ML aggregation detects +3.8% lift; Stage 1 t-test underpowered) |
 
 On the patched version, the sequential t-test reports leakage that does not exist. dudect's interleaved collection solves the temporal drift problem and correctly passes. However, dudect still produces a false positive on the Intel interleaved asymmetric dataset (|t| = 8.10) because it cannot distinguish cache pollution from real leakage; on Apple Silicon the same test passes (|t| = 0.99), likely due to cache absorption. This platform dependence is exactly why sca-triage is necessary as a universal backstop. On the vulnerable version, both the sequential t-test and dudect produce false negatives: they are underpowered at 25K traces and the KyberSlash signal (d = 0.094) is too small for Welch's t-test to reach significance against the OS scheduling noise floor. sca-triage correctly triages all three cases: identifying the temporal-drift false positive, the cache-pollution false positive, and detecting the real vulnerability via cross-key ML classification that aggregates weak signals across 500 keys.
 
@@ -291,8 +291,6 @@ An attacker with kernel-level performance counter access could achieve high-reso
 The liboqs KyberSlash fix (v0.15.0 and later) is effective. Our positive control confirms that the known timing vulnerability in pre-patch versions is detectable and that the patch eliminates it. Organizations integrating liboqs at current versions can proceed with confidence that the implementation is timing-safe against remote and userspace adversaries constrained by OS scheduling noise and standard timer resolution.
 
 For organizations already in FIPS evaluation: if your lab has reported a TVLA failure on ML-KEM running on Apple Silicon or Intel hardware, request a Stage 2 analysis. Point evaluators to this paper and the sca-triage tool. The TVLA failure is real in the statistical sense, but it does not represent exploitable leakage.
-
-**Denial of Certification.** The temporal-drift confound implies a co-tenancy attack: an adversary on shared infrastructure could amplify drift between TVLA measurement blocks to inflate a competitor's |t| above 4.5, blocking their FIPS certification. We have not demonstrated this experimentally, but the mechanism is plausible given sequential collection alone produces |t| up to 62x above the threshold. Interleaved collection or pairwise decomposition would defeat such an attack.
 
 ### 6.2 What This Means for Other PQC Algorithms
 
