@@ -1,14 +1,45 @@
 # When TVLA Lies: How a Broken Standard Is Blocking Post-Quantum Crypto Deployment
 
+> **[Read the whitepaper (PDF)](whitepaper.pdf)** | **[Read the whitepaper (Markdown)](WHITEPAPER.md)**
+
 ISO 17825 TVLA (the mandatory side-channel test for FIPS 140-3 certification) produces catastrophic false positives on ML-KEM when run on modern hardware. The root cause is **temporal drift from sequential data collection**, not any weakness in the algorithm or its implementation.
 
 **Headline result:** Switching from sequential to interleaved measurement collection reduces Apple Silicon's |t| from **62.49 to 0.58** (a 100x reduction) with no change to the hardware, software, or cryptographic inputs. Intel x86 shows the same pattern: |t| drops from **6.70 to 1.65**. 12.2 million traces and 150+ experiments confirm zero exploitable bits of secret information.
 
 We release **sca-triage**, an open-source triage tool that distinguishes real side-channel leakage from false positives, and propose a two-stage evaluation protocol for ISO 17825.
 
+## Repository Layout
+
+```
+├── WHITEPAPER.md              ← Full paper (Markdown)
+├── whitepaper.pdf             ← Full paper (PDF)
+├── REPRODUCE.md               ← Step-by-step reproduction guide
+│
+├── sca-triage/                ← Open-source triage tool (pip installable)
+│   ├── sca_triage/            ← Python package source
+│   ├── tests/                 ← Unit tests
+│   └── examples/              ← Usage examples
+│
+├── data/                      ← All experimental data (CSV, NPZ, JSON)
+├── figures/                   ← Generated figures for the paper
+├── scripts/                   ← Analysis scripts and experiment orchestrators
+│   └── validate_paper_claims.py  ← Verifies all 28 numerical claims
+│
+├── harnesses/                 ← C timing measurement harnesses
+├── x86-replication/           ← Intel x86 cross-platform replication
+├── liboqs-vulnerable/         ← Vulnerable liboqs build (positive control)
+│
+├── submission/                ← Ancillary submission materials
+│   ├── cfp_abstracts.md       ← Conference abstracts
+│   └── slide_deck_outline.md  ← Talk outline
+│
+├── Dockerfile                 ← Full reproduction in a container
+└── docker-compose.yml
+```
+
 ## Quick Start
 
-**Prerequisites:** Python 3.10+ and pip. On macOS, install via `brew install python` or [python.org](https://www.python.org/downloads/). On Ubuntu/Debian: `sudo apt install python3 python3-pip python3-venv`.
+**Prerequisites:** Python 3.10+ and pip.
 
 ```bash
 git clone https://github.com/asdfghjkltygh/m-series-pqc-timing-leak.git
@@ -34,17 +65,23 @@ sca-triage analyze --timing-data data/tvla_traces.npz --targets sk_lsb --quick
 python3 scripts/dudect_comparison.py
 ```
 
-The quick check runs Stage 1 (TVLA: |t|=8.42, FAIL). The full pipeline via `dudect_comparison.py` runs all three stages and produces the FALSE_POSITIVE verdict.
+### 3. Run the Live Demo
 
-### 3. Full Reproduction (Docker, zero local dependencies)
+```bash
+sca-triage demo --timing-data data/raw_timing_traces_v3.csv \
+  --vuln-data data/raw_timing_traces_vuln.csv \
+  --targets sk_lsb --precomputed --dark
+```
 
-If you prefer not to install Python, Docker runs everything in an isolated container:
+Add `--fast` to skip animations.
+
+### 4. Full Reproduction (Docker)
 
 ```bash
 docker-compose up --build run-all-experiments
 ```
 
-Runs all experiments (~7 minutes), validates all claims, outputs results to `data/` and `figures/`. Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Runs all experiments (~7 minutes), validates all claims, outputs results to `data/` and `figures/`. See [REPRODUCE.md](REPRODUCE.md) for details.
 
 ## Key Results
 
@@ -56,12 +93,6 @@ Runs all experiments (~7 minutes), validates all claims, outputs results to `dat
 | Interleaved | Intel x86 | 1.65 | **PASS** |
 
 Same hardware. Same code. Same inputs. The only difference is *when* the measurements were collected.
-
-## Links
-
-- **Whitepaper:** [submission/whitepaper.md](submission/whitepaper.md)
-- **Reproduction guide:** [REPRODUCE.md](REPRODUCE.md)
-- **sca-triage tool:** [sca-triage/](sca-triage/)
 
 ## License
 
