@@ -120,7 +120,7 @@ python3 ../scripts/intel_symmetric_control.py
 
 cd ..
 ```
-**Expected (asymmetric):** |t|=12.95, variance ratio 0.47x (FAIL).
+**Expected (500K asymmetric):** |t|=12.95, variance ratio 0.47x (FAIL). This 500K-trace run confirmed the Intel TVLA failure. The whitepaper's Table 1 uses 50K-trace values from the symmetric control experiment below for matched comparison with Apple Silicon.
 **Expected (symmetric control):** Both harnesses fail: asymmetric |t|=5.35, symmetric |t|=6.70.
 
 ### Interleaved Control: Temporal Drift Isolation (Intel x86)

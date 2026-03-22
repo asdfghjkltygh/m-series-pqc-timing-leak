@@ -8,6 +8,22 @@ ISO 17825 TVLA (the mandatory side-channel test for FIPS 140-3 certification) pr
 
 We release **sca-triage**, an open-source triage tool that distinguishes real side-channel leakage from false positives, and propose a two-stage evaluation protocol for ISO 17825.
 
+---
+
+## Demo
+
+[![When TVLA Lies: The certification test says FAIL, but the encryption is safe](assets/demo_highlight.gif)](https://youtu.be/YOUR_YOUTUBE_LINK)
+
+[Watch the full demo on YouTube](https://youtu.be/YOUR_YOUTUBE_LINK)
+
+The demo runs a live four-act analysis showing how TVLA produces a catastrophic false positive (score: 62.49) that vanishes (score: 0.58) when measurement collection order is changed. Run it yourself:
+
+```bash
+make demo
+```
+
+---
+
 ## Repository Layout
 
 ```
@@ -33,6 +49,8 @@ We release **sca-triage**, an open-source triage tool that distinguishes real si
 │   ├── cfp_abstracts.md       ← Conference abstracts
 │   └── slide_deck_outline.md  ← Talk outline
 │
+├── assets/                    ← Demo GIF and media
+├── Makefile                   ← install, demo, validate targets
 ├── Dockerfile                 ← Full reproduction in a container
 └── docker-compose.yml
 ```

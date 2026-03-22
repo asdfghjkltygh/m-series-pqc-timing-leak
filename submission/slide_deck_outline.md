@@ -397,7 +397,7 @@ QR code linking to the sca-triage GitHub repository.
 |-------|--------|----------|---------|
 | The Setup | 1-5 | 5 min | Title, PQC context, TVLA explanation, the failing result |
 | The Hunt | 6-8 | 10 min | Exhaustive search, information-theoretic proof, positive control |
-| The Root Cause | 9-13 | 10 min | Confound explanation, Apple DMP, Intel cache, pairwise proof, both-directions failure |
+| The Root Cause | 9-13 | 10 min | Confound explanation, temporal drift isolation, Intel cache pollution, pairwise proof, cross-platform replication |
 | The Fix | 14-16 | 5 min | Two-stage protocol, tool release, recommendations |
 | Live Demo | 17-19 | 5 min | Transition, terminal demo (three acts), recap |
 | Implications | 20-22 | 5 min | Proceed with PQC, all algorithms affected, standards must evolve |
