@@ -37,7 +37,7 @@ Sequential collection: $\tval$ = 62.49 (FAIL). Interleaved collection: $\tval$ =
 
 TVLA is the mandatory side-channel evaluation for ISO 17825 / FIPS 140-3 certification. It collects two groups of timing measurements, "fixed" (one repeated input) and "random" (different inputs each time), then runs Welch's t-test to check whether the groups differ. If the test statistic $\tval$ exceeds 4.5, the implementation fails.
 
-When we run TVLA on liboqs ML-KEM-768, the most widely integrated open-source implementation of the NIST post-quantum key exchange standard, it reports catastrophic leakage: $\tval$ = 62.49 on Apple Silicon and $\tval$ = 6.70 on Intel x86, both far above the 4.5 failure threshold. Taken at face value, these results block ML-KEM deployment across the US federal government and any organization requiring FIPS compliance.
+When we run TVLA on liboqs ML-KEM-768, the most widely integrated open-source implementation of the NIST post-quantum key exchange standard, it reports severe leakage: $\tval$ = 62.49 on Apple Silicon and $\tval$ = 6.70 on Intel x86, both far above the 4.5 failure threshold. Taken at face value, these results block ML-KEM deployment across the US federal government and any organization requiring FIPS compliance.
 
 The leakage is not real. The signal comes from temporal drift in the measurement process: the standard protocol collects all fixed-input measurements in one block, then all random-input measurements in another. During these multi-minute collection runs, system state evolves (thermal throttling, OS scheduling, power management) and these environmental changes correlate perfectly with group assignment. TVLA interprets the resulting distributional shift as cryptographic leakage.
 
@@ -71,13 +71,13 @@ There is no "borderline" TVLA failure: exceeding $\tval$ = 4.5 triggers a remedi
 
 TVLA's limitations on general-purpose hardware are well-documented: Schneider and Moradi [1] showed environmental noise produces non-exploitable statistical significance; Whitnall and Oswald [2] established fair evaluation frameworks for side-channel distinguishers; Mather et al. [3] provided a priori statistical power analysis for leakage detection; Bronchain and Standaert [4] introduced Perceived Information because TVLA detection does not imply exploitability; Dunsche et al. [6, 7] proposed improved statistical tests with controlled type-1 error. Our work is complementary: Dunsche et al. address the *statistical test*; we address the *measurement methodology* and provide a practical triage tool.
 
-dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces catastrophic false positives on production hardware ($\tval$ inflated from 0.58 to 62.49 on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
+dudect (Reparaz et al. [5]) already interleaves fixed and random inputs by design, inherently preventing temporal drift, validating our diagnosis. Our contribution is not discovering that interleaving prevents drift; it is demonstrating that ISO 17825's implicit sequential protocol produces false positives on production hardware ($\tval$ inflated from 0.58 to 62.49 on Apple Silicon), quantifying the effect across two instruction set architectures (ISAs), proving non-exploitability through 150+ experiments, and releasing sca-triage for the FIPS ecosystem.
 
 ---
 
 ## 3. The Investigation
 
-We collected 12.2 million timing traces across both platforms trying to turn this TVLA result into an actual key recovery attack. We did not set out to prove TVLA wrong. We set out to exploit the leakage it reported. Every technique we tried (and we tried everything) came back empty.
+We collected 12.2 million timing traces across both platforms trying to turn this TVLA result into an actual key recovery attack. We didn't set out to prove TVLA wrong. We set out to exploit the leakage it reported. Every technique we tried (and we tried everything) came back empty.
 
 ### 3.1 Measurement Setup
 
@@ -91,7 +91,7 @@ We collected 12.2 million timing traces across both platforms trying to turn thi
 
 We threw every attack in the side-channel toolkit at this data: gradient-boosted classifiers, neural networks, template attacks, information-theoretic bounds. Over 150 experiments across both platforms and multiple configurations. Every one came back empty.
 
-**Against the patched implementation, there is zero exploitable signal.** Every technique performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG (Kraskov-Stögbauer-Grassberger) mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's $d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix A for metric definitions and methodology.
+**Against the patched implementation, there is zero exploitable signal.** All techniques performed at or below random guessing. XGBoost achieves 50.2% on binary key-bit classification (majority baseline: 50.0%). KSG (Kraskov-Stögbauer-Grassberger) mutual information returns 0.000 bits ($p = 1.0$). Perceived Information is negative for all targets. At the single-trace level (100K unaggregated measurements), Cohen's $d = 0.0003$ for sk_lsb ($d < 0.2$ is conventionally "small"). The null result holds at every granularity (aggregated summaries, raw traces, and cross-platform) ruling out aggregation masking. Higher-order analysis is inapplicable to scalar timing (one value per execution; no second sample to combine). See Appendix A for metric definitions and methodology.
 
 ### 3.3 The Positive Control
 
@@ -113,7 +113,7 @@ If TVLA reports significant leakage and no attack can exploit it, the question i
 
 Pairwise decomposition is the definitive proof that the TVLA signal is not secret-dependent. Instead of comparing fixed-vs-random (which confounds input repetition with secret identity), we compare timing distributions grouped by actual secret properties (individual key bits, Hamming weight classes, key byte values) while holding the fixed-vs-random structure constant.
 
-When we split traces by actual secret properties instead of TVLA group assignment, the distributions are identical. Every pairwise t-test, every distributional comparison, every classifier trained on actual secret labels performs at chance. The structure TVLA detects vanishes entirely when the comparison is reframed around the secret rather than around input repetition.
+When we split traces by actual secret properties instead of TVLA group assignment, the distributions are identical. All pairwise t-tests, all distributional comparisons, all classifiers trained on actual secret labels performs at chance. The structure TVLA detects vanishes entirely when the comparison is reframed around the secret rather than around input repetition.
 
 The leakage is input-dependent, not secret-dependent. TVLA cannot distinguish between the two. This is not a subtle statistical argument; it is a complete decomposition that isolates the confound and shows it accounts for 100% of the TVLA signal.
 
@@ -125,7 +125,7 @@ This asymmetry is not a bug in our harness; it is the natural implementation of 
 
 ### 4.3 The Temporal Drift Confound
 
-Even with a perfectly symmetric harness, TVLA fails catastrophically when fixed and random measurements are collected in separate sequential blocks. We initially blamed an architectural confound: adaptive microarchitecture responding differently to repeated vs. novel inputs. The interleaved control experiment disproves this: when fixed and random measurements alternate within a single collection run, TVLA passes on both platforms. The confound is temporal drift between sequential collection blocks, not the CPU's response to data content.
+Even with a perfectly symmetric harness, TVLA fails when fixed and random measurements are collected in separate sequential blocks. We initially blamed an architectural confound: adaptive microarchitecture responding differently to repeated vs. novel inputs. The interleaved control disproves this: when fixed and random measurements alternate within a single collection run, TVLA passes on both platforms. The confound is temporal drift between sequential collection blocks, not the CPU's response to data content.
 
 In sequential collection, the fixed block runs first (e.g., 50,000 consecutive decapsulations on the same input), then the random block runs (50,000 decapsulations on distinct inputs). Between these blocks, and during each block, system state evolves through multiple mechanisms:
 
@@ -138,7 +138,7 @@ On our Apple Silicon test platform, a 50K-trace collection block runs for approx
 
 ### 4.4 Per-Platform Evidence
 
-**Apple Silicon.** The symmetric harness pre-generates all inputs so both modes execute identical code paths (array index, then decaps, then record timing). Despite this, sequential collection fails catastrophically:
+**Apple Silicon.** The symmetric harness pre-generates all inputs so both modes execute identical code paths (array index, then decaps, then record timing). Despite this, sequential collection still fails:
 
 **Table 2:** Apple Silicon sequential collection results.
 
@@ -195,7 +195,7 @@ All five levels fail TVLA. The `-Os` run-to-run instability ($\tval$ = 1.73 then
 
 ## 5. The Fix
 
-The finding does not mean TVLA is useless. It means TVLA is incomplete. A TVLA pass is still meaningful: if the distributions are indistinguishable, there is no leakage of any kind to worry about. The problem is TVLA failures on modern hardware, which require a second stage of analysis to determine whether the detected signal is exploitable.
+The finding doesn't mean TVLA is useless. It means TVLA is incomplete. A TVLA pass is still meaningful: if the distributions are indistinguishable, there is no leakage of any kind to worry about. The problem is TVLA failures on modern hardware, which require a second stage of analysis to determine whether the detected signal is exploitable.
 
 ### 5.1 The Two-Stage Evaluation Protocol
 
@@ -247,7 +247,7 @@ Pairwise decomposition tests 13 secret-key properties; all return non-significan
 
 ### 5.3 Why the Welch's t-Test Alone Is Insufficient
 
-The core statistical test in both TVLA and dudect is a Welch's t-test comparing two timing distributions. dudect [5] solves the temporal-drift problem by interleaving its measurement loop; if you run the actual dudect binary, it will not produce false positives from drift. But dudect does not protect against harness asymmetry (cache pollution from live keygen+encaps in random mode), and critically, FIPS evaluation labs running ISO 17825 do not use dudect's interleaved collection; they collect sequentially.
+The core statistical test in both TVLA and dudect is a Welch's t-test comparing two timing distributions. dudect [5] solves the temporal-drift problem by interleaving its measurement loop; if you run the actual dudect binary, it won't produce false positives from drift. But dudect doesn't protect against harness asymmetry (cache pollution from live keygen+encaps in random mode), and critically, FIPS evaluation labs running ISO 17825 do not use dudect's interleaved collection; they collect sequentially.
 
 The question sca-triage answers is different from what dudect or TVLA answer. The Welch's t-test tells you whether two distributions differ. It cannot tell you *why* they differ: temporal drift, harness asymmetry, or real leakage all produce the same FAIL. sca-triage's pairwise decomposition and MI stages provide the missing diagnostic:
 
@@ -309,7 +309,7 @@ The gap between "TVLA-detectable" and "exploitable" is wider on modern processor
 
 ### 6.4 Limitations
 
-**Temporal drift mechanism uncharacterized.** We demonstrate that sequential collection introduces catastrophic temporal drift but have not isolated the specific physical mechanism (thermal throttling, OS scheduling, DVFS). The interleaved control proves drift is the cause regardless of mechanism; the fix is mechanism-agnostic.
+**Temporal drift mechanism uncharacterized.** We demonstrate that sequential collection introduces temporal drift sufficient to produce $\tval$ = 62.49 but have not isolated the specific physical mechanism (thermal throttling, OS scheduling, DVFS). The interleaved control proves drift is the cause regardless of mechanism; the fix is mechanism-agnostic.
 
 **ML-KEM only.** We have not yet run cross-algorithm validation (ML-DSA, SLH-DSA, BIKE, HQC). The confound is methodological, not algorithm-specific, but empirical confirmation across algorithms would strengthen the generalization claim.
 
