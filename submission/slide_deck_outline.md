@@ -78,7 +78,7 @@
 
 **Title:** We Tried Everything
 
-**Key Message:** Over 100 experiments across every major side-channel technique produced zero exploitable information.
+**Key Message:** Over 150 experiments across every major side-channel technique produced zero exploitable information.
 
 **Visual:** Heatmap figure from the paper: experiment matrix with rows as techniques (XGBoost, Random Forest, CNN, Template, KS-test, PCA, t-SNE, MI, PI, SNR) and columns as targets (key bit, key byte, Hamming weight, etc.). Every cell is green/blue (at or below baseline). No red cells. Title on heatmap: "Accuracy vs. Majority Baseline." Color legend: green = at baseline, blue = below baseline.
 
@@ -90,7 +90,7 @@
 
 **Title:** The Information Is Not There
 
-**Key Message:** Six independent information-theoretic methods bound the extractable secret information at exactly zero bits.
+**Key Message:** Six independent methods bound the extractable secret information at exactly zero bits.
 
 **Visual:** Clean table with six rows:
 
@@ -133,7 +133,7 @@ Below the table, bold text: "Zero bits. Not low. Not marginal. Zero."
 
 **Visual:** Diagram showing TVLA's assumption vs. reality. Left ("What TVLA assumes"): two boxes labeled "Fixed" and "Random" with arrow pointing to "Timing difference = secret leakage." Right ("What actually happens"): timeline showing "Block 1: Fixed traces" then "Block 2: Random traces" with annotation arrows: "thermal state drifts," "OS scheduler activity changes," "DVFS adjusts frequency." Arrow pointing to "Timing difference = when you measured, not what you measured."
 
-**Speaker Notes:** "Here's what's actually happening. The standard protocol collects all fixed-input traces in one block, then all random-input traces in a second block. Between those blocks, the system state drifts: thermal conditions change, the OS scheduler intervenes differently, DVFS adjusts clock frequency. TVLA sees a timing difference between the two groups and calls it leakage. But the difference is temporal; it's about when you measured, not what you measured. We proved this by interleaving the measurements: alternate fixed and random on every iteration, and the signal vanishes. 62 to 0.5."
+**Speaker Notes:** "Here's what's actually happening. The standard protocol collects all fixed-input traces in one block, then all random-input traces in a second block. Between those blocks, the system state drifts: thermal conditions change, the OS scheduler intervenes differently, DVFS adjusts clock frequency. TVLA sees a timing difference between the two groups and calls it leakage. But the difference is temporal; it's about when you measured, not what you measured. We proved this by interleaving the measurements: alternate fixed and random on every iteration, and the signal vanishes. 62.49 to 0.58."
 
 ---
 
@@ -176,7 +176,7 @@ Below: "100x reduction on Apple. 4x reduction on Intel. No code changes. No hard
 
 **Key Message:** When you group by actual secret key properties instead of fixed-vs-random, the distributions are identical.
 
-**Visual:** Two rows of small distribution plots. Top row labeled "TVLA grouping (fixed vs random)": two clearly separated distributions with "|t| = 62.49" annotation (symmetric harness). Bottom row labeled "Secret grouping (key bit 0 vs key bit 1)": two perfectly overlapping distributions with "|t| = 0.3" annotation. Bold caption: "Remove the confound, the signal disappears. The leakage is input-dependent, not secret-dependent."
+**Visual:** Two rows of small distribution plots. Top row labeled "TVLA grouping (fixed vs random)": two clearly separated distributions with "|t| = 62.49" annotation (symmetric harness). Bottom row labeled "Secret grouping (key bit 0 vs key bit 1)": two perfectly overlapping distributions with "|t| = 0.59" annotation. Bold caption: "Remove the confound, the signal disappears. The leakage is input-dependent, not secret-dependent."
 
 **Speaker Notes:** "Here's the definitive proof. Top row: TVLA's fixed-vs-random comparison on the symmetric harness, |t| of 62, massive separation. Bottom row: same traces, but now we group by actual secret key bits instead of by TVLA group assignment. The distributions are identical. Every pairwise comparison (by key bit, key byte, Hamming weight) shows no difference. The structure TVLA detects exists only in the fixed-vs-random framing. Remove that framing, and the signal vanishes completely."
 
@@ -399,7 +399,7 @@ QR code linking to the sca-triage GitHub repository.
 | The Hunt | 6-8 | 10 min | Exhaustive search, information-theoretic proof, positive control |
 | The Root Cause | 9-13 | 10 min | Confound explanation, temporal drift isolation, Intel cache pollution, pairwise proof, cross-platform replication |
 | The Fix | 14-16 | 5 min | Two-stage protocol, tool release, recommendations |
-| Live Demo | 17-19 | 5 min | Transition, terminal demo (three acts), recap |
+| Live Demo | 17-19 | 5 min | Transition, terminal demo (four acts), recap |
 | Implications | 20-22 | 5 min | Proceed with PQC, all algorithms affected, standards must evolve |
 | Close | 23-24 | ~Q&A | Summary slide, contact/links, Q&A |
 | **Total** | **24 slides** | **40 min + 10 min Q&A** | |

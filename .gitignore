@@ -42,12 +42,30 @@ data/test_v2_raw.csv
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+.venv/
 
 # OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Models
 data/models/
 *.pkl
 *.pt
-*.egg-info/
+
+# Temporary
+*.cast
+*.tmp

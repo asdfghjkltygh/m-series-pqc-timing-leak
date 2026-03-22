@@ -63,7 +63,7 @@ Reading across columns isolates the effect of each fix:
 
 ### 1.2 Background
 
-There is no "borderline" TVLA failure: exceeding $\tval$ = 4.5 triggers a remediation cycle costing months of engineering time and \$50,000 to \$150,000 in lab fees. With NIST finalizing ML-KEM in August 2024 and CNSA 2.0 (NSA's Commercial National Security Algorithm Suite timeline) mandating quantum-resistant cryptography for national security systems by 2033, false TVLA failures directly impede PQC migration across government and regulated industries. Evaluation labs are running these tests on modern hardware today, and failures are being reported today.
+There is no "borderline" TVLA failure: exceeding $\tval$ = 4.5 triggers a remediation cycle costing months of engineering time and an estimated \$50,000 to \$150,000 in lab fees (based on published CMVP lab pricing and typical remediation timelines). With NIST finalizing ML-KEM in August 2024 and CNSA 2.0 (NSA's Commercial National Security Algorithm Suite timeline) mandating quantum-resistant cryptography for national security systems by 2033, false TVLA failures directly impede PQC migration across government and regulated industries. Evaluation labs are running these tests on modern hardware today, and failures are being reported today.
 
 ---
 
@@ -101,7 +101,7 @@ The results are unambiguous. On vulnerable code, our XGBoost classifier achieves
 
 Our apparatus detects both secret-dependent and input-dependent timing leakage when they exist. The null result on patched ML-KEM is not a measurement failure; it is a measurement. Our pipeline's detection floor is $d \approx 0.275$; effects below $d \approx 0.1$ are below all detection mechanisms and unexploitable via userspace timing (full sensitivity characterization in Section 5).
 
-**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based (Median Absolute Deviation) SNR (zero), Winsorized SNR (zero), and vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample). Definitions and methodology in Appendix A. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
+**Information-theoretic confirmation.** Six independent methods all converge on zero extractable bits: Perceived Information (negative for all targets), KSG mutual information (0.000 bits, $p = 1.0$), MAD-based (Median Absolute Deviation) SNR (zero), Winsorized SNR (zero), vertical scaling analysis (flat accuracy curves at 15x predicted minimum sample), and all ML classifiers (at or below majority baseline). Definitions and methodology in Appendix A. The TVLA result of $\tval$ = 62.49 reports a signal that, by every other information-theoretic measure, does not exist, and that vanishes ($\tval$ = 0.58) when collection is interleaved.
 
 ---
 
@@ -172,7 +172,7 @@ The 62-cycle gap in sequential means (Table 2) vanishes under interleaving (Tabl
 | Asymmetric | 8.10 | 0.98x | **FAIL** |
 | Symmetric | 1.65 | 0.86x | **PASS** |
 
-The symmetric harness's higher absolute cycle counts (183K vs 58K in the interleaved data) reflect the cost of indexing into a pre-generated array of 50,000 (ciphertext, key) pairs; this memory footprint introduces uniform cache pressure that inflates both groups equally without affecting the t-test comparison. The asymmetric interleaved failure ($\tval$ = 8.10) confirms cache pollution from live keygen+encaps is a real secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99), likely because its large shared L2/SLC cache absorbs the pollution (see Limitations).
+The symmetric harness's higher absolute cycle counts (183K vs 58K in the interleaved data) reflect the cost of indexing into a pre-generated array of 50,000 (ciphertext, key) pairs; this memory footprint introduces uniform cache pressure that inflates both groups equally without affecting the t-test comparison. The asymmetric interleaved failure ($\tval$ = 8.10) confirms cache pollution from live keygen+encaps is a real secondary confound on Intel, independent of temporal drift. Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99), likely because its large shared L2/SLC (System Level Cache) absorbs the pollution (see Limitations).
 
 ### 4.5 Compiler Optimization Level Independence
 
@@ -223,7 +223,7 @@ sca-triage analyze --timing-data traces.npz --secret-labels keys.csv \
 
 The tool runs three stages: (1) standard TVLA (Welch's t-test, pass/fail at $\tval$ = 4.5), (2) pairwise secret-group decomposition (regroups traces by key bits, byte values, Hamming weight; runs t-tests within each partition), and (3) KSG mutual information validated by permutation test. If TVLA fails but all pairwise tests are non-significant *and* MI is zero within the permutation confidence interval, the verdict is FALSE_POSITIVE. Output is JSON with full statistics, suitable for CMVP submission.
 
-**Worked example.** On our Apple Silicon asymmetric harness data (50,000 traces, $\tval$ = 8.42, representative of what evaluation labs encounter; symmetric data produces the same verdict at $\tval$ = 62.49), the full pipeline (`python scripts/dudect_comparison.py`) produces:
+**Worked example.** On our Apple Silicon asymmetric harness data (50,000 traces from a separate collection run, $\tval$ = 8.42; Table 1's asymmetric value of 3.00 comes from the symmetric control experiment's concurrent run, illustrating the run-to-run variability inherent in sequential collection), the full pipeline (`python scripts/dudect_comparison.py`) produces:
 
 ```
 [Stage 1] Running Fixed-vs-Random TVLA...
@@ -313,7 +313,7 @@ The gap between "TVLA-detectable" and "exploitable" is wider on modern processor
 
 **ML-KEM only.** We have not yet run cross-algorithm validation (ML-DSA, SLH-DSA, BIKE, HQC). The confound is methodological, not algorithm-specific, but empirical confirmation across algorithms would strengthen the generalization claim.
 
-**Apple Silicon cache absorption hypothesis unverified.** We hypothesize that Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99) while Intel fails ($\tval$ = 8.10) because Apple's large shared L2/SLC cache absorbs keygen+encaps pollution. The symmetric interleaved result ($\tval$ = 0.58) is the definitive measurement regardless of mechanism.
+**Apple Silicon cache absorption hypothesis unverified.** We hypothesize that Apple Silicon's interleaved asymmetric harness passes ($\tval$ = 0.99) while Intel fails ($\tval$ = 8.10) because Apple's large shared L2/SLC (System Level Cache) absorbs keygen+encaps pollution. The symmetric interleaved result ($\tval$ = 0.58) is the definitive measurement regardless of mechanism.
 
 **No NTT-internal (Number Theoretic Transform) intermediate targets.** We tested key-level and message-level properties but not butterfly outputs, Montgomery reduction intermediates, or CBD (Centered Binomial Distribution) sampling. Our raw-trace analysis bounds any per-execution timing signal at $d < 0.001$, constraining intermediate-value leakage.
 

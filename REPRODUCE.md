@@ -50,7 +50,7 @@ Large raw CSV files (>1MB) are gitignored. To obtain them, contact the authors o
 ```bash
 python scripts/dudect_comparison.py
 ```
-**Expected:** dudect and TVLA both report |t|>4.5 (FAIL). sca-triage triages as FALSE POSITIVE.
+**Expected:** TVLA reports |t|>4.5 (FAIL) on sequential data. dudect's interleaved collection reports PASS (solves temporal drift). sca-triage triages the sequential TVLA failure as FALSE POSITIVE.
 
 ### Raw trace analysis: aggregation masking test (~30 seconds)
 ```bash
@@ -149,7 +149,7 @@ The repository contains representative sample datasets for immediate, low-fricti
 
 **Included in the repository:**
 - `data/tvla_traces.npz` (854KB, 1M TVLA traces: 500K fixed + 500K random): primary dataset for all pipeline validation
-- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces across 2,000 keys): per-key analysis and secret-label experiments
+- `data/raw_timing_traces_v3.csv` (2.4MB, 100K traces across 500 keys (50 repetitions per key, both fixed and random conditions)): per-key analysis and secret-label experiments
 - `data/raw_timing_traces_vuln.csv` (579KB, 25K traces): KyberSlash positive control
 
 **Available on request:**
