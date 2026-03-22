@@ -103,14 +103,13 @@ Runs all experiments (~7 minutes), validates all claims, outputs results to `dat
 
 ## Key Results
 
-| Collection | Platform | |t| | Verdict |
-|-----------|----------|-----|---------|
-| Sequential | Apple Silicon | 62.49 | **FAIL** |
-| Interleaved | Apple Silicon | 0.58 | **PASS** |
-| Sequential | Intel x86 | 6.70 | **FAIL** |
-| Interleaved | Intel x86 | 1.65 | **PASS** |
+```
+                        Sequential    Interleaved
+Apple Silicon           62.49 FAIL       0.58 PASS
+Intel x86                6.70 FAIL       1.65 PASS
+```
 
-Same hardware. Same code. Same inputs. The only difference is *when* the measurements were collected.
+Same hardware. Same code. Same inputs. The only difference is *when* the measurements were collected. Every value is a Welch's t-test statistic; anything above 4.5 is a mandatory FIPS failure.
 
 ## License
 
