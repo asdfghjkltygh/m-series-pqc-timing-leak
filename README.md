@@ -12,9 +12,9 @@ We release **sca-triage**, an open-source triage tool that distinguishes real si
 
 ## Demo
 
-[![When TVLA Lies: The certification test says FAIL, but the encryption is safe](assets/demo_highlight.gif)](https://youtu.be/YOUR_YOUTUBE_LINK)
+[![When TVLA Lies: The certification test says FAIL, but the encryption is safe](assets/demo_highlight.gif)](https://youtu.be/ntKd9beAb54)
 
-[Watch the full demo on YouTube](https://youtu.be/YOUR_YOUTUBE_LINK)
+[Watch the full demo on YouTube](https://youtu.be/ntKd9beAb54)
 
 The demo runs a live four-act analysis showing how TVLA produces a catastrophic false positive (score: 62.49) that vanishes (score: 0.58) when measurement collection order is changed. Run it yourself:
 
