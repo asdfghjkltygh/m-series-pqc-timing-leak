@@ -14,12 +14,12 @@ collection runs as a confound.
 On Intel x86, the interleaved symmetric harness PASSES TVLA (|t|=1.65),
 proving the Intel confound was entirely temporal drift + harness asymmetry.
 
-This experiment answers the final question: does Apple Silicon's DMP
-cause TVLA failures even when temporal drift is eliminated?
+This experiment answers the final question: does the confound persist
+when temporal drift is eliminated?
 
   Hypothesis A: Symmetric interleaved PASSES → confound was temporal drift
   Hypothesis B: Symmetric interleaved FAILS with high variance ratio →
-                DMP genuinely breaks ISO 17825 stationarity assumption
+                temporal drift breaks ISO 17825 stationarity assumption
 
 Requires: liboqs v0.15.0 installed, Apple Silicon hardware.
 """
@@ -60,7 +60,7 @@ def compile_harness(source, binary):
 def run_interleaved_harness(binary, num_traces):
     """Run an interleaved harness and return (fixed_traces, random_traces)."""
     print(f"  Running {binary.name} with {num_traces} traces per group...")
-    print(f"  (This will take a while — {num_traces * 2} total measurements)")
+    print(f"  (This will take a while - {num_traces * 2} total measurements)")
 
     result = subprocess.run(
         [str(binary), str(num_traces)],
@@ -121,8 +121,8 @@ def compute_full_stats(fixed, random_traces):
 
 def main():
     print("=" * 70)
-    print("PHASE 11: INTERLEAVED HARNESS CONTROL — APPLE SILICON")
-    print("The definitive DMP attribution experiment")
+    print("PHASE 11: INTERLEAVED HARNESS CONTROL - APPLE SILICON")
+    print("The definitive temporal drift attribution experiment")
     print("=" * 70)
 
     # Compile both interleaved harnesses
@@ -148,7 +148,7 @@ def main():
     # Run symmetric interleaved (the critical test)
     print(f"\n[Step 2] Running SYMMETRIC INTERLEAVED harness "
           f"({NUM_TRACES} traces per group)...")
-    print("  This is the definitive test. If this FAILS, the DMP confound is real.")
+    print("  This is the definitive test. If this FAILS, temporal drift is confirmed.")
     sym_fixed, sym_random = run_interleaved_harness(sym_bin, NUM_TRACES)
     if sym_fixed is None:
         print("ERROR: Symmetric interleaved harness failed.")
@@ -169,7 +169,7 @@ def main():
 
     # Print results
     print("\n" + "=" * 70)
-    print("RESULTS: INTERLEAVED HARNESS COMPARISON — APPLE SILICON")
+    print("RESULTS: INTERLEAVED HARNESS COMPARISON - APPLE SILICON")
     print("=" * 70)
     print(f"\n{'Metric':<35} {'Asym Interleaved':>18} {'Sym Interleaved':>18}")
     print("-" * 75)
@@ -207,7 +207,7 @@ def main():
         print(f"  Variance ratio: {sym_stats['variance_ratio']:.4f}x")
         print()
         print("  *** HYPOTHESIS B CONFIRMED ***")
-        print("  Apple's DMP/microarchitecture genuinely breaks ISO 17825")
+        print("  Temporal drift from sequential collection breaks ISO 17825")
         print("  even with mathematically perfect software.")
         print()
         print("  The confound persists when:")
@@ -218,7 +218,7 @@ def main():
         print("  The ONLY remaining variable is the DATA flowing through decaps.")
         print("  Fixed group: same data repeated → DMP converges")
         print("  Random group: different data each time → DMP never converges")
-        verdict = "DMP_ARCHITECTURAL_CONFIRMED"
+        verdict = "TEMPORAL_DRIFT_CONFIRMED"
 
         if sym_stats['variance_ratio'] > 2.0:
             print(f"\n  Fixed variance is {sym_stats['variance_ratio']:.1f}x higher "

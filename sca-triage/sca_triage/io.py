@@ -250,8 +250,8 @@ def load_npz(
 
     Expected arrays inside the archive:
 
-    * ``fixed_timings`` — 1-D or 2-D (n_keys, n_repeats)
-    * ``random_timings`` — same layout
+    * ``fixed_timings`` - 1-D or 2-D (n_keys, n_repeats)
+    * ``random_timings`` - same layout
     * (optional) any additional arrays treated as metadata
 
     Parameters
@@ -307,7 +307,7 @@ def load_npz(
         features_random = _features_from_2d(random_raw)
         features = np.vstack([features_fixed, features_random])
     elif fixed_raw.ndim == 1:
-        # Already one value per key — trivial features.
+        # Already one value per key - trivial features.
         all_vals = np.concatenate([fixed_raw, random_raw])
         features = all_vals.reshape(-1, 1)
         pad = np.zeros((features.shape[0], len(FEATURE_NAMES) - 1))

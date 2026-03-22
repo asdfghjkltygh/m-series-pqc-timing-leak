@@ -1,8 +1,8 @@
 """Generate realistic synthetic TVLA timing data for testing.
 
 Produces CSV files mimicking real ML-KEM-768 decapsulation measurements
-on Apple Silicon, including the DMP-induced variance confound that causes
-TVLA false positives.
+on Apple Silicon, including the temporal-drift-induced variance confound
+that causes TVLA false positives.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def generate_sample_data(
     Mimics real ML-KEM-768 measurements:
     - Median ~710 cycles (CNTVCT_EL0 ticks)
     - Right-skewed with heavy tail (occasional spikes to 10M+ cycles)
-    - Fixed traces: 10x variance (DMP synchronization effect)
+    - Fixed traces: 10x variance (sequential collection drift effect)
     - Random traces: moderate, consistent variance
     - NO secret-dependent timing difference (null result)
 
@@ -51,7 +51,7 @@ def generate_sample_data(
     # --- Generate base timings ---
     # Lognormal with median ~710 cycles: ln(710) ~ 6.565
     mu_log = 6.565
-    sigma_log_fixed = 0.6    # high variance for fixed (DMP effect)
+    sigma_log_fixed = 0.6    # high variance for fixed (temporal drift effect)
     sigma_log_random = 0.07  # low variance for random
 
     total_fixed = n_keys * repeats_per_key

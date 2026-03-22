@@ -2,14 +2,15 @@
 """
 phase9_symmetric_harness_control.py
 
-Symmetric harness control experiment: isolates the architectural DMP confound
-from the harness-induced cache pollution confound.
+Symmetric harness control experiment: isolates the temporal drift confound
+(DMP hypothesis disproved by interleaved control) from the harness-induced
+cache pollution confound.
 
 Compiles and runs tvla_harness_symmetric.c, which pre-generates all random
 (ct, sk) pairs into memory arrays before measurement. Both fixed and random
 modes execute identical code paths during the timed loop.
 
-If the TVLA failure (|t| > 4.5) persists → the cause is architectural (DMP).
+If the TVLA failure (|t| > 4.5) persists → the cause is temporal drift.
 If it vanishes → the cause was harness asymmetry (keygen+encaps cache pollution).
 
 Also runs the original asymmetric harness for direct comparison.
@@ -84,7 +85,7 @@ def compute_tvla(fixed, random):
 def main():
     print("=" * 70)
     print("SYMMETRIC HARNESS CONTROL EXPERIMENT")
-    print("Isolating DMP architectural confound from harness cache pollution")
+    print("Isolating temporal drift confound from harness cache pollution")
     print("=" * 70)
 
     # Compile both harnesses
@@ -152,14 +153,14 @@ def main():
     if not sym_result['passes_tvla']:
         print(f"  SYMMETRIC HARNESS STILL FAILS TVLA: |t| = {sym_result['t_statistic']:.2f}")
         print(f"  Variance ratio: {sym_result['variance_ratio_fixed_over_random']:.2f}")
-        print("  → The TVLA false positive is ARCHITECTURAL (DMP synchronization),")
+        print("  → The TVLA false positive is caused by TEMPORAL DRIFT")
+        print("    (disproved DMP via interleaved control),")
         print("    NOT caused by harness-induced cache pollution.")
-        print("  → The 'microarchitectural mirage' thesis is VALIDATED.")
-        verdict = "ARCHITECTURAL_CONFIRMED"
+        verdict = "TEMPORAL_DRIFT_CONFIRMED"
     else:
         print(f"  SYMMETRIC HARNESS PASSES TVLA: |t| = {sym_result['t_statistic']:.2f}")
         print("  → The TVLA false positive was caused by HARNESS ASYMMETRY,")
-        print("    NOT by architectural DMP effects.")
+        print("    NOT by temporal drift.")
         print("  → The paper must be reframed as a software engineering critique.")
         verdict = "HARNESS_ASYMMETRY_ONLY"
 
@@ -175,9 +176,9 @@ def main():
         "verdict": verdict,
         "interpretation": (
             "The symmetric harness eliminates keygen+encaps cache pollution from "
-            "the measurement loop. If TVLA still fails, the cause is architectural "
-            "(DMP synchronization on repeated data). If TVLA passes, the original "
-            "false positive was entirely due to harness asymmetry."
+            "the measurement loop. If TVLA still fails, the cause is temporal drift "
+            "from sequential collection. If TVLA passes, the original false positive "
+            "was entirely due to harness asymmetry."
         )
     }
 

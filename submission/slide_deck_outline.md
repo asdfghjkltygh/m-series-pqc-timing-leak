@@ -240,7 +240,7 @@ Below: sample terminal output showing Stage 1 FAIL (|t|=8.42), Stage 2 pairwise 
 - Acknowledge execution-context confound in normative text
 
 **CMVP / FIPS 140-3:**
-- Issue implementation guidance note on microarchitectural confounds
+- Issue implementation guidance note on temporal drift confounds
 - Accept Stage 2 evidence for overriding TVLA failures
 
 **Evaluation Labs:**
@@ -368,7 +368,7 @@ Bottom: "Point your evaluators to this paper and sca-triage."
 4. **TVLA is broken in both directions: false positives on safe code, and KyberSlash (d=0.094) falls below its detection floor.**
 5. **Fix: interleave collection + two-stage triage protocol + sca-triage open-source tool. Deploy PQC with confidence.**
 
-**Speaker Notes:** "If you remember five things from this talk: TVLA fails ML-KEM on both major platforms. Twelve million traces prove the leakage is not real. The root cause is a microarchitectural confound, not a crypto weakness. TVLA is wrong in both directions: false positives on safe code and it misses the real KyberSlash vulnerability. And the fix is a two-stage protocol with an open-source tool you can use today."
+**Speaker Notes:** "If you remember five things from this talk: TVLA fails ML-KEM on both major platforms. Twelve million traces prove the leakage is not real. The root cause is temporal drift from sequential measurement collection, not a crypto weakness. TVLA is wrong in both directions: false positives on safe code and it misses the real KyberSlash vulnerability. And the fix is a two-stage protocol with an open-source tool you can use today."
 
 ---
 

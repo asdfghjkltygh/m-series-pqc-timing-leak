@@ -1,10 +1,10 @@
 # x86-64 TVLA Control Experiment
 
 **Purpose:** Replicate the TVLA false positive analysis on Intel x86-64 and run the
-symmetric harness control experiment to confirm the confound is architectural.
+symmetric harness control experiment to confirm the temporal drift confound persists cross-platform.
 
 **Result:** Both asymmetric (|t|=5.35) and symmetric (|t|=6.70) harnesses fail TVLA
-on Intel x86, confirming the confound is architectural on both platforms.
+on Intel x86, confirming the temporal drift confound affects both platforms.
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ python3 tvla_analysis_x86.py --traces 500000
 | File | Description |
 |------|-------------|
 | `tvla_harness_x86.c` | **Asymmetric** TVLA harness. Random mode runs keygen+encaps before each timed decaps. Fixed mode reuses one (ct, sk) pair. Uses RDTSC with CPUID serialization. |
-| `tvla_harness_symmetric_x86.c` | **Symmetric** TVLA harness. Pre-generates ALL random (ct, sk) pairs into memory arrays before measurement. Both modes execute identical code paths during the timed loop. Isolates architectural confound from harness-induced cache pollution. |
+| `tvla_harness_symmetric_x86.c` | **Symmetric** TVLA harness. Pre-generates ALL random (ct, sk) pairs into memory arrays before measurement. Both modes execute identical code paths during the timed loop. Isolates temporal drift confound from harness-induced cache pollution. |
 | `timer_profile_x86.c` | RDTSC timer resolution profiler. Measures back-to-back overhead (10M samples). Validates timer is sufficient for crypto timing measurement. |
 
 Usage for both harnesses:
@@ -78,7 +78,7 @@ Usage for both harnesses:
 | Asymmetric | 5.35 | 1.84x | **FAIL** |
 | Symmetric | 6.70 | 0.43x | **FAIL** |
 
-Both harnesses fail. The symmetric harness produces a *higher* t-statistic, confirming the Intel confound is **architectural**, not solely harness-induced.
+Both harnesses fail. The symmetric harness produces a *higher* t-statistic, confirming the Intel confound is **temporal drift**, not solely harness-induced. (The interleaved control in REPRODUCE.md proves this: symmetric interleaved |t|=1.65 PASS.)
 
 ### Cross-Platform Comparison
 

@@ -5,7 +5,7 @@ phase10_compiler_flags.py
 Tests whether the TVLA false positive persists across compiler optimization
 levels (-O0, -O1, -O2, -O3, -Os) using the symmetric harness on Apple Silicon.
 
-Uses 20K traces per mode — the symmetric confound is so large (|t|≈62 at 50K)
+Uses 20K traces per mode - the symmetric confound is so large (|t|≈62 at 50K)
 that 20K is more than sufficient for statistical clarity while saving ~60% runtime.
 """
 
@@ -57,7 +57,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
             binaries[flag] = bpath
             print(f"  {flag} OK", file=sys.stderr)
         else:
-            print(f"  {flag} FAILED — skipping", file=sys.stderr)
+            print(f"  {flag} FAILED - skipping", file=sys.stderr)
 
     if not binaries:
         print("No binaries compiled. Check liboqs install.", file=sys.stderr)
@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
         fixed = run_harness(bpath, "fixed")
         random = run_harness(bpath, "random")
         if fixed is None or random is None:
-            print(f"  {flag} run failed — skipping", file=sys.stderr)
+            print(f"  {flag} run failed - skipping", file=sys.stderr)
             continue
         t, p = stats.ttest_ind(fixed, random, equal_var=False)
         vr = np.var(fixed) / np.var(random)
@@ -89,7 +89,7 @@ print("COPY-PASTE RESULTS START HERE")
 print("=" * 70)
 
 print(f"""
-COMPILER FLAG EXPERIMENT — Apple Silicon Symmetric Harness
+COMPILER FLAG EXPERIMENT - Apple Silicon Symmetric Harness
 ==========================================================
 Platform: Apple Silicon M-series (CNTVCT_EL0)
 Harness: Symmetric (pre-generated inputs, identical code paths)
@@ -104,12 +104,12 @@ for flag in FLAGS:
         r = results[flag]
         print(f"| {flag} | {r['t']:.2f} | {r['vr']:.2f}x | {r['fixed_mean']:.1f} | {r['random_mean']:.1f} | **{'PASS' if r['passes'] else 'FAIL'}** |")
     else:
-        print(f"| {flag} | — | — | — | — | COMPILE FAILED |")
+        print(f"| {flag} | - | - | - | - | COMPILE FAILED |")
 
 all_fail = all(not r["passes"] for r in results.values())
 print(f"""
-VERDICT: {'CONFOUND PERSISTS ACROSS ALL FLAGS' if all_fail else 'FLAG-DEPENDENT — SEE TABLE'}
-{'The architectural confound is independent of compiler optimization level.' if all_fail else 'Some flags alter the confound magnitude — investigate.'}
+VERDICT: {'CONFOUND PERSISTS ACROSS ALL FLAGS' if all_fail else 'FLAG-DEPENDENT - SEE TABLE'}
+{'The temporal drift confound is independent of compiler optimization level.' if all_fail else 'Some flags alter the confound magnitude - investigate.'}
 """)
 
 print("=" * 70)

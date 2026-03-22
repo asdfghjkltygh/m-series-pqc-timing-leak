@@ -179,7 +179,7 @@ def _run_precomputed(
     pause(2.0)
 
     # ==================================================================
-    # ACT 0 — Setup + The Broken Test (~40 seconds)
+    # ACT 0 - Setup + The Broken Test (~40 seconds)
     # ==================================================================
     _section_header(console, "ACT 0")
     console.print()
@@ -367,7 +367,7 @@ def _run_precomputed(
     pause(5.0)
 
     # ==================================================================
-    # ACT 1 — Real World (12 seconds)
+    # ACT 1 - Real World (12 seconds)
     # ==================================================================
     _section_header(console, "ACT 1")
     console.print()
@@ -398,7 +398,7 @@ def _run_precomputed(
     pause(3.0)
 
     # ==================================================================
-    # ACT 2 — The Proof (20 seconds)
+    # ACT 2 - The Proof (20 seconds)
     # ==================================================================
     _section_header(console, "ACT 2")
     console.print()
@@ -485,7 +485,7 @@ def _run_precomputed(
     pause(5.0)
 
     # ==================================================================
-    # ACT 3 — Validation + Closing (25 seconds)
+    # ACT 3 - Validation + Closing (25 seconds)
     # ==================================================================
     if has_vuln:
         _section_header(console, "ACT 3")
@@ -543,7 +543,7 @@ def _run_precomputed(
         pause(4.0)
 
     # ==================================================================
-    # Animated ending — the visual punchline
+    # Animated ending - the visual punchline
     # ==================================================================
     divider = "\u2500" * 60
     console.print(f"  {divider}", style="dim", highlight=False)
@@ -556,7 +556,7 @@ def _run_precomputed(
 
     max_val = sequential_t  # scale all bars relative to worst case
 
-    # Bar 1: Sequential — FAIL (Apple Silicon)
+    # Bar 1: Sequential - FAIL (Apple Silicon)
     console.print("  The mandatory test, run the standard way:",
                   style="dim", highlight=False)
     pause(0.5)
@@ -570,7 +570,7 @@ def _run_precomputed(
                       style="bold red", highlight=False)
     pause(2.0)
 
-    # Bar 2: Alternating but asymmetric harness — still FAIL (Intel x86)
+    # Bar 2: Alternating but asymmetric harness - still FAIL (Intel x86)
     console.print()
     console.print(
         "  Alternating collection, but with an asymmetric test harness (Intel x86):",
@@ -589,12 +589,12 @@ def _run_precomputed(
     pause(1.5)
 
     console.print(
-        "  (Cache pollution from the harness itself — "
+        "  (Cache pollution from the harness itself - "
         "alternating can't fix this.)",
         style="dim", highlight=False)
     pause(2.0)
 
-    # Bar 3: sca-triage pairwise decomposition — PASS
+    # Bar 3: sca-triage pairwise decomposition - PASS
     console.print()
     console.print(
         "  sca-triage pairwise decomposition on the same sequential data:",

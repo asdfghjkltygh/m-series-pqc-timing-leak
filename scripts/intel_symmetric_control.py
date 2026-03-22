@@ -113,13 +113,13 @@ SYMMETRIC HARNESS (pre-generated inputs, identical code paths):
 # Determine verdict
 if not sym['passes'] and not asym['passes']:
     verdict = "BOTH_FAIL"
-    interpretation = "Both harnesses fail TVLA. The Intel confound is ARCHITECTURAL — harness asymmetry is not the sole cause."
+    interpretation = "Both harnesses fail TVLA. The Intel confound is TEMPORAL DRIFT — harness asymmetry is not the sole cause."
 elif sym['passes'] and not asym['passes']:
     verdict = "HARNESS_ASYMMETRY_ONLY"
     interpretation = "Symmetric harness passes, asymmetric fails. The Intel confound is HARNESS-INDUCED — eliminating keygen+encaps cache pollution resolves the false positive."
 elif not sym['passes'] and asym['passes']:
     verdict = "ARCHITECTURAL_UNMASKED"
-    interpretation = "Symmetric fails, asymmetric passes. Same pattern as Apple Silicon — harness asymmetry was MASKING the architectural confound."
+    interpretation = "Symmetric fails, asymmetric passes. Same pattern as Apple Silicon — harness asymmetry was MASKING the temporal drift confound."
 else:
     verdict = "BOTH_PASS"
     interpretation = "Both harnesses pass TVLA. No confound detected on this hardware."
@@ -143,7 +143,7 @@ print(f"""CROSS-PLATFORM COMPARISON TABLE (include Apple Silicon results from pr
 Apple Silicon (already confirmed):
   Asymmetric: |t|=3.00,  var_ratio=0.16x, PASS
   Symmetric:  |t|=62.49, var_ratio=7.71x, FAIL
-  Verdict: ARCHITECTURAL_CONFIRMED (asymmetric was masking DMP)
+  Verdict: TEMPORAL_DRIFT_CONFIRMED (asymmetric was masking temporal drift)
 
 Intel x86 (THIS EXPERIMENT):
   Asymmetric: |t|={asym['t_stat']:.2f}, var_ratio={asym['var_ratio']:.2f}x, {'PASS' if asym['passes'] else 'FAIL'}
